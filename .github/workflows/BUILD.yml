@@ -3,7 +3,7 @@ on:
   push:
 permissions: write-all
 jobs:
-  setup-cloudflare:
+  build-push:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
