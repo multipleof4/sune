@@ -1,415 +1,447 @@
 <!doctype html>
 
-<html lang="en">
-<head>
-  <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
-  <title>ChatGPT — Mobile Clone (Light)</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <style>
-    :root{--safe-bottom:env(safe-area-inset-bottom)}
-    ::-webkit-scrollbar{height:8px;width:8px}
-    ::-webkit-scrollbar-thumb{background:#e5e7eb;border-radius:999px}
-    .no-scrollbar::-webkit-scrollbar{display:none}
-    .no-scrollbar{-ms-overflow-style:none;scrollbar-width:none}
-  </style>
-</head>
-<body class="bg-white text-gray-900 selection:bg-black/10">
-  <div class="flex flex-col h-dvh max-h-dvh">
-    <!-- Header -->
-    <header class="sticky top-0 z-20 bg-white/80 backdrop-blur border-b border-gray-200">
-      <div class="mx-auto w-full max-w-2xl px-4 py-3 grid grid-cols-3 items-center">
-        <!-- Sidebar toggle (left) -->
-        <button id="sidebarBtn" class="h-8 w-8 rounded-xl bg-gray-100 hover:bg-gray-200 active:scale-[.99] transition flex items-center justify-center" title="Assistants">
-          <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"/></svg>
-        </button>
-        <!-- Active assistant (center) -->
-        <button id="settingsBtnTop" class="justify-self-center h-8 w-8 rounded-full bg-gray-200 text-gray-900 flex items-center justify-center hover:bg-gray-300 active:scale-[.99] transition" title="Assistant settings">🤖</button>
-        <!-- API key badge (right) -->
-        <button id="apiBadge" title="Set OpenRouter API key" class="justify-self-end h-8 min-w-8 px-3 rounded-full border text-xs font-medium inline-flex items-center justify-center gap-1 transition bg-gray-100 text-gray-700 border-gray-200 hover:bg-gray-200">
-          <svg viewBox="0 0 24 24" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M15 7a4 4 0 11-7.999.001A4 4 0 0115 7zm-.293 6.707L9 19.414V22h2.586l5.707-5.707a1 1 0 000-1.414l-1.586-1.586a1 1 0 00-1.414 0z"/></svg>
-          <span id="statusText" class="sr-only">offline</span>
-        </button>
-      </div>
-    </header><!-- Messages -->
-<main id="chat" class="flex-1 overflow-y-auto no-scrollbar">
-  <div id="messages" class="mx-auto w-full max-w-2xl px-4 py-4 sm:py-6 space-y-4"></div>
-  <div class="h-24"></div>
-</main>
+<html lang="en">  
+<head>  
+  <meta charset="utf-8"/>  
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>  
+  <title>ChatGPT — Mobile Clone (Light)</title>  
+  <script src="https://cdn.tailwindcss.com"></script>  
+  <style>  
+    :root{--safe-bottom:env(safe-area-inset-bottom)}  
+    ::-webkit-scrollbar{height:8px;width:8px}  
+    ::-webkit-scrollbar-thumb{background:#e5e7eb;border-radius:999px}  
+    .no-scrollbar::-webkit-scrollbar{display:none}  
+    .no-scrollbar{-ms-overflow-style:none;scrollbar-width:none}  
+  </style>  
+</head>  
+<body class="bg-white text-gray-900 selection:bg-black/10">  
+  <div class="flex flex-col h-dvh max-h-dvh">  
+    <!-- Header -->  
+    <header class="sticky top-0 z-20 bg-white/80 backdrop-blur border-b border-gray-200">  
+      <div class="mx-auto w-full max-w-2xl px-4 py-3 grid grid-cols-3 items-center">  
+        <!-- Sidebar toggle (left) -->  
+        <button id="sidebarBtn" class="h-8 w-8 rounded-xl bg-gray-100 hover:bg-gray-200 active:scale-[.99] transition flex items-center justify-center" title="Assistants">  
+          <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"/></svg>  
+        </button>  
+        <!-- Active assistant (center) -->  
+        <button id="settingsBtnTop" class="justify-self-center h-8 w-8 rounded-full bg-gray-200 text-gray-900 flex items-center justify-center hover:bg-gray-300 active:scale-[.99] transition" title="Assistant settings">🤖</button>  
+        <!-- API key badge (right) -->  
+        <button id="apiBadge" title="Set OpenRouter API key" class="justify-self-end h-8 min-w-8 px-3 rounded-full border text-xs font-medium inline-flex items-center justify-center gap-1 transition bg-gray-100 text-gray-700 border-gray-200 hover:bg-gray-200">  
+          <svg viewBox="0 0 24 24" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M15 7a4 4 0 11-7.999.001A4 4 0 0115 7zm-.293 6.707L9 19.414V22h2.586l5.707-5.707a1 1 0 000-1.414l-1.586-1.586a1 1 0 00-1.414 0z"/></svg>  
+          <span id="statusText" class="sr-only">offline</span>  
+        </button>  
+      </div>  
+    </header><!-- Messages -->  
+<main id="chat" class="flex-1 overflow-y-auto no-scrollbar">  
+  <div id="messages" class="mx-auto w-full max-w-2xl px-4 py-4 sm:py-6 space-y-4"></div>  
+  <div class="h-24"></div>  
+</main>  <!-- Input Dock -->  <footer class="sticky bottom-0 z-10 bg-gradient-to-t from-white via-white/95 to-white/40 pt-3 pb-[calc(12px+var(--safe-bottom))] border-t border-gray-200">  
+  <div class="mx-auto w-full max-w-2xl px-4">  
+    <form id="composer" class="group relative flex items-end gap-2">  
+      <textarea id="input" rows="1" placeholder="Send a message" spellcheck="true" class="flex-1 resize-none rounded-2xl border border-gray-300 bg-white px-4 py-3 text-[15px] leading-6 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-black/20 focus:border-gray-300 max-h-40"></textarea>  
+      <button id="sendBtn" type="submit" aria-label="Send" class="shrink-0 rounded-2xl bg-black text-white h-10 w-10 inline-flex items-center justify-center shadow-sm hover:bg-black/90 active:scale-[.98] transition disabled:opacity-40 disabled:cursor-not-allowed">  
+        <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14M12 5l7 7-7 7"/></svg>  
+      </button>  
+    </form>  
+    <div class="mt-2 flex items-center justify-end text-xs text-gray-500">  
+      <div class="flex items-center gap-3">  
+        <button id="stopBtn" class="underline decoration-dotted hover:text-gray-700 hidden">Stop</button>  
+        <button id="clearBtn" class="underline decoration-dotted hover:text-gray-700">Clear</button>  
+      </div>  
+    </div>  
+  </div>  
+</footer>    </div>  <!-- Sidebar -->  <div id="sidebarOverlay" class="fixed inset-0 z-40 bg-black/20 hidden"></div>  
+  <aside id="sidebar" class="fixed inset-y-0 left-0 z-50 w-72 max-w-[85vw] bg-white border-r border-gray-200 shadow-xl transform -translate-x-full transition-transform duration-200 ease-out flex flex-col">  
+    <div class="p-3 border-b flex items-center gap-2">  
+      <button id="newAssistantBtn" class="px-3 py-2 rounded-xl bg-black text-white text-sm hover:bg-black/90">New assistant</button>  
+      <span class="text-xs text-gray-500">Click name to equip</span>  
+    </div>  
+    <div id="assistantList" class="flex-1 overflow-y-auto divide-y"></div>  
+  </aside>  
+  <!-- Settings Dialog -->  
+  <div id="settingsModal" class="hidden fixed inset-0 z-50">  
+    <div class="absolute inset-0 bg-black/30"></div>  
+    <div class="absolute inset-x-0 top-12 mx-auto w-full max-w-md px-4">  
+      <div class="rounded-2xl bg-white shadow-xl border border-gray-200 overflow-hidden">  
+        <div class="px-4 py-3 border-b text-sm font-semibold flex items-center justify-between">  
+          <span>Assistant Settings</span>  
+          <button id="closeSettings" class="p-1 rounded hover:bg-gray-100" aria-label="Close">  
+            <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>  
+          </button>  
+        </div>  
+        <form id="settingsForm" class="text-sm">  
+          <div class="border-b flex text-sm font-medium">  
+            <button type="button" id="tabModel" class="flex-1 py-2 px-3 text-center border-b-2 border-black">Model & Sampling</button>  
+            <button type="button" id="tabPrompt" class="flex-1 py-2 px-3 text-center border-b-2 border-transparent hover:border-gray-300">System Prompt</button>  
+          </div>  
+          <div id="panelModel" class="p-4 space-y-4">  
+            <div>  
+              <label class="block text-gray-700 font-medium mb-1">Model name</label>  
+              <input id="set_model" type="text" class="w-full rounded-xl border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-black/20" placeholder="openai/gpt-4o"/>  
+            </div>  
+            <div class="grid grid-cols-2 gap-3">  
+              <div><label class="block text-gray-700 font-medium mb-1">Temperature <span class="text-gray-400">(0–2)</span></label><input id="set_temperature" type="number" min="0" max="2" step="0.1" class="w-full rounded-xl border border-gray-300 px-3 py-2" placeholder="1.0"/><p class="mt-1 text-xs text-gray-500">Variety. Lower = predictable.</p></div>  
+              <div><label class="block text-gray-700 font-medium mb-1">Top P <span class="text-gray-400">(0–1)</span></label><input id="set_top_p" type="number" min="0" max="1" step="0.01" class="w-full rounded-xl border border-gray-300 px-3 py-2" placeholder="1.0"/><p class="mt-1 text-xs text-gray-500">Nucleus sampling.</p></div>  
+              <div><label class="block text-gray-700 font-medium mb-1">Top K</label><input id="set_top_k" type="number" min="0" step="1" class="w-full rounded-xl border border-gray-300 px-3 py-2" placeholder="0"/><p class="mt-1 text-xs text-gray-500">Token shortlist size.</p></div>  
+              <div><label class="block text-gray-700 font-medium mb-1">Frequency Penalty <span class="text-gray-400">(-2–2)</span></label><input id="set_frequency_penalty" type="number" min="-2" max="2" step="0.1" class="w-full rounded-xl border border-gray-300 px-3 py-2" placeholder="0.0"/><p class="mt-1 text-xs text-gray-500">Discourage repeats by count.</p></div>  
+              <div><label class="block text-gray-700 font-medium mb-1">Presence Penalty <span class="text-gray-400">(-2–2)</span></label><input id="set_presence_penalty" type="number" min="-2" max="2" step="0.1" class="w-full rounded-xl border border-gray-300 px-3 py-2" placeholder="0.0"/><p class="mt-1 text-xs text-gray-500">Discourage seen tokens.</p></div>  
+              <div><label class="block text-gray-700 font-medium mb-1">Repetition Penalty <span class="text-gray-400">(0–2)</span></label><input id="set_repetition_penalty" type="number" min="0" max="2" step="0.1" class="w-full rounded-xl border border-gray-300 px-3 py-2" placeholder="1.0"/><p class="mt-1 text-xs text-gray-500">Reduce verbatim echoes.</p></div>  
+              <div><label class="block text-gray-700 font-medium mb-1">Min P <span class="text-gray-400">(0–1)</span></label><input id="set_min_p" type="number" min="0" max="1" step="0.01" class="w-full rounded-xl border border-gray-300 px-3 py-2" placeholder="0.0"/><p class="mt-1 text-xs text-gray-500">Minimum token prob vs best.</p></div>  
+              <div><label class="block text-gray-700 font-medium mb-1">Top A <span class="text-gray-400">(0–1)</span></label><input id="set_top_a" type="number" min="0" max="1" step="0.01" class="w-full rounded-xl border border-gray-300 px-3 py-2" placeholder="0.0"/><p class="mt-1 text-xs text-gray-500">Adaptive nucleus filter.</p></div>  
+            </div>  
+          </div>  
+          <div id="panelPrompt" class="p-4 space-y-4 hidden">  
+            <div>  
+              <label class="block text-gray-700 font-medium mb-1">System Prompt</label>  
+              <textarea id="set_system_prompt" rows="8" class="w-full rounded-xl border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-black/20" placeholder="Enter a system prompt to guide the assistant"></textarea>  
+              <p class="mt-1 text-xs text-gray-500">Saved per assistant.</p>  
+            </div>  
+          </div>  
+          <!-- Footer actions: Delete (left), Cancel/Save (right) -->
+          <div class="flex items-center justify-between gap-2 px-4 py-3 border-t">  
+            <button type="button" id="deleteAssistantBtn" class="inline-flex items-center gap-2 px-3 py-2 rounded-xl border border-red-200 text-red-700 hover:bg-red-50">  
+              <svg viewBox="0 0 24 24" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 6h18M8 6v12a2 2 0 0 0 2 2h4a2 2 0 0 0 2-2V6m-9 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>  
+              <span>Delete assistant</span>  
+            </button>  
+            <div class="flex items-center justify-end gap-2">  
+              <button type="button" id="cancelSettings" class="px-3 py-2 rounded-xl border bg-white hover:bg-gray-50">Cancel</button>  
+              <button type="submit" class="px-3 py-2 rounded-xl bg-black text-white hover:bg-black/90">Save</button>  
+            </div>  
+          </div>  
+        </form>  
+      </div>  
+    </div>  
+  </div>    <script>  
+    // === Constants ===  
+    const DEFAULT_MODEL = 'openai/gpt-4o';  
+    const DEFAULT_API_KEY = '';  
 
-<!-- Input Dock -->
-<footer class="sticky bottom-0 z-10 bg-gradient-to-t from-white via-white/95 to-white/40 pt-3 pb-[calc(12px+var(--safe-bottom))] border-t border-gray-200">
-  <div class="mx-auto w-full max-w-2xl px-4">
-    <form id="composer" class="group relative flex items-end gap-2">
-      <textarea id="input" rows="1" placeholder="Send a message" spellcheck="true" class="flex-1 resize-none rounded-2xl border border-gray-300 bg-white px-4 py-3 text-[15px] leading-6 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-black/20 focus:border-gray-300 max-h-40"></textarea>
-      <button id="sendBtn" type="submit" aria-label="Send" class="shrink-0 rounded-2xl bg-black text-white h-10 w-10 inline-flex items-center justify-center shadow-sm hover:bg-black/90 active:scale-[.98] transition disabled:opacity-40 disabled:cursor-not-allowed">
-        <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14M12 5l7 7-7 7"/></svg>
-      </button>
-    </form>
-    <div class="mt-2 flex items-center justify-end text-xs text-gray-500">
-      <div class="flex items-center gap-3">
-        <button id="stopBtn" class="underline decoration-dotted hover:text-gray-700 hidden">Stop</button>
-        <button id="clearBtn" class="underline decoration-dotted hover:text-gray-700">Clear</button>
-      </div>
-    </div>
-  </div>
-</footer>
+    // === Elements ===  
+    const el = Object.fromEntries([  
+      'chat','messages','composer','input','sendBtn','stopBtn','clearBtn','apiBadge','statusText','settingsBtnTop',  
+      'settingsModal','settingsForm','closeSettings','cancelSettings','tabModel','tabPrompt','panelModel','panelPrompt',  
+      'set_model','set_temperature','set_top_p','set_top_k','set_frequency_penalty','set_presence_penalty','set_repetition_penalty','set_min_p','set_top_a','set_system_prompt',  
+      'sidebar','sidebarOverlay','sidebarBtn','assistantList','newAssistantBtn','deleteAssistantBtn'  
+    ].map(id => [id, document.getElementById(id)]));  
 
-  </div>  <!-- Sidebar -->  <div id="sidebarOverlay" class="fixed inset-0 z-40 bg-black/20 hidden"></div>
-  <aside id="sidebar" class="fixed inset-y-0 left-0 z-50 w-72 max-w-[85vw] bg-white border-r border-gray-200 shadow-xl transform -translate-x-full transition-transform duration-200 ease-out flex flex-col">
-    <div class="p-3 border-b flex items-center gap-2">
-      <button id="newAssistantBtn" class="px-3 py-2 rounded-xl bg-black text-white text-sm hover:bg-black/90">New assistant</button>
-      <span class="text-xs text-gray-500">Click name to equip</span>
-    </div>
-    <div id="assistantList" class="flex-1 overflow-y-auto divide-y"></div>
-  </aside>  <!-- Settings Dialog -->  <div id="settingsModal" class="hidden fixed inset-0 z-50">
-    <div class="absolute inset-0 bg-black/30"></div>
-    <div class="absolute inset-x-0 top-12 mx-auto w-full max-w-md px-4">
-      <div class="rounded-2xl bg-white shadow-xl border border-gray-200 overflow-hidden">
-        <div class="px-4 py-3 border-b text-sm font-semibold flex items-center justify-between">
-          <span>Assistant Settings</span>
-          <button id="closeSettings" class="p-1 rounded hover:bg-gray-100" aria-label="Close">
-            <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
-          </button>
-        </div>
-        <form id="settingsForm" class="text-sm">
-          <div class="border-b flex text-sm font-medium">
-            <button type="button" id="tabModel" class="flex-1 py-2 px-3 text-center border-b-2 border-black">Model & Sampling</button>
-            <button type="button" id="tabPrompt" class="flex-1 py-2 px-3 text-center border-b-2 border-transparent hover:border-gray-300">System Prompt</button>
-          </div>
-          <div id="panelModel" class="p-4 space-y-4">
-            <div>
-              <label class="block text-gray-700 font-medium mb-1">Model name</label>
-              <input id="set_model" type="text" class="w-full rounded-xl border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-black/20" placeholder="openai/gpt-4o"/>
-            </div>
-            <div class="grid grid-cols-2 gap-3">
-              <div><label class="block text-gray-700 font-medium mb-1">Temperature <span class="text-gray-400">(0–2)</span></label><input id="set_temperature" type="number" min="0" max="2" step="0.1" class="w-full rounded-xl border border-gray-300 px-3 py-2" placeholder="1.0"/><p class="mt-1 text-xs text-gray-500">Variety. Lower = predictable.</p></div>
-              <div><label class="block text-gray-700 font-medium mb-1">Top P <span class="text-gray-400">(0–1)</span></label><input id="set_top_p" type="number" min="0" max="1" step="0.01" class="w-full rounded-xl border border-gray-300 px-3 py-2" placeholder="1.0"/><p class="mt-1 text-xs text-gray-500">Nucleus sampling.</p></div>
-              <div><label class="block text-gray-700 font-medium mb-1">Top K</label><input id="set_top_k" type="number" min="0" step="1" class="w-full rounded-xl border border-gray-300 px-3 py-2" placeholder="0"/><p class="mt-1 text-xs text-gray-500">Token shortlist size.</p></div>
-              <div><label class="block text-gray-700 font-medium mb-1">Frequency Penalty <span class="text-gray-400">(-2–2)</span></label><input id="set_frequency_penalty" type="number" min="-2" max="2" step="0.1" class="w-full rounded-xl border border-gray-300 px-3 py-2" placeholder="0.0"/><p class="mt-1 text-xs text-gray-500">Discourage repeats by count.</p></div>
-              <div><label class="block text-gray-700 font-medium mb-1">Presence Penalty <span class="text-gray-400">(-2–2)</span></label><input id="set_presence_penalty" type="number" min="-2" max="2" step="0.1" class="w-full rounded-xl border border-gray-300 px-3 py-2" placeholder="0.0"/><p class="mt-1 text-xs text-gray-500">Discourage seen tokens.</p></div>
-              <div><label class="block text-gray-700 font-medium mb-1">Repetition Penalty <span class="text-gray-400">(0–2)</span></label><input id="set_repetition_penalty" type="number" min="0" max="2" step="0.1" class="w-full rounded-xl border border-gray-300 px-3 py-2" placeholder="1.0"/><p class="mt-1 text-xs text-gray-500">Reduce verbatim echoes.</p></div>
-              <div><label class="block text-gray-700 font-medium mb-1">Min P <span class="text-gray-400">(0–1)</span></label><input id="set_min_p" type="number" min="0" max="1" step="0.01" class="w-full rounded-xl border border-gray-300 px-3 py-2" placeholder="0.0"/><p class="mt-1 text-xs text-gray-500">Minimum token prob vs best.</p></div>
-              <div><label class="block text-gray-700 font-medium mb-1">Top A <span class="text-gray-400">(0–1)</span></label><input id="set_top_a" type="number" min="0" max="1" step="0.01" class="w-full rounded-xl border border-gray-300 px-3 py-2" placeholder="0.0"/><p class="mt-1 text-xs text-gray-500">Adaptive nucleus filter.</p></div>
-            </div>
-          </div>
-          <div id="panelPrompt" class="p-4 space-y-4 hidden">
-            <div>
-              <label class="block text-gray-700 font-medium mb-1">System Prompt</label>
-              <textarea id="set_system_prompt" rows="8" class="w-full rounded-xl border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-black/20" placeholder="Enter a system prompt to guide the assistant"></textarea>
-              <p class="mt-1 text-xs text-gray-500">Saved per assistant.</p>
-            </div>
-          </div>
-          <div class="flex items-center justify-end gap-2 px-4 py-3 border-t">
-            <button type="button" id="cancelSettings" class="px-3 py-2 rounded-xl border bg-white hover:bg-gray-50">Cancel</button>
-            <button type="submit" class="px-3 py-2 rounded-xl bg-black text-white hover:bg-black/90">Save</button>
-          </div>
-        </form>
-      </div>
-    </div>
-  </div>  <script>
-    // === Constants ===
-    const DEFAULT_MODEL = 'openai/gpt-4o';
-    const DEFAULT_API_KEY = '';
+    // === Utilities ===  
+    const clamp = (v, min, max) => Math.max(min, Math.min(max, v));  
+    const num = (v, d) => (v == null || v === '' || isNaN(+v)) ? d : +v;  
+    const int = (v, d) => (v == null || v === '' || isNaN(parseInt(v))) ? d : parseInt(v);  
+    const gid = () => Math.random().toString(36).slice(2,9);  
 
-    // === Elements ===
-    const el = Object.fromEntries([
-      'chat','messages','composer','input','sendBtn','stopBtn','clearBtn','apiBadge','statusText','settingsBtnTop',
-      'settingsModal','settingsForm','closeSettings','cancelSettings','tabModel','tabPrompt','panelModel','panelPrompt',
-      'set_model','set_temperature','set_top_p','set_top_k','set_frequency_penalty','set_presence_penalty','set_repetition_penalty','set_min_p','set_top_a','set_system_prompt',
-      'sidebar','sidebarOverlay','sidebarBtn','assistantList','newAssistantBtn'
-    ].map(id => [id, document.getElementById(id)]));
+    // === Global store (API key only) ===  
+    const globalStore = {  
+      get apiKey(){ return localStorage.getItem('openrouter_api_key') || DEFAULT_API_KEY || '' },  
+      set apiKey(v){ localStorage.setItem('openrouter_api_key', v || ''); updateStatus(); },  
+    };  
 
-    // === Utilities ===
-    const clamp = (v, min, max) => Math.max(min, Math.min(max, v));
-    const num = (v, d) => (v == null || v === '' || isNaN(+v)) ? d : +v;
-    const int = (v, d) => (v == null || v === '' || isNaN(parseInt(v))) ? d : parseInt(v);
-    const gid = () => Math.random().toString(36).slice(2,9);
+    // === Assistants store (per-assistant settings) ===  
+    const as = {  
+      key: 'assistants_v1',  
+      activeKey: 'active_assistant_id',  
+      load(){ try{ return JSON.parse(localStorage.getItem(this.key)||'[]') }catch{ return [] } },  
+      save(list){ localStorage.setItem(this.key, JSON.stringify(list||[])) },  
+      getActiveId(){ return localStorage.getItem(this.activeKey) || null },  
+      setActiveId(id){ localStorage.setItem(this.activeKey, id||'') },  
+    };  
 
-    // === Global store (API key only) ===
-    const globalStore = {
-      get apiKey(){ return localStorage.getItem('openrouter_api_key') || DEFAULT_API_KEY || '' },
-      set apiKey(v){ localStorage.setItem('openrouter_api_key', v || ''); updateStatus(); },
-    };
+    let assistants = as.load();  
+    if (!assistants.length){  
+      const id = gid();  
+      assistants = [{ id, name: 'Default', settings: { model: DEFAULT_MODEL, temperature:1, top_p:1, top_k:0, frequency_penalty:0, presence_penalty:0, repetition_penalty:1, min_p:0, top_a:0, system_prompt:'' } }];  
+      as.save(assistants);  
+      as.setActiveId(id);  
+    }  
 
-    // === Assistants store (per-assistant settings) ===
-    const as = {
-      key: 'assistants_v1',
-      activeKey: 'active_assistant_id',
-      load(){ try{ return JSON.parse(localStorage.getItem(this.key)||'[]') }catch{ return [] } },
-      save(list){ localStorage.setItem(this.key, JSON.stringify(list||[])) },
-      getActiveId(){ return localStorage.getItem(this.activeKey) || null },
-      setActiveId(id){ localStorage.setItem(this.activeKey, id||'') },
-    };
+    // Derived helpers for current assistant  
+    const getActive = () => assistants.find(a => a.id === as.getActiveId()) || assistants[0];  
+    const setActive = (id) => { as.setActiveId(id); renderSidebar(); reflectActiveAssistant(); clearChat(); };  
 
-    let assistants = as.load();
-    if (!assistants.length){
-      const id = gid();
-      assistants = [{ id, name: 'Default', settings: { model: DEFAULT_MODEL, temperature:1, top_p:1, top_k:0, frequency_penalty:0, presence_penalty:0, repetition_penalty:1, min_p:0, top_a:0, system_prompt:'' } }];
-      as.save(assistants);
-      as.setActiveId(id);
-    }
+    const createDefaultAssistant = () => ({ id: gid(), name: 'Default', settings: { model: DEFAULT_MODEL, temperature:1, top_p:1, top_k:0, frequency_penalty:0, presence_penalty:0, repetition_penalty:1, min_p:0, top_a:0, system_prompt:'' } });
 
-    // Derived helpers for current assistant
-    const getActive = () => assistants.find(a => a.id === as.getActiveId()) || assistants[0];
-    const setActive = (id) => { as.setActiveId(id); renderSidebar(); reflectActiveAssistant(); clearChat(); };
+    // === Legacy-compatible settings proxy bound to active assistant ===  
+    const store = new Proxy({}, {  
+      get(_, prop){  
+        if (prop === 'apiKey') return globalStore.apiKey;  
+        const a = getActive();  
+        if (prop === 'model') return a.settings.model;  
+        if (prop in a.settings) return a.settings[prop];  
+        if (prop === 'system_prompt') return a.settings.system_prompt;  
+        return undefined;  
+      },  
+      set(_, prop, val){  
+        if (prop === 'apiKey'){ globalStore.apiKey = val; return true; }  
+        const idx = assistants.findIndex(a => a.id === getActive().id);  
+        if (idx >= 0){  
+          if (prop === 'model') assistants[idx].settings.model = val || DEFAULT_MODEL;  
+          else if (prop === 'system_prompt') assistants[idx].settings.system_prompt = val || '';  
+          else assistants[idx].settings[prop] = val;  
+          as.save(assistants);  
+          return true;  
+        }  
+        return false;  
+      }  
+    });  
 
-    // === Legacy-compatible settings proxy bound to active assistant ===
-    const store = new Proxy({}, {
-      get(_, prop){
-        if (prop === 'apiKey') return globalStore.apiKey;
-        const a = getActive();
-        if (prop === 'model') return a.settings.model;
-        if (prop in a.settings) return a.settings[prop];
-        if (prop === 'system_prompt') return a.settings.system_prompt;
-        return undefined;
-      },
-      set(_, prop, val){
-        if (prop === 'apiKey'){ globalStore.apiKey = val; return true; }
-        const idx = assistants.findIndex(a => a.id === getActive().id);
-        if (idx >= 0){
-          if (prop === 'model') assistants[idx].settings.model = val || DEFAULT_MODEL;
-          else if (prop === 'system_prompt') assistants[idx].settings.system_prompt = val || '';
-          else assistants[idx].settings[prop] = val;
-          as.save(assistants);
-          return true;
-        }
-        return false;
-      }
-    });
+    // === Runtime state ===  
+    const state = { messages: [], busy: false, controller: null };  
 
-    // === Runtime state ===
-    const state = { messages: [], busy: false, controller: null };
+    // === UI helpers ===  
+    const getModelShort = () => {  
+      const m = store.model || '';  
+      return m.includes('/') ? m.split('/').pop() : m;  
+    };  
 
-    // === UI helpers ===
-    const getModelShort = () => {
-      const m = store.model || '';
-      return m.includes('/') ? m.split('/').pop() : m;
-    };
+    function reflectActiveAssistant(){  
+      const a = getActive();  
+      el.settingsBtnTop.title = `Settings — ${a.name}`;  
+    }  
 
-    function reflectActiveAssistant(){
-      const a = getActive();
-      el.settingsBtnTop.title = `Settings — ${a.name}`;
-    }
+    function renderSidebar(){  
+      const activeId = as.getActiveId();  
+      el.assistantList.innerHTML = assistants.map(a => `  
+        <button data-asst-id="${a.id}" class="w-full text-left px-3 py-2 hover:bg-gray-50 flex items-center gap-2 ${a.id===activeId?'bg-gray-100':''}">  
+          <span class="h-6 w-6 rounded-full bg-gray-200 flex items-center justify-center">🤖</span>  
+          <span class="truncate">${a.name}</span>  
+        </button>  
+      `).join('');  
+    }  
 
-    function renderSidebar(){
-      const activeId = as.getActiveId();
-      el.assistantList.innerHTML = assistants.map(a => `
-        <button data-asst-id="${a.id}" class="w-full text-left px-3 py-2 hover:bg-gray-50 flex items-center gap-2 ${a.id===activeId?'bg-gray-100':''}">
-          <span class="h-6 w-6 rounded-full bg-gray-200 flex items-center justify-center">🤖</span>
-          <span class="truncate">${a.name}</span>
-        </button>
-      `).join('');
-    }
+    function addMessage(role, content){  
+      const row = document.createElement('div');  
+      row.className = 'flex gap-3';  
+      const avatar = document.createElement('div');  
+      avatar.className = 'cursor-pointer shrink-0 h-8 w-8 rounded-full flex items-center justify-center ' + (role === 'user' ? 'bg-gray-900 text-white' : 'bg-gray-200 text-gray-900');  
+      avatar.textContent = role === 'user' ? '🧑' : '🤖';  
+      if (role !== 'user') avatar.setAttribute('data-assistant-avatar','');  
+      const right = document.createElement('div');  
+      right.className = 'flex flex-col';  
+      if (role !== 'user'){  
+        const name = document.createElement('div');  
+        name.className = 'text-xs font-medium text-gray-500 mb-0.5';  
+        name.textContent = getModelShort();  
+        right.appendChild(name);  
+      }  
+      const bubble = document.createElement('div');  
+      bubble.className = 'rounded-2xl px-4 py-3 text-[15px] leading-relaxed whitespace-pre-wrap ' + (role === 'user' ? 'bg-gray-50 border border-gray-200' : 'bg-gray-100');  
+      bubble.textContent = content;  
+      right.appendChild(bubble);  
+      row.appendChild(avatar); row.appendChild(right);  
+      el.messages.appendChild(row);  
+      state.messages.push({ role, content });  
+      queueMicrotask(() => el.chat.scrollTo({ top: el.chat.scrollHeight, behavior: 'smooth' }));  
+      return bubble;  
+    }  
 
-    function addMessage(role, content){
-      const row = document.createElement('div');
-      row.className = 'flex gap-3';
-      const avatar = document.createElement('div');
-      avatar.className = 'cursor-pointer shrink-0 h-8 w-8 rounded-full flex items-center justify-center ' + (role === 'user' ? 'bg-gray-900 text-white' : 'bg-gray-200 text-gray-900');
-      avatar.textContent = role === 'user' ? '🧑' : '🤖';
-      if (role !== 'user') avatar.setAttribute('data-assistant-avatar','');
-      const right = document.createElement('div');
-      right.className = 'flex flex-col';
-      if (role !== 'user'){
-        const name = document.createElement('div');
-        name.className = 'text-xs font-medium text-gray-500 mb-0.5';
-        name.textContent = getModelShort();
-        right.appendChild(name);
-      }
-      const bubble = document.createElement('div');
-      bubble.className = 'rounded-2xl px-4 py-3 text-[15px] leading-relaxed whitespace-pre-wrap ' + (role === 'user' ? 'bg-gray-50 border border-gray-200' : 'bg-gray-100');
-      bubble.textContent = content;
-      right.appendChild(bubble);
-      row.appendChild(avatar); row.appendChild(right);
-      el.messages.appendChild(row);
-      state.messages.push({ role, content });
-      queueMicrotask(() => el.chat.scrollTo({ top: el.chat.scrollHeight, behavior: 'smooth' }));
-      return bubble;
-    }
+    function addAssistantBubbleStreaming(){  
+      const row = document.createElement('div'); row.className = 'flex gap-3';  
+      const avatar = document.createElement('div'); avatar.className = 'cursor-pointer shrink-0 h-8 w-8 rounded-full flex items-center justify-center bg-gray-200 text-gray-900'; avatar.textContent='🤖'; avatar.setAttribute('data-assistant-avatar','');  
+      const right = document.createElement('div'); right.className='flex flex-col';  
+      const name = document.createElement('div'); name.className='text-xs font-medium text-gray-500 mb-0.5'; name.textContent=getModelShort();  
+      const bubble = document.createElement('div'); bubble.className='rounded-2xl px-4 py-3 text-[15px] leading-relaxed bg-gray-100 text-gray-800 whitespace-pre-wrap'; bubble.textContent='';  
+      right.appendChild(name); right.appendChild(bubble);  
+      row.appendChild(avatar); row.appendChild(right);  
+      el.messages.appendChild(row);  
+      queueMicrotask(() => el.chat.scrollTo({ top: el.chat.scrollHeight }));  
+      return bubble;  
+    }  
 
-    function addAssistantBubbleStreaming(){
-      const row = document.createElement('div'); row.className = 'flex gap-3';
-      const avatar = document.createElement('div'); avatar.className = 'cursor-pointer shrink-0 h-8 w-8 rounded-full flex items-center justify-center bg-gray-200 text-gray-900'; avatar.textContent='🤖'; avatar.setAttribute('data-assistant-avatar','');
-      const right = document.createElement('div'); right.className='flex flex-col';
-      const name = document.createElement('div'); name.className='text-xs font-medium text-gray-500 mb-0.5'; name.textContent=getModelShort();
-      const bubble = document.createElement('div'); bubble.className='rounded-2xl px-4 py-3 text-[15px] leading-relaxed bg-gray-100 text-gray-800 whitespace-pre-wrap'; bubble.textContent='';
-      right.appendChild(name); right.appendChild(bubble);
-      row.appendChild(avatar); row.appendChild(right);
-      el.messages.appendChild(row);
-      queueMicrotask(() => el.chat.scrollTo({ top: el.chat.scrollHeight }));
-      return bubble;
-    }
+    function clearChat(){ state.messages=[]; el.messages.innerHTML=''; }  
 
-    function clearChat(){ state.messages=[]; el.messages.innerHTML=''; }
+    function updateStatus(){  
+      const online = !!store.apiKey;  
+      el.apiBadge.className = 'justify-self-end h-8 min-w-8 px-3 rounded-full border text-xs font-medium inline-flex items-center justify-center gap-1 transition ' + (online ? 'bg-black text-white border-black hover:bg-black/90' : 'bg-gray-100 text-gray-700 border-gray-200 hover:bg-gray-200');  
+      el.statusText.textContent = online ? 'online' : 'offline';  
+    }  
 
-    function updateStatus(){
-      const online = !!store.apiKey;
-      el.apiBadge.className = 'justify-self-end h-8 min-w-8 px-3 rounded-full border text-xs font-medium inline-flex items-center justify-center gap-1 transition ' + (online ? 'bg-black text-white border-black hover:bg-black/90' : 'bg-gray-100 text-gray-700 border-gray-200 hover:bg-gray-200');
-      el.statusText.textContent = online ? 'online' : 'offline';
-    }
+    // === Networking ===  
+    function payloadWithSampling(base){  
+      return Object.assign({}, base, {  
+        temperature: store.temperature,  
+        top_p: store.top_p,  
+        top_k: store.top_k,  
+        frequency_penalty: store.frequency_penalty,  
+        presence_penalty: store.presence_penalty,  
+        repetition_penalty: store.repetition_penalty,  
+        min_p: store.min_p,  
+        top_a: store.top_a,  
+      });  
+    }  
 
-    // === Networking ===
-    function payloadWithSampling(base){
-      return Object.assign({}, base, {
-        temperature: store.temperature,
-        top_p: store.top_p,
-        top_k: store.top_k,
-        frequency_penalty: store.frequency_penalty,
-        presence_penalty: store.presence_penalty,
-        repetition_penalty: store.repetition_penalty,
-        min_p: store.min_p,
-        top_a: store.top_a,
-      });
-    }
+    async function askOpenRouterStreaming(onDelta){  
+      const apiKey = store.apiKey; const model = store.model;  
+      if (!apiKey){ const text = localDemoReply(state.messages[state.messages.length-1]?.content || ''); onDelta(text,true); return { ok:true, text } }  
+      try{  
+        state.controller = new AbortController();  
+        const msgs = [];  
+        if (store.system_prompt) msgs.push({ role:'system', content: store.system_prompt });  
+        msgs.push(...state.messages.filter(m=>m.role!=='system'));  
+        const body = payloadWithSampling({ model, messages: msgs, stream: true });  
+        const res = await fetch('https://openrouter.ai/api/v1/chat/completions',{  
+          method:'POST', headers:{ 'Content-Type':'application/json','Authorization':'Bearer '+apiKey }, body: JSON.stringify(body), signal: state.controller.signal  
+        });  
+        if (!res.ok){ const errText = await res.text().catch(()=> ''); throw new Error(errText || ('HTTP '+res.status)); }  
+        const reader = res.body.getReader(); const decoder = new TextDecoder('utf-8'); let buffer=''; let full='';  
+        while(true){ const { value, done } = await reader.read(); if (done) break; buffer += decoder.decode(value,{stream:true});  
+          let idx; while((idx = buffer.indexOf('\n\n')) !== -1){ const chunk = buffer.slice(0,idx).trim(); buffer = buffer.slice(idx+2); if (!chunk) continue; if (chunk.startsWith('data:')){ const data = chunk.slice(5).trim(); if (data==='[DONE]') continue; try{ const json=JSON.parse(data); const delta=json.choices?.[0]?.delta?.content ?? ''; if (delta){ full+=delta; onDelta(delta,false); } const finish=json.choices?.[0]?.finish_reason; if (finish){ onDelta('',true); } }catch{} } }  
+        }  
+        return { ok:true, text: full };  
+      }catch(e){  
+        const msg = String(e?.message||e);  
+        let hint = 'Request failed.';  
+        if (/401|unauthorized/i.test(msg)) hint = 'Unauthorized (check API key).';  
+        else if (/429|rate/i.test(msg)) hint = 'Rate limited (slow down or upgrade).';  
+        else if (/access|forbidden|403/i.test(msg)) hint = 'Forbidden (model or key scope).';  
+        const fallback = `\n\n${hint}\nSwitching to local demo.\n\n` + localDemoReply(state.messages[state.messages.length-1]?.content || '');  
+        onDelta(fallback,true);  
+        return { ok:false, text: fallback };  
+      }finally{ state.controller = null }  
+    }  
 
-    async function askOpenRouterStreaming(onDelta){
-      const apiKey = store.apiKey; const model = store.model;
-      if (!apiKey){ const text = localDemoReply(state.messages[state.messages.length-1]?.content || ''); onDelta(text,true); return { ok:true, text } }
-      try{
-        state.controller = new AbortController();
-        const msgs = [];
-        if (store.system_prompt) msgs.push({ role:'system', content: store.system_prompt });
-        msgs.push(...state.messages.filter(m=>m.role!=='system'));
-        const body = payloadWithSampling({ model, messages: msgs, stream: true });
-        const res = await fetch('https://openrouter.ai/api/v1/chat/completions',{
-          method:'POST', headers:{ 'Content-Type':'application/json','Authorization':'Bearer '+apiKey }, body: JSON.stringify(body), signal: state.controller.signal
-        });
-        if (!res.ok){ const errText = await res.text().catch(()=> ''); throw new Error(errText || ('HTTP '+res.status)); }
-        const reader = res.body.getReader(); const decoder = new TextDecoder('utf-8'); let buffer=''; let full='';
-        while(true){ const { value, done } = await reader.read(); if (done) break; buffer += decoder.decode(value,{stream:true});
-          let idx; while((idx = buffer.indexOf('\n\n')) !== -1){ const chunk = buffer.slice(0,idx).trim(); buffer = buffer.slice(idx+2); if (!chunk) continue; if (chunk.startsWith('data:')){ const data = chunk.slice(5).trim(); if (data==='[DONE]') continue; try{ const json=JSON.parse(data); const delta=json.choices?.[0]?.delta?.content ?? ''; if (delta){ full+=delta; onDelta(delta,false); } const finish=json.choices?.[0]?.finish_reason; if (finish){ onDelta('',true); } }catch{} } }
-        }
-        return { ok:true, text: full };
-      }catch(e){
-        const msg = String(e?.message||e);
-        let hint = 'Request failed.';
-        if (/401|unauthorized/i.test(msg)) hint = 'Unauthorized (check API key).';
-        else if (/429|rate/i.test(msg)) hint = 'Rate limited (slow down or upgrade).';
-        else if (/access|forbidden|403/i.test(msg)) hint = 'Forbidden (model or key scope).';
-        const fallback = `\n\n${hint}\nSwitching to local demo.\n\n` + localDemoReply(state.messages[state.messages.length-1]?.content || '');
-        onDelta(fallback,true);
-        return { ok:false, text: fallback };
-      }finally{ state.controller = null }
-    }
+    function localDemoReply(prompt){  
+      const tips = [ 'Tip: click the key badge to set your OpenRouter API key.', 'Click 🤖 to change model & sampling.', 'New chats are stateless here—no history is kept.' ];  
+      const tip = tips[Math.floor(Math.random()*tips.length)];  
+      const mirrored = prompt.split(/\s+/).slice(0,24).join(' ');  
+      return `Local demo mode. You said: "${mirrored}"\n\n${tip}`;  
+    }  
 
-    function localDemoReply(prompt){
-      const tips = [ 'Tip: click the key badge to set your OpenRouter API key.', 'Click 🤖 to change model & sampling.', 'New chats are stateless here—no history is kept.' ];
-      const tip = tips[Math.floor(Math.random()*tips.length)];
-      const mirrored = prompt.split(/\s+/).slice(0,24).join(' ');
-      return `Local demo mode. You said: "${mirrored}"\n\n${tip}`;
-    }
+    // === Settings modal logic (per assistant) ===  
+    function openSettings(){  
+      const a = getActive(); const s = a.settings;  
+      el.set_model.value = s.model;  
+      el.set_temperature.value = s.temperature;  
+      el.set_top_p.value = s.top_p;  
+      el.set_top_k.value = s.top_k;  
+      el.set_frequency_penalty.value = s.frequency_penalty;  
+      el.set_presence_penalty.value = s.presence_penalty;  
+      el.set_repetition_penalty.value = s.repetition_penalty;  
+      el.set_min_p.value = s.min_p;  
+      el.set_top_a.value = s.top_a;  
+      el.set_system_prompt.value = s.system_prompt;  
+      showModelTab();  
+      el.settingsModal.classList.remove('hidden');  
+    }  
+    function closeSettings(){ el.settingsModal.classList.add('hidden') }  
 
-    // === Settings modal logic (per assistant) ===
-    function openSettings(){
-      const a = getActive(); const s = a.settings;
-      el.set_model.value = s.model;
-      el.set_temperature.value = s.temperature;
-      el.set_top_p.value = s.top_p;
-      el.set_top_k.value = s.top_k;
-      el.set_frequency_penalty.value = s.frequency_penalty;
-      el.set_presence_penalty.value = s.presence_penalty;
-      el.set_repetition_penalty.value = s.repetition_penalty;
-      el.set_min_p.value = s.min_p;
-      el.set_top_a.value = s.top_a;
-      el.set_system_prompt.value = s.system_prompt;
-      showModelTab();
-      el.settingsModal.classList.remove('hidden');
-    }
-    function closeSettings(){ el.settingsModal.classList.add('hidden') }
+    function showModelTab(){ el.tabModel.classList.add('border-black'); el.tabPrompt.classList.remove('border-black'); el.panelModel.classList.remove('hidden'); el.panelPrompt.classList.add('hidden'); }  
+    function showPromptTab(){ el.tabPrompt.classList.add('border-black'); el.tabModel.classList.remove('border-black'); el.panelPrompt.classList.remove('hidden'); el.panelModel.classList.add('hidden'); }  
 
-    function showModelTab(){ el.tabModel.classList.add('border-black'); el.tabPrompt.classList.remove('border-black'); el.panelModel.classList.remove('hidden'); el.panelPrompt.classList.add('hidden'); }
-    function showPromptTab(){ el.tabPrompt.classList.add('border-black'); el.tabModel.classList.remove('border-black'); el.panelPrompt.classList.remove('hidden'); el.panelModel.classList.add('hidden'); }
+    // === Events ===  
+    el.closeSettings.addEventListener('click', closeSettings);  
+    el.cancelSettings.addEventListener('click', closeSettings);  
+    el.settingsModal.addEventListener('click', e => { if (e.target === el.settingsModal || e.target.classList.contains('bg-black/30')) closeSettings(); });  
+    el.tabModel.addEventListener('click', showModelTab);  
+    el.tabPrompt.addEventListener('click', showPromptTab);  
 
-    // === Events ===
-    el.closeSettings.addEventListener('click', closeSettings);
-    el.cancelSettings.addEventListener('click', closeSettings);
-    el.settingsModal.addEventListener('click', e => { if (e.target === el.settingsModal || e.target.classList.contains('bg-black/30')) closeSettings(); });
-    el.tabModel.addEventListener('click', showModelTab);
-    el.tabPrompt.addEventListener('click', showPromptTab);
+    el.settingsForm.addEventListener('submit', (e) => {  
+      e.preventDefault();  
+      const a = getActive(); const s = a.settings;  
+      s.model = (el.set_model.value || DEFAULT_MODEL).trim();  
+      s.temperature = clamp(num(el.set_temperature.value,1.0),0,2);  
+      s.top_p = clamp(num(el.set_top_p.value,1.0),0,1);  
+      s.top_k = Math.max(0, int(el.set_top_k.value,0));  
+      s.frequency_penalty = clamp(num(el.set_frequency_penalty.value,0.0),-2,2);  
+      s.presence_penalty = clamp(num(el.set_presence_penalty.value,0.0),-2,2);  
+      s.repetition_penalty = clamp(num(el.set_repetition_penalty.value,1.0),0,2);  
+      s.min_p = clamp(num(el.set_min_p.value,0.0),0,1);  
+      s.top_a = clamp(num(el.set_top_a.value,0.0),0,1);  
+      s.system_prompt = el.set_system_prompt.value.trim();  
+      as.save(assistants);  
+      closeSettings();  
+      reflectActiveAssistant();  
+    });  
 
-    el.settingsForm.addEventListener('submit', (e) => {
-      e.preventDefault();
-      const a = getActive(); const s = a.settings;
-      s.model = (el.set_model.value || DEFAULT_MODEL).trim();
-      s.temperature = clamp(num(el.set_temperature.value,1.0),0,2);
-      s.top_p = clamp(num(el.set_top_p.value,1.0),0,1);
-      s.top_k = Math.max(0, int(el.set_top_k.value,0));
-      s.frequency_penalty = clamp(num(el.set_frequency_penalty.value,0.0),-2,2);
-      s.presence_penalty = clamp(num(el.set_presence_penalty.value,0.0),-2,2);
-      s.repetition_penalty = clamp(num(el.set_repetition_penalty.value,1.0),0,2);
-      s.min_p = clamp(num(el.set_min_p.value,0.0),0,1);
-      s.top_a = clamp(num(el.set_top_a.value,0.0),0,1);
-      s.system_prompt = el.set_system_prompt.value.trim();
-      as.save(assistants);
-      closeSettings();
-      reflectActiveAssistant();
-    });
+    // NEW: Delete assistant (bottom-left of settings)
+    el.deleteAssistantBtn.addEventListener('click', () => {  
+      const activeId = as.getActiveId();  
+      const active = getActive();  
+      const name = active?.name || 'this assistant';  
+      if (!confirm(`Delete "${name}"?`)) return;  
+      // Remove active from list
+      assistants = assistants.filter(a => a.id !== activeId);  
+      // Persist
+      as.save(assistants);  
+      // Decide next active
+      if (assistants.length === 0){  
+        const def = createDefaultAssistant();  
+        assistants = [def];  
+        as.save(assistants);  
+        as.setActiveId(def.id);  
+      }else{  
+        as.setActiveId(assistants[0].id);  
+      }  
+      // Refresh UI
+      renderSidebar();  
+      reflectActiveAssistant();  
+      clearChat();  
+      closeSettings();  
+    });  
 
-    // Composer
-    el.composer.addEventListener('submit', async (e) => {
-      e.preventDefault(); if (state.busy) return; const text = el.input.value.trim(); if (!text) return;
-      el.input.value=''; el.input.style.height='auto'; addMessage('user', text);
-      state.busy = true; el.sendBtn.disabled = true; el.stopBtn.classList.remove('hidden');
-      const assistantBubble = addAssistantBubbleStreaming();
-      await askOpenRouterStreaming((delta,done)=>{
-        assistantBubble.textContent += delta;
-        if (done){ el.sendBtn.disabled=false; el.stopBtn.classList.add('hidden'); state.busy=false; state.messages.push({ role:'assistant', content: assistantBubble.textContent }); queueMicrotask(()=> el.chat.scrollTo({ top: el.chat.scrollHeight, behavior:'smooth' })); }
-      });
-    });
+    // Composer  
+    el.composer.addEventListener('submit', async (e) => {  
+      e.preventDefault(); if (state.busy) return; const text = el.input.value.trim(); if (!text) return;  
+      el.input.value=''; el.input.style.height='auto'; addMessage('user', text);  
+      state.busy = true; el.sendBtn.disabled = true; el.stopBtn.classList.remove('hidden');  
+      const assistantBubble = addAssistantBubbleStreaming();  
+      await askOpenRouterStreaming((delta,done)=>{  
+        assistantBubble.textContent += delta;  
+        if (done){ el.sendBtn.disabled=false; el.stopBtn.classList.add('hidden'); state.busy=false; state.messages.push({ role:'assistant', content: assistantBubble.textContent }); queueMicrotask(()=> el.chat.scrollTo({ top: el.chat.scrollHeight, behavior:'smooth' })); }  
+      });  
+    });  
 
-    // Stop streaming
-    el.stopBtn.addEventListener('click', ()=>{ if (state.controller) state.controller.abort(); el.stopBtn.classList.add('hidden'); el.sendBtn.disabled=false; state.busy=false; });
+    // Stop streaming  
+    el.stopBtn.addEventListener('click', ()=>{ if (state.controller) state.controller.abort(); el.stopBtn.classList.add('hidden'); el.sendBtn.disabled=false; state.busy=false; });  
 
-    // Open settings on any assistant avatar click
-    el.messages.addEventListener('click', (e) => { const target = e.target.closest('[data-assistant-avatar]'); if (target) openSettings(); });
+    // Open settings on any assistant avatar click  
+    el.messages.addEventListener('click', (e) => { const target = e.target.closest('[data-assistant-avatar]'); if (target) openSettings(); });  
 
-    // Top bar assistant icon opens settings
-    el.settingsBtnTop.addEventListener('click', openSettings);
+    // Top bar assistant icon opens settings  
+    el.settingsBtnTop.addEventListener('click', openSettings);  
 
-    // Auto-resize textarea
-    el.input.addEventListener('input', () => { el.input.style.height='auto'; el.input.style.height = Math.min(el.input.scrollHeight,160) + 'px'; });
+    // Auto-resize textarea  
+    el.input.addEventListener('input', () => { el.input.style.height='auto'; el.input.style.height = Math.min(el.input.scrollHeight,160) + 'px'; });  
 
-    // Clear keeps chat blank
-    el.clearBtn.addEventListener('click', () => clearChat());
+    // Clear keeps chat blank  
+    el.clearBtn.addEventListener('click', () => clearChat());  
 
-    // API badge click
-    el.apiBadge.addEventListener('click', () => {
-      const currentMasked = store.apiKey ? '********' : '';
-      const input = prompt('Enter OpenRouter API key (stored locally):', currentMasked);
-      if (input === null) return;
-      store.apiKey = input === '********' ? store.apiKey : (input.trim());
-      alert(store.apiKey ? 'API key saved locally.' : 'API key cleared.');
-    });
+    // API badge click  
+    el.apiBadge.addEventListener('click', () => {  
+      const currentMasked = store.apiKey ? '********' : '';  
+      const input = prompt('Enter OpenRouter API key (stored locally):', currentMasked);  
+      if (input === null) return;  
+      store.apiKey = input === '********' ? store.apiKey : (input.trim());  
+      alert(store.apiKey ? 'API key saved locally.' : 'API key cleared.');  
+    });  
 
-    // === Sidebar interactions ===
-    function openSidebar(){ el.sidebar.classList.remove('-translate-x-full'); el.sidebarOverlay.classList.remove('hidden'); }
-    function closeSidebar(){ el.sidebar.classList.add('-translate-x-full'); el.sidebarOverlay.classList.add('hidden'); }
-    el.sidebarBtn.addEventListener('click', openSidebar);
-    el.sidebarOverlay.addEventListener('click', closeSidebar);
+    // === Sidebar interactions ===  
+    function openSidebar(){ el.sidebar.classList.remove('-translate-x-full'); el.sidebarOverlay.classList.remove('hidden'); }  
+    function closeSidebar(){ el.sidebar.classList.add('-translate-x-full'); el.sidebarOverlay.classList.add('hidden'); }  
+    el.sidebarBtn.addEventListener('click', openSidebar);  
+    el.sidebarOverlay.addEventListener('click', closeSidebar);  
 
-    el.newAssistantBtn.addEventListener('click', () => {
-      const name = prompt('Name your assistant:');
-      if (!name) return;
-      const id = gid();
-      assistants.unshift({ id, name: name.trim(), settings: { model: DEFAULT_MODEL, temperature:1, top_p:1, top_k:0, frequency_penalty:0, presence_penalty:0, repetition_penalty:1, min_p:0, top_a:0, system_prompt:'' } });
-      as.save(assistants);
-      setActive(id);
-      renderSidebar();
-      closeSidebar();
-      reflectActiveAssistant();
-    });
+    el.newAssistantBtn.addEventListener('click', () => {  
+      const name = prompt('Name your assistant:');  
+      if (!name) return;  
+      const id = gid();  
+      assistants.unshift({ id, name: name.trim(), settings: { model: DEFAULT_MODEL, temperature:1, top_p:1, top_k:0, frequency_penalty:0, presence_penalty:0, repetition_penalty:1, min_p:0, top_a:0, system_prompt:'' } });  
+      as.save(assistants);  
+      setActive(id);  
+      renderSidebar();  
+      closeSidebar();  
+      reflectActiveAssistant();  
+    });  
 
-    el.assistantList.addEventListener('click', (e) => {
-      const btn = e.target.closest('[data-asst-id]');
-      if (!btn) return;
-      const id = btn.getAttribute('data-asst-id');
-      if (id){ setActive(id); renderSidebar(); closeSidebar(); reflectActiveAssistant(); }
-    });
+    el.assistantList.addEventListener('click', (e) => {  
+      const btn = e.target.closest('[data-asst-id]');  
+      if (!btn) return;  
+      const id = btn.getAttribute('data-asst-id');  
+      if (id){ setActive(id); renderSidebar(); closeSidebar(); reflectActiveAssistant(); }  
+    });  
 
-    // === Init ===
-    function initFromQuery(){ const url = new URL(location.href); const key = url.searchParams.get('key'); const model = url.searchParams.get('model'); if (key) store.apiKey = key; if (model){ const a=getActive(); a.settings.model = model; as.save(assistants);} }
-    function init(){ initFromQuery(); updateStatus(); renderSidebar(); reflectActiveAssistant(); clearChat(); }
+    // === Init ===  
+    function initFromQuery(){ const url = new URL(location.href); const key = url.searchParams.get('key'); const model = url.searchParams.get('model'); if (key) store.apiKey = key; if (model){ const a=getActive(); a.settings.model = model; as.save(assistants);} }  
+    function init(){ initFromQuery(); updateStatus(); renderSidebar(); reflectActiveAssistant(); clearChat(); }  
     init();
-  </script></body>
-</html>
+
+  </script></body></html>
