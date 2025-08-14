@@ -40,7 +40,7 @@
       <div class="shrink-0 h-8 w-8 rounded-full bg-gray-200 text-gray-900 flex items-center justify-center">🤖</div>
       <div class="bg-gray-100 rounded-2xl px-4 py-3 text-[15px] leading-relaxed">
         <div class="font-semibold text-gray-800 mb-1">Hello!</div>
-        I’m a lightweight ChatGPT-style demo. Click the key badge to set an OpenRouter API key; otherwise I’ll reply locally. Enter adds a newline.
+        I’m wired to OpenRouter. Click the key badge to set an API key, or hardcode one below if you insist. Enter adds a newline.
       </div>
     </div>
   </div>
@@ -64,14 +64,19 @@
       <div class="flex items-center gap-1.5">
         <span>Enter</span> for newline
       </div>
-      <button id="clearBtn" class="underline decoration-dotted hover:text-gray-700">Clear</button>
+      <div class="flex items-center gap-3">
+        <button id="stopBtn" class="underline decoration-dotted hover:text-gray-700 hidden">Stop</button>
+        <button id="clearBtn" class="underline decoration-dotted hover:text-gray-700">Clear</button>
+      </div>
     </div>
   </div>
 </footer>
 
-<!-- Bottom-left controls removed (no longer needed) -->
-
   </div>  <script>
+    // === Configuration (fill in only if you *really* want to hardcode) ===
+    const DEFAULT_MODEL = 'openai/gpt-4o';
+    const DEFAULT_API_KEY = '';// ← paste here if you insist (not recommended)
+
     // === Elements ===
     const el = {
       chat: document.getElementById('chat'),
@@ -79,6 +84,7 @@
       composer: document.getElementById('composer'),
       input: document.getElementById('input'),
       sendBtn: document.getElementById('sendBtn'),
+      stopBtn: document.getElementById('stopBtn'),
       clearBtn: document.getElementById('clearBtn'),
       newChatBtn: document.getElementById('newChatBtn'),
       modelName: document.getElementById('modelName'),
@@ -89,10 +95,10 @@
 
     // === Local storage ===
     const store = {
-      get apiKey() { return localStorage.getItem('openrouter_api_key') || ''; },
+      get apiKey() { return localStorage.getItem('openrouter_api_key') || DEFAULT_API_KEY || ''; },
       set apiKey(v) { localStorage.setItem('openrouter_api_key', v || ''); updateStatus(); },
-      get model() { return localStorage.getItem('openrouter_model') || 'openai/gpt-4o'; },
-      set model(v) { localStorage.setItem('openrouter_model', v || 'openai/gpt-4o'); el.modelName.textContent = store.model; },
+      get model() { return localStorage.getItem('openrouter_model') || DEFAULT_MODEL; },
+      set model(v) { localStorage.setItem('openrouter_model', v || DEFAULT_MODEL); el.modelName.textContent = store.model; },
     };
 
     // === Runtime state ===
@@ -116,15 +122,15 @@
       return bubble;
     }
 
-    function addThinkingBubble() {
+    function addAssistantBubbleStreaming() {
       const row = document.createElement('div');
       row.className = 'flex gap-3';
       const avatar = document.createElement('div');
       avatar.className = 'shrink-0 h-8 w-8 rounded-full flex items-center justify-center bg-gray-200 text-gray-900';
       avatar.textContent = '🤖';
       const bubble = document.createElement('div');
-      bubble.className = 'rounded-2xl px-4 py-3 text-[15px] leading-relaxed bg-gray-100 text-gray-700';
-      bubble.innerHTML = '<span class="inline-flex items-center gap-1">Thinking<span class="inline-block w-1 h-1 bg-gray-500 rounded-full animate-bounce [animation-delay:-0.2s]"></span><span class="inline-block w-1 h-1 bg-gray-500 rounded-full animate-bounce [animation-delay:-0.1s]"></span><span class="inline-block w-1 h-1 bg-gray-500 rounded-full animate-bounce"></span></span>';
+      bubble.className = 'rounded-2xl px-4 py-3 text-[15px] leading-relaxed bg-gray-100 text-gray-800 whitespace-pre-wrap';
+      bubble.textContent = '';
       row.appendChild(avatar);
       row.appendChild(bubble);
       el.messages.appendChild(row);
@@ -145,7 +151,6 @@
 
     function updateStatus() {
       const online = !!store.apiKey;
-      // Toggle badge colors
       el.apiBadge.className = 'h-8 min-w-8 px-3 rounded-full border text-xs font-medium inline-flex items-center justify-center gap-1 transition ' + (online
         ? 'bg-black text-white border-black hover:bg-black/90'
         : 'bg-gray-100 text-gray-700 border-gray-200 hover:bg-gray-200');
@@ -153,28 +158,85 @@
     }
 
     // === Networking ===
-    async function askOpenRouter() {
+    async function askOpenRouterStreaming(onDelta) {
       const apiKey = store.apiKey;
       const model = store.model;
       if (!apiKey) {
-        return { ok: true, text: localDemoReply(state.messages[state.messages.length - 1]?.content || '') };
+        // Local demo fallback
+        const text = localDemoReply(state.messages[state.messages.length - 1]?.content || '');
+        onDelta(text, true);
+        return { ok: true, text };
       }
       try {
         state.controller = new AbortController();
         const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + apiKey },
-          body: JSON.stringify({ model, messages: state.messages.filter(m => m.role !== 'system'), stream: false }),
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + apiKey,
+          },
+          body: JSON.stringify({
+            model,
+            messages: state.messages.filter(m => m.role !== 'system'),
+            stream: true,
+          }),
           signal: state.controller.signal,
         });
-        if (!res.ok) throw new Error(await res.text() || ('HTTP ' + res.status));
-        const data = await res.json();
-        const choice = data.choices?.[0]?.message?.content?.trim() || '(no content)';
-        return { ok: true, text: choice };
+
+        if (!res.ok) {
+          const errText = await res.text().catch(() => '');
+          throw new Error(errText || ('HTTP ' + res.status));
+        }
+
+        // Stream via SSE-style chunks
+        const reader = res.body.getReader();
+        const decoder = new TextDecoder('utf-8');
+        let buffer = '';
+        let full = '';
+
+        while (true) {
+          const { value, done } = await reader.read();
+          if (done) break;
+          buffer += decoder.decode(value, { stream: true });
+
+          let idx;
+          while ((idx = buffer.indexOf('\n\n')) !== -1) {
+            const chunk = buffer.slice(0, idx).trim();
+            buffer = buffer.slice(idx + 2);
+            if (!chunk) continue;
+            if (chunk.startsWith('data:')) {
+              const data = chunk.slice(5).trim();
+              if (data === '[DONE]') continue;
+              try {
+                const json = JSON.parse(data);
+                const delta = json.choices?.[0]?.delta?.content ?? '';
+                if (delta) {
+                  full += delta;
+                  onDelta(delta, false);
+                }
+                const finish = json.choices?.[0]?.finish_reason;
+                if (finish) {
+                  onDelta('', true);
+                }
+              } catch { /* ignore partial JSON */ }
+            }
+          }
+        }
+        return { ok: true, text: full };
       } catch (e) {
         console.error(e);
-        return { ok: false, text: 'Request failed. Using local demo instead.\n\n' + localDemoReply(state.messages[state.messages.length - 1]?.content || '') };
-      } finally { state.controller = null; }
+        const msg = String(e?.message || e);
+        // Minimal triage
+        let hint = 'Request failed.';
+        if (/401|unauthorized/i.test(msg)) hint = 'Unauthorized (check API key).';
+        else if (/429|rate/i.test(msg)) hint = 'Rate limited (slow down or upgrade).';
+        else if (/access|forbidden|403/i.test(msg)) hint = 'Forbidden (model or key scope).';
+        const fallback = `\n\n${hint}\nSwitching to local demo.\n\n` + localDemoReply(state.messages[state.messages.length - 1]?.content || '');
+        onDelta(fallback, true);
+        return { ok: false, text: fallback };
+      } finally {
+        state.controller = null;
+      }
     }
 
     function localDemoReply(prompt) {
@@ -200,16 +262,35 @@
       addMessage('user', text);
       state.busy = true;
       el.sendBtn.disabled = true;
-      const thinking = addThinkingBubble();
+      el.stopBtn.classList.remove('hidden');
 
-      const res = await askOpenRouter();
-      thinking.textContent = res.text;
-      thinking.className = 'rounded-2xl px-4 py-3 text-[15px] leading-relaxed bg-gray-100 text-gray-800 whitespace-pre-wrap';
-      state.messages[state.messages.length - 1] = { role: 'assistant', content: res.text };
+      const assistantBubble = addAssistantBubbleStreaming();
 
+      const res = await askOpenRouterStreaming((delta, done) => {
+        assistantBubble.textContent += delta;
+        if (done) {
+          el.sendBtn.disabled = false;
+          el.stopBtn.classList.add('hidden');
+          state.busy = false;
+          // ensure assistant message stored
+          const lastIdx = state.messages.length - 1;
+          // replace temp assistant if last is not assistant yet
+          if (state.messages[lastIdx]?.role !== 'assistant') {
+            state.messages.push({ role: 'assistant', content: assistantBubble.textContent });
+          } else {
+            state.messages[lastIdx].content = assistantBubble.textContent;
+          }
+          queueMicrotask(() => el.chat.scrollTo({ top: el.chat.scrollHeight, behavior: 'smooth' }));
+        }
+      });
+    });
+
+    // Stop streaming
+    el.stopBtn.addEventListener('click', () => {
+      if (state.controller) state.controller.abort();
+      el.stopBtn.classList.add('hidden');
       el.sendBtn.disabled = false;
       state.busy = false;
-      queueMicrotask(() => el.chat.scrollTo({ top: el.chat.scrollHeight, behavior: 'smooth' }));
     });
 
     // Auto-resize textarea
@@ -219,17 +300,15 @@
       el.input.style.height = h + 'px';
     });
 
-    // Do NOT send on Enter — Enter inserts newline by default; no keydown override here.
-
     // Clear / New
     el.clearBtn.addEventListener('click', () => clearChat(false));
-    el.newChatBtn.addEventListener('click', () => clearChat(true));
+    document.getElementById('newChatBtn')?.addEventListener('click', () => clearChat(true));
 
     // Model badge click
     el.modelBadge.addEventListener('click', () => {
       const input = prompt('Enter model name (e.g., openai/gpt-4o):', store.model);
       if (input === null) return;
-      store.model = input.trim() || 'openai/gpt-4o';
+      store.model = input.trim() || DEFAULT_MODEL;
     });
 
     // API badge click
@@ -242,7 +321,20 @@
     });
 
     // Init
-    updateStatus();
-    el.modelName.textContent = store.model;
+    function initFromQuery() {
+      const url = new URL(location.href);
+      const key = url.searchParams.get('key');
+      const model = url.searchParams.get('model');
+      if (key) store.apiKey = key; // transient: saved to localStorage by design
+      if (model) store.model = model;
+    }
+
+    function init() {
+      initFromQuery();
+      updateStatus();
+      el.modelName.textContent = store.model;
+    }
+
+    init();
   </script></body>
 </html>
