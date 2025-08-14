@@ -19,14 +19,20 @@
     <!-- Header -->
     <header class="sticky top-0 z-10 bg-white/80 backdrop-blur border-b border-gray-200">
       <div class="mx-auto w-full max-w-2xl px-4 py-3 flex items-center justify-between">
-        <button id="newChatBtn" class="text-sm font-medium px-3 py-1.5 rounded-xl bg-gray-100 hover:bg-gray-200 active:scale-[.99] transition">New chat</button>
-        <!-- Model badge (click to change model) -->
-        <button id="modelBadge" class="text-xs font-medium px-3 py-1.5 rounded-full bg-black text-white border border-black hover:bg-black/90 transition">
-          <span id="modelName">openai/gpt-4o</span>
+        <!-- New chat = icon only -->
+        <button id="newChatBtn" class="h-8 w-8 rounded-xl bg-gray-100 hover:bg-gray-200 active:scale-[.99] transition flex items-center justify-center" title="New chat">
+          <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v12M6 12h12"/>
+          </svg>
         </button>
-        <!-- API key badge (click to set key); color reflects online/offline -->
+        <!-- Robot icon (clickable to change model) -->
+        <button id="modelBadge" class="h-8 w-8 rounded-full bg-black text-white border border-black hover:bg-black/90 transition flex items-center justify-center" title="Change model">
+          <svg viewBox="0 0 24 24" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="1.8">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M9 7h6a2 2 0 012 2v6a2 2 0 01-2 2H9a2 2 0 01-2-2V9a2 2 0 012-2zm3-4v3m-3 4h.01M15 10h.01"/>
+          </svg>
+        </button>
+        <!-- API key badge -->
         <button id="apiBadge" title="Set OpenRouter API key" class="h-8 min-w-8 px-3 rounded-full border text-xs font-medium inline-flex items-center justify-center gap-1 transition bg-gray-100 text-gray-700 border-gray-200 hover:bg-gray-200">
-          <!-- Key icon -->
           <svg viewBox="0 0 24 24" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="1.8">
             <path stroke-linecap="round" stroke-linejoin="round" d="M15 7a4 4 0 11-7.999.001A4 4 0 0115 7zm-.293 6.707L9 19.414V22h2.586l5.707-5.707a1 1 0 000-1.414l-1.586-1.586a1 1 0 00-1.414 0z"/>
           </svg>
@@ -60,10 +66,7 @@
         </svg>
       </button>
     </form>
-    <div class="mt-2 flex items-center justify-between text-xs text-gray-500">
-      <div class="flex items-center gap-1.5">
-        <span>Enter</span> for newline
-      </div>
+    <div class="mt-2 flex items-center justify-end text-xs text-gray-500">
       <div class="flex items-center gap-3">
         <button id="stopBtn" class="underline decoration-dotted hover:text-gray-700 hidden">Stop</button>
         <button id="clearBtn" class="underline decoration-dotted hover:text-gray-700">Clear</button>
@@ -87,7 +90,6 @@
       stopBtn: document.getElementById('stopBtn'),
       clearBtn: document.getElementById('clearBtn'),
       newChatBtn: document.getElementById('newChatBtn'),
-      modelName: document.getElementById('modelName'),
       modelBadge: document.getElementById('modelBadge'),
       apiBadge: document.getElementById('apiBadge'),
       statusText: document.getElementById('statusText'),
@@ -98,7 +100,14 @@
       get apiKey() { return localStorage.getItem('openrouter_api_key') || DEFAULT_API_KEY || ''; },
       set apiKey(v) { localStorage.setItem('openrouter_api_key', v || ''); updateStatus(); },
       get model() { return localStorage.getItem('openrouter_model') || DEFAULT_MODEL; },
-      set model(v) { localStorage.setItem('openrouter_model', v || DEFAULT_MODEL); el.modelName.textContent = store.model; },
+      set model(v) { localStorage.setItem('openrouter_model', v || DEFAULT_MODEL); },
+    };
+
+    // === Helpers ===
+    const getModelShort = () => {
+      const m = store.model || '';
+      const name = m.includes('/') ? m.split('/').pop() : m;
+      return name;
     };
 
     // === Runtime state ===
@@ -108,14 +117,29 @@
     function addMessage(role, content) {
       const row = document.createElement('div');
       row.className = 'flex gap-3';
+
       const avatar = document.createElement('div');
       avatar.className = 'shrink-0 h-8 w-8 rounded-full flex items-center justify-center ' + (role === 'user' ? 'bg-gray-900 text-white' : 'bg-gray-200 text-gray-900');
       avatar.textContent = role === 'user' ? '🧑' : '🤖';
+
+      const right = document.createElement('div');
+      right.className = 'flex flex-col';
+
+      if (role !== 'user') {
+        const name = document.createElement('div');
+        name.className = 'text-xs font-medium text-gray-500 mb-0.5';
+        name.textContent = getModelShort();
+        right.appendChild(name);
+      }
+
       const bubble = document.createElement('div');
       bubble.className = 'rounded-2xl px-4 py-3 text-[15px] leading-relaxed whitespace-pre-wrap ' + (role === 'user' ? 'bg-gray-50 border border-gray-200' : 'bg-gray-100');
       bubble.textContent = content;
+
+      right.appendChild(bubble);
       row.appendChild(avatar);
-      row.appendChild(bubble);
+      row.appendChild(right);
+
       el.messages.appendChild(row);
       state.messages.push({ role, content });
       queueMicrotask(() => el.chat.scrollTo({ top: el.chat.scrollHeight, behavior: 'smooth' }));
@@ -125,14 +149,27 @@
     function addAssistantBubbleStreaming() {
       const row = document.createElement('div');
       row.className = 'flex gap-3';
+
       const avatar = document.createElement('div');
       avatar.className = 'shrink-0 h-8 w-8 rounded-full flex items-center justify-center bg-gray-200 text-gray-900';
       avatar.textContent = '🤖';
+
+      const right = document.createElement('div');
+      right.className = 'flex flex-col';
+
+      const name = document.createElement('div');
+      name.className = 'text-xs font-medium text-gray-500 mb-0.5';
+      name.textContent = getModelShort();
+
       const bubble = document.createElement('div');
       bubble.className = 'rounded-2xl px-4 py-3 text-[15px] leading-relaxed bg-gray-100 text-gray-800 whitespace-pre-wrap';
       bubble.textContent = '';
+
+      right.appendChild(name);
+      right.appendChild(bubble);
       row.appendChild(avatar);
-      row.appendChild(bubble);
+      row.appendChild(right);
+
       el.messages.appendChild(row);
       queueMicrotask(() => el.chat.scrollTo({ top: el.chat.scrollHeight }));
       return bubble;
@@ -144,7 +181,7 @@
       if (intro) {
         const introRow = document.createElement('div');
         introRow.className = 'flex gap-3';
-        introRow.innerHTML = `<div class="shrink-0 h-8 w-8 rounded-full bg-gray-200 text-gray-900 flex items-center justify-center">🤖</div><div class="bg-gray-100 rounded-2xl px-4 py-3 text-[15px] leading-relaxed"><div class="font-semibold text-gray-800 mb-1">New chat</div>You're in a fresh conversation. Ask away.</div>`;
+        introRow.innerHTML = `<div class=\"shrink-0 h-8 w-8 rounded-full bg-gray-200 text-gray-900 flex items-center justify-center\">🤖</div><div class=\"bg-gray-100 rounded-2xl px-4 py-3 text-[15px] leading-relaxed\"><div class=\"font-semibold text-gray-800 mb-1\">New chat</div>You're in a fresh conversation. Ask away.</div>`;
         el.messages.appendChild(introRow);
       }
     }
@@ -162,7 +199,6 @@
       const apiKey = store.apiKey;
       const model = store.model;
       if (!apiKey) {
-        // Local demo fallback
         const text = localDemoReply(state.messages[state.messages.length - 1]?.content || '');
         onDelta(text, true);
         return { ok: true, text };
@@ -188,7 +224,6 @@
           throw new Error(errText || ('HTTP ' + res.status));
         }
 
-        // Stream via SSE-style chunks
         const reader = res.body.getReader();
         const decoder = new TextDecoder('utf-8');
         let buffer = '';
@@ -226,7 +261,6 @@
       } catch (e) {
         console.error(e);
         const msg = String(e?.message || e);
-        // Minimal triage
         let hint = 'Request failed.';
         if (/401|unauthorized/i.test(msg)) hint = 'Unauthorized (check API key).';
         else if (/429|rate/i.test(msg)) hint = 'Rate limited (slow down or upgrade).';
@@ -242,7 +276,7 @@
     function localDemoReply(prompt) {
       const tips = [
         'Tip: click the key badge to set your OpenRouter API key.',
-        'Model is clickable at the top—tap the model badge to change it.',
+        'Click the robot to change the model.',
         'New chats are stateless here—no history is kept.'
       ];
       const tip = tips[Math.floor(Math.random() * tips.length)];
@@ -266,20 +300,13 @@
 
       const assistantBubble = addAssistantBubbleStreaming();
 
-      const res = await askOpenRouterStreaming((delta, done) => {
+      await askOpenRouterStreaming((delta, done) => {
         assistantBubble.textContent += delta;
         if (done) {
           el.sendBtn.disabled = false;
           el.stopBtn.classList.add('hidden');
           state.busy = false;
-          // ensure assistant message stored
-          const lastIdx = state.messages.length - 1;
-          // replace temp assistant if last is not assistant yet
-          if (state.messages[lastIdx]?.role !== 'assistant') {
-            state.messages.push({ role: 'assistant', content: assistantBubble.textContent });
-          } else {
-            state.messages[lastIdx].content = assistantBubble.textContent;
-          }
+          state.messages.push({ role: 'assistant', content: assistantBubble.textContent });
           queueMicrotask(() => el.chat.scrollTo({ top: el.chat.scrollHeight, behavior: 'smooth' }));
         }
       });
@@ -302,9 +329,9 @@
 
     // Clear / New
     el.clearBtn.addEventListener('click', () => clearChat(false));
-    document.getElementById('newChatBtn')?.addEventListener('click', () => clearChat(true));
+    el.newChatBtn.addEventListener('click', () => clearChat(true));
 
-    // Model badge click
+    // Model badge click (robot)
     el.modelBadge.addEventListener('click', () => {
       const input = prompt('Enter model name (e.g., openai/gpt-4o):', store.model);
       if (input === null) return;
@@ -325,14 +352,13 @@
       const url = new URL(location.href);
       const key = url.searchParams.get('key');
       const model = url.searchParams.get('model');
-      if (key) store.apiKey = key; // transient: saved to localStorage by design
+      if (key) store.apiKey = key;
       if (model) store.model = model;
     }
 
     function init() {
       initFromQuery();
       updateStatus();
-      el.modelName.textContent = store.model;
     }
 
     init();
