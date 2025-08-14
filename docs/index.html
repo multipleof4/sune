@@ -25,12 +25,7 @@
             <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v12M6 12h12"/>
           </svg>
         </button>
-        <!-- Robot icon (clickable to change model) -->
-        <button id="modelBadge" class="h-8 w-8 rounded-full bg-black text-white border border-black hover:bg-black/90 transition flex items-center justify-center" title="Change model">
-          <svg viewBox="0 0 24 24" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="1.8">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M9 7h6a2 2 0 012 2v6a2 2 0 01-2 2H9a2 2 0 01-2-2V9a2 2 0 012-2zm3-4v3m-3 4h.01M15 10h.01"/>
-          </svg>
-        </button>
+        <div class="text-xs text-gray-400">&nbsp;</div>
         <!-- API key badge -->
         <button id="apiBadge" title="Set OpenRouter API key" class="h-8 min-w-8 px-3 rounded-full border text-xs font-medium inline-flex items-center justify-center gap-1 transition bg-gray-100 text-gray-700 border-gray-200 hover:bg-gray-200">
           <svg viewBox="0 0 24 24" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="1.8">
@@ -43,10 +38,10 @@
 <main id="chat" class="flex-1 overflow-y-auto no-scrollbar">
   <div id="messages" class="mx-auto w-full max-w-2xl px-4 py-4 sm:py-6 space-y-4">
     <div class="flex gap-3">
-      <div class="shrink-0 h-8 w-8 rounded-full bg-gray-200 text-gray-900 flex items-center justify-center">🤖</div>
+      <div data-assistant-avatar class="cursor-pointer shrink-0 h-8 w-8 rounded-full bg-gray-200 text-gray-900 flex items-center justify-center" title="Assistant settings">🤖</div>
       <div class="bg-gray-100 rounded-2xl px-4 py-3 text-[15px] leading-relaxed">
         <div class="font-semibold text-gray-800 mb-1">Hello!</div>
-        I’m wired to OpenRouter. Click the key badge to set an API key, or hardcode one below if you insist. Enter adds a newline.
+        I’m wired to OpenRouter. Click the key badge to set an API key. Click any 🤖 avatar to tune model & sampling.
       </div>
     </div>
   </div>
@@ -75,6 +70,71 @@
   </div>
 </footer>
 
+  </div>  <!-- Settings Dialog -->  <div id="settingsModal" class="hidden fixed inset-0 z-50">
+    <div class="absolute inset-0 bg-black/30"></div>
+    <div class="absolute inset-x-0 top-12 mx-auto w-full max-w-md px-4">
+      <div class="rounded-2xl bg-white shadow-xl border border-gray-200 overflow-hidden">
+        <div class="px-4 py-3 border-b text-sm font-semibold flex items-center justify-between">
+          <span>Assistant Settings</span>
+          <button id="closeSettings" class="p-1 rounded hover:bg-gray-100" aria-label="Close">
+            <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+          </button>
+        </div>
+        <form id="settingsForm" class="p-4 space-y-4 text-sm">
+          <div>
+            <label class="block text-gray-700 font-medium mb-1">Model name</label>
+            <input id="set_model" type="text" class="w-full rounded-xl border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-black/20" placeholder="openai/gpt-4o" />
+          </div><div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="block text-gray-700 font-medium mb-1">Temperature <span class="text-gray-400">(0–2)</span></label>
+          <input id="set_temperature" type="number" min="0" max="2" step="0.1" class="w-full rounded-xl border border-gray-300 px-3 py-2" placeholder="1.0" />
+          <p class="mt-1 text-xs text-gray-500">Variety. Lower = predictable.</p>
+        </div>
+        <div>
+          <label class="block text-gray-700 font-medium mb-1">Top P <span class="text-gray-400">(0–1)</span></label>
+          <input id="set_top_p" type="number" min="0" max="1" step="0.01" class="w-full rounded-xl border border-gray-300 px-3 py-2" placeholder="1.0" />
+          <p class="mt-1 text-xs text-gray-500">Nucleus sampling.</p>
+        </div>
+        <div>
+          <label class="block text-gray-700 font-medium mb-1">Top K</label>
+          <input id="set_top_k" type="number" min="0" step="1" class="w-full rounded-xl border border-gray-300 px-3 py-2" placeholder="0" />
+          <p class="mt-1 text-xs text-gray-500">Token shortlist size.</p>
+        </div>
+        <div>
+          <label class="block text-gray-700 font-medium mb-1">Frequency Penalty <span class="text-gray-400">(-2–2)</span></label>
+          <input id="set_frequency_penalty" type="number" min="-2" max="2" step="0.1" class="w-full rounded-xl border border-gray-300 px-3 py-2" placeholder="0.0" />
+          <p class="mt-1 text-xs text-gray-500">Discourage repeats by count.</p>
+        </div>
+        <div>
+          <label class="block text-gray-700 font-medium mb-1">Presence Penalty <span class="text-gray-400">(-2–2)</span></label>
+          <input id="set_presence_penalty" type="number" min="-2" max="2" step="0.1" class="w-full rounded-xl border border-gray-300 px-3 py-2" placeholder="0.0" />
+          <p class="mt-1 text-xs text-gray-500">Discourage seen tokens.</p>
+        </div>
+        <div>
+          <label class="block text-gray-700 font-medium mb-1">Repetition Penalty <span class="text-gray-400">(0–2)</span></label>
+          <input id="set_repetition_penalty" type="number" min="0" max="2" step="0.1" class="w-full rounded-xl border border-gray-300 px-3 py-2" placeholder="1.0" />
+          <p class="mt-1 text-xs text-gray-500">Reduce verbatim echoes.</p>
+        </div>
+        <div>
+          <label class="block text-gray-700 font-medium mb-1">Min P <span class="text-gray-400">(0–1)</span></label>
+          <input id="set_min_p" type="number" min="0" max="1" step="0.01" class="w-full rounded-xl border border-gray-300 px-3 py-2" placeholder="0.0" />
+          <p class="mt-1 text-xs text-gray-500">Minimum token prob vs best.</p>
+        </div>
+        <div>
+          <label class="block text-gray-700 font-medium mb-1">Top A <span class="text-gray-400">(0–1)</span></label>
+          <input id="set_top_a" type="number" min="0" max="1" step="0.01" class="w-full rounded-xl border border-gray-300 px-3 py-2" placeholder="0.0" />
+          <p class="mt-1 text-xs text-gray-500">Adaptive nucleus filter.</p>
+        </div>
+      </div>
+
+      <div class="flex items-center justify-end gap-2 pt-2 border-t">
+        <button type="button" id="cancelSettings" class="px-3 py-2 rounded-xl border bg-white hover:bg-gray-50">Cancel</button>
+        <button type="submit" class="px-3 py-2 rounded-xl bg-black text-white hover:bg-black/90">Save</button>
+      </div>
+    </form>
+  </div>
+</div>
+
   </div>  <script>
     // === Configuration (fill in only if you *really* want to hardcode) ===
     const DEFAULT_MODEL = 'openai/gpt-4o';
@@ -90,20 +150,57 @@
       stopBtn: document.getElementById('stopBtn'),
       clearBtn: document.getElementById('clearBtn'),
       newChatBtn: document.getElementById('newChatBtn'),
-      modelBadge: document.getElementById('modelBadge'),
       apiBadge: document.getElementById('apiBadge'),
       statusText: document.getElementById('statusText'),
+
+      // settings modal
+      settingsModal: document.getElementById('settingsModal'),
+      settingsForm: document.getElementById('settingsForm'),
+      closeSettings: document.getElementById('closeSettings'),
+      cancelSettings: document.getElementById('cancelSettings'),
+      set_model: document.getElementById('set_model'),
+      set_temperature: document.getElementById('set_temperature'),
+      set_top_p: document.getElementById('set_top_p'),
+      set_top_k: document.getElementById('set_top_k'),
+      set_frequency_penalty: document.getElementById('set_frequency_penalty'),
+      set_presence_penalty: document.getElementById('set_presence_penalty'),
+      set_repetition_penalty: document.getElementById('set_repetition_penalty'),
+      set_min_p: document.getElementById('set_min_p'),
+      set_top_a: document.getElementById('set_top_a'),
     };
 
     // === Local storage ===
     const store = {
+      // core
       get apiKey() { return localStorage.getItem('openrouter_api_key') || DEFAULT_API_KEY || ''; },
       set apiKey(v) { localStorage.setItem('openrouter_api_key', v || ''); updateStatus(); },
       get model() { return localStorage.getItem('openrouter_model') || DEFAULT_MODEL; },
       set model(v) { localStorage.setItem('openrouter_model', v || DEFAULT_MODEL); },
+
+      // sampling params
+      get temperature() { return num(localStorage.getItem('openrouter_temperature'), 1.0); },
+      set temperature(v) { localStorage.setItem('openrouter_temperature', String(v)); },
+      get top_p() { return num(localStorage.getItem('openrouter_top_p'), 1.0); },
+      set top_p(v) { localStorage.setItem('openrouter_top_p', String(v)); },
+      get top_k() { return int(localStorage.getItem('openrouter_top_k'), 0); },
+      set top_k(v) { localStorage.setItem('openrouter_top_k', String(v)); },
+      get frequency_penalty() { return num(localStorage.getItem('openrouter_frequency_penalty'), 0.0); },
+      set frequency_penalty(v) { localStorage.setItem('openrouter_frequency_penalty', String(v)); },
+      get presence_penalty() { return num(localStorage.getItem('openrouter_presence_penalty'), 0.0); },
+      set presence_penalty(v) { localStorage.setItem('openrouter_presence_penalty', String(v)); },
+      get repetition_penalty() { return num(localStorage.getItem('openrouter_repetition_penalty'), 1.0); },
+      set repetition_penalty(v) { localStorage.setItem('openrouter_repetition_penalty', String(v)); },
+      get min_p() { return num(localStorage.getItem('openrouter_min_p'), 0.0); },
+      set min_p(v) { localStorage.setItem('openrouter_min_p', String(v)); },
+      get top_a() { return num(localStorage.getItem('openrouter_top_a'), 0.0); },
+      set top_a(v) { localStorage.setItem('openrouter_top_a', String(v)); },
     };
 
     // === Helpers ===
+    const clamp = (v, min, max) => Math.max(min, Math.min(max, v));
+    const num = (v, d) => (v == null || v === '' || isNaN(+v)) ? d : +v;
+    const int = (v, d) => (v == null || v === '' || isNaN(parseInt(v))) ? d : parseInt(v);
+
     const getModelShort = () => {
       const m = store.model || '';
       const name = m.includes('/') ? m.split('/').pop() : m;
@@ -119,8 +216,9 @@
       row.className = 'flex gap-3';
 
       const avatar = document.createElement('div');
-      avatar.className = 'shrink-0 h-8 w-8 rounded-full flex items-center justify-center ' + (role === 'user' ? 'bg-gray-900 text-white' : 'bg-gray-200 text-gray-900');
+      avatar.className = 'cursor-pointer shrink-0 h-8 w-8 rounded-full flex items-center justify-center ' + (role === 'user' ? 'bg-gray-900 text-white' : 'bg-gray-200 text-gray-900');
       avatar.textContent = role === 'user' ? '🧑' : '🤖';
+      if (role !== 'user') avatar.setAttribute('data-assistant-avatar', '');
 
       const right = document.createElement('div');
       right.className = 'flex flex-col';
@@ -151,8 +249,9 @@
       row.className = 'flex gap-3';
 
       const avatar = document.createElement('div');
-      avatar.className = 'shrink-0 h-8 w-8 rounded-full flex items-center justify-center bg-gray-200 text-gray-900';
+      avatar.className = 'cursor-pointer shrink-0 h-8 w-8 rounded-full flex items-center justify-center bg-gray-200 text-gray-900';
       avatar.textContent = '🤖';
+      avatar.setAttribute('data-assistant-avatar', '');
 
       const right = document.createElement('div');
       right.className = 'flex flex-col';
@@ -181,7 +280,7 @@
       if (intro) {
         const introRow = document.createElement('div');
         introRow.className = 'flex gap-3';
-        introRow.innerHTML = `<div class=\"shrink-0 h-8 w-8 rounded-full bg-gray-200 text-gray-900 flex items-center justify-center\">🤖</div><div class=\"bg-gray-100 rounded-2xl px-4 py-3 text-[15px] leading-relaxed\"><div class=\"font-semibold text-gray-800 mb-1\">New chat</div>You're in a fresh conversation. Ask away.</div>`;
+        introRow.innerHTML = `<div data-assistant-avatar class="cursor-pointer shrink-0 h-8 w-8 rounded-full bg-gray-200 text-gray-900 flex items-center justify-center" title="Assistant settings">🤖</div><div class="bg-gray-100 rounded-2xl px-4 py-3 text-[15px] leading-relaxed"><div class="font-semibold text-gray-800 mb-1">New chat</div>You're in a fresh conversation. Click 🤖 to configure.</div>`;
         el.messages.appendChild(introRow);
       }
     }
@@ -195,6 +294,19 @@
     }
 
     // === Networking ===
+    function payloadWithSampling(base) {
+      return Object.assign({}, base, {
+        temperature: store.temperature,
+        top_p: store.top_p,
+        top_k: store.top_k,
+        frequency_penalty: store.frequency_penalty,
+        presence_penalty: store.presence_penalty,
+        repetition_penalty: store.repetition_penalty,
+        min_p: store.min_p,
+        top_a: store.top_a,
+      });
+    }
+
     async function askOpenRouterStreaming(onDelta) {
       const apiKey = store.apiKey;
       const model = store.model;
@@ -205,17 +317,18 @@
       }
       try {
         state.controller = new AbortController();
+        const body = payloadWithSampling({
+          model,
+          messages: state.messages.filter(m => m.role !== 'system'),
+          stream: true,
+        });
         const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
             'Authorization': 'Bearer ' + apiKey,
           },
-          body: JSON.stringify({
-            model,
-            messages: state.messages.filter(m => m.role !== 'system'),
-            stream: true,
-          }),
+          body: JSON.stringify(body),
           signal: state.controller.signal,
         });
 
@@ -276,13 +389,64 @@
     function localDemoReply(prompt) {
       const tips = [
         'Tip: click the key badge to set your OpenRouter API key.',
-        'Click the robot to change the model.',
+        'Click 🤖 to change model & sampling.',
         'New chats are stateless here—no history is kept.'
       ];
       const tip = tips[Math.floor(Math.random() * tips.length)];
       const mirrored = prompt.split(/\s+/).slice(0, 24).join(' ');
       return `Local demo mode. You said: "${mirrored}"\n\n${tip}`;
     }
+
+    // === Settings modal logic ===
+    function openSettings() {
+      // hydrate inputs
+      el.set_model.value = store.model;
+      el.set_temperature.value = store.temperature;
+      el.set_top_p.value = store.top_p;
+      el.set_top_k.value = store.top_k;
+      el.set_frequency_penalty.value = store.frequency_penalty;
+      el.set_presence_penalty.value = store.presence_penalty;
+      el.set_repetition_penalty.value = store.repetition_penalty;
+      el.set_min_p.value = store.min_p;
+      el.set_top_a.value = store.top_a;
+      el.settingsModal.classList.remove('hidden');
+    }
+    function closeSettings() {
+      el.settingsModal.classList.add('hidden');
+    }
+
+    el.closeSettings.addEventListener('click', closeSettings);
+    el.cancelSettings.addEventListener('click', closeSettings);
+    el.settingsModal.addEventListener('click', (e) => {
+      if (e.target === el.settingsModal || e.target.classList.contains('bg-black/30')) closeSettings();
+    });
+
+    el.settingsForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      // collect + clamp
+      let model = (el.set_model.value || DEFAULT_MODEL).trim();
+      let temperature = clamp(num(el.set_temperature.value, 1.0), 0.0, 2.0);
+      let top_p = clamp(num(el.set_top_p.value, 1.0), 0.0, 1.0);
+      let top_k = Math.max(0, int(el.set_top_k.value, 0));
+      let frequency_penalty = clamp(num(el.set_frequency_penalty.value, 0.0), -2.0, 2.0);
+      let presence_penalty = clamp(num(el.set_presence_penalty.value, 0.0), -2.0, 2.0);
+      let repetition_penalty = clamp(num(el.set_repetition_penalty.value, 1.0), 0.0, 2.0);
+      let min_p = clamp(num(el.set_min_p.value, 0.0), 0.0, 1.0);
+      let top_a = clamp(num(el.set_top_a.value, 0.0), 0.0, 1.0);
+
+      // save
+      store.model = model;
+      store.temperature = temperature;
+      store.top_p = top_p;
+      store.top_k = top_k;
+      store.frequency_penalty = frequency_penalty;
+      store.presence_penalty = presence_penalty;
+      store.repetition_penalty = repetition_penalty;
+      store.min_p = min_p;
+      store.top_a = top_a;
+
+      closeSettings();
+    });
 
     // === Events ===
     el.composer.addEventListener('submit', async (e) => {
@@ -320,6 +484,12 @@
       state.busy = false;
     });
 
+    // Open settings on any assistant avatar click (event delegation)
+    el.messages.addEventListener('click', (e) => {
+      const target = e.target.closest('[data-assistant-avatar]');
+      if (target) openSettings();
+    });
+
     // Auto-resize textarea
     el.input.addEventListener('input', () => {
       el.input.style.height = 'auto';
@@ -330,13 +500,6 @@
     // Clear / New
     el.clearBtn.addEventListener('click', () => clearChat(false));
     el.newChatBtn.addEventListener('click', () => clearChat(true));
-
-    // Model badge click (robot)
-    el.modelBadge.addEventListener('click', () => {
-      const input = prompt('Enter model name (e.g., openai/gpt-4o):', store.model);
-      if (input === null) return;
-      store.model = input.trim() || DEFAULT_MODEL;
-    });
 
     // API badge click
     el.apiBadge.addEventListener('click', () => {
