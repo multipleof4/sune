@@ -79,55 +79,75 @@
           <button id="closeSettings" class="p-1 rounded hover:bg-gray-100" aria-label="Close">
             <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
           </button>
+        </div><!-- Form with Tabs -->
+    <form id="settingsForm" class="text-sm">
+      <!-- Tabs -->
+      <div class="border-b flex text-sm font-medium">
+        <button type="button" id="tabModel" class="flex-1 py-2 px-3 text-center border-b-2 border-black">Model & Sampling</button>
+        <button type="button" id="tabPrompt" class="flex-1 py-2 px-3 text-center border-b-2 border-transparent hover:border-gray-300">System Prompt</button>
+      </div>
+
+      <!-- Panels -->
+      <div id="panelModel" class="p-4 space-y-4">
+        <div>
+          <label class="block text-gray-700 font-medium mb-1">Model name</label>
+          <input id="set_model" type="text" class="w-full rounded-xl border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-black/20" placeholder="openai/gpt-4o" />
         </div>
-        <form id="settingsForm" class="p-4 space-y-4 text-sm">
+
+        <div class="grid grid-cols-2 gap-3">
           <div>
-            <label class="block text-gray-700 font-medium mb-1">Model name</label>
-            <input id="set_model" type="text" class="w-full rounded-xl border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-black/20" placeholder="openai/gpt-4o" />
-          </div><div class="grid grid-cols-2 gap-3">
-        <div>
-          <label class="block text-gray-700 font-medium mb-1">Temperature <span class="text-gray-400">(0–2)</span></label>
-          <input id="set_temperature" type="number" min="0" max="2" step="0.1" class="w-full rounded-xl border border-gray-300 px-3 py-2" placeholder="1.0" />
-          <p class="mt-1 text-xs text-gray-500">Variety. Lower = predictable.</p>
-        </div>
-        <div>
-          <label class="block text-gray-700 font-medium mb-1">Top P <span class="text-gray-400">(0–1)</span></label>
-          <input id="set_top_p" type="number" min="0" max="1" step="0.01" class="w-full rounded-xl border border-gray-300 px-3 py-2" placeholder="1.0" />
-          <p class="mt-1 text-xs text-gray-500">Nucleus sampling.</p>
-        </div>
-        <div>
-          <label class="block text-gray-700 font-medium mb-1">Top K</label>
-          <input id="set_top_k" type="number" min="0" step="1" class="w-full rounded-xl border border-gray-300 px-3 py-2" placeholder="0" />
-          <p class="mt-1 text-xs text-gray-500">Token shortlist size.</p>
-        </div>
-        <div>
-          <label class="block text-gray-700 font-medium mb-1">Frequency Penalty <span class="text-gray-400">(-2–2)</span></label>
-          <input id="set_frequency_penalty" type="number" min="-2" max="2" step="0.1" class="w-full rounded-xl border border-gray-300 px-3 py-2" placeholder="0.0" />
-          <p class="mt-1 text-xs text-gray-500">Discourage repeats by count.</p>
-        </div>
-        <div>
-          <label class="block text-gray-700 font-medium mb-1">Presence Penalty <span class="text-gray-400">(-2–2)</span></label>
-          <input id="set_presence_penalty" type="number" min="-2" max="2" step="0.1" class="w-full rounded-xl border border-gray-300 px-3 py-2" placeholder="0.0" />
-          <p class="mt-1 text-xs text-gray-500">Discourage seen tokens.</p>
-        </div>
-        <div>
-          <label class="block text-gray-700 font-medium mb-1">Repetition Penalty <span class="text-gray-400">(0–2)</span></label>
-          <input id="set_repetition_penalty" type="number" min="0" max="2" step="0.1" class="w-full rounded-xl border border-gray-300 px-3 py-2" placeholder="1.0" />
-          <p class="mt-1 text-xs text-gray-500">Reduce verbatim echoes.</p>
-        </div>
-        <div>
-          <label class="block text-gray-700 font-medium mb-1">Min P <span class="text-gray-400">(0–1)</span></label>
-          <input id="set_min_p" type="number" min="0" max="1" step="0.01" class="w-full rounded-xl border border-gray-300 px-3 py-2" placeholder="0.0" />
-          <p class="mt-1 text-xs text-gray-500">Minimum token prob vs best.</p>
-        </div>
-        <div>
-          <label class="block text-gray-700 font-medium mb-1">Top A <span class="text-gray-400">(0–1)</span></label>
-          <input id="set_top_a" type="number" min="0" max="1" step="0.01" class="w-full rounded-xl border border-gray-300 px-3 py-2" placeholder="0.0" />
-          <p class="mt-1 text-xs text-gray-500">Adaptive nucleus filter.</p>
+            <label class="block text-gray-700 font-medium mb-1">Temperature <span class="text-gray-400">(0–2)</span></label>
+            <input id="set_temperature" type="number" min="0" max="2" step="0.1" class="w-full rounded-xl border border-gray-300 px-3 py-2" placeholder="1.0" />
+            <p class="mt-1 text-xs text-gray-500">Variety. Lower = predictable.</p>
+          </div>
+          <div>
+            <label class="block text-gray-700 font-medium mb-1">Top P <span class="text-gray-400">(0–1)</span></label>
+            <input id="set_top_p" type="number" min="0" max="1" step="0.01" class="w-full rounded-xl border border-gray-300 px-3 py-2" placeholder="1.0" />
+            <p class="mt-1 text-xs text-gray-500">Nucleus sampling.</p>
+          </div>
+          <div>
+            <label class="block text-gray-700 font-medium mb-1">Top K</label>
+            <input id="set_top_k" type="number" min="0" step="1" class="w-full rounded-xl border border-gray-300 px-3 py-2" placeholder="0" />
+            <p class="mt-1 text-xs text-gray-500">Token shortlist size.</p>
+          </div>
+          <div>
+            <label class="block text-gray-700 font-medium mb-1">Frequency Penalty <span class="text-gray-400">(-2–2)</span></label>
+            <input id="set_frequency_penalty" type="number" min="-2" max="2" step="0.1" class="w-full rounded-xl border border-gray-300 px-3 py-2" placeholder="0.0" />
+            <p class="mt-1 text-xs text-gray-500">Discourage repeats by count.</p>
+          </div>
+          <div>
+            <label class="block text-gray-700 font-medium mb-1">Presence Penalty <span class="text-gray-400">(-2–2)</span></label>
+            <input id="set_presence_penalty" type="number" min="-2" max="2" step="0.1" class="w-full rounded-xl border border-gray-300 px-3 py-2" placeholder="0.0" />
+            <p class="mt-1 text-xs text-gray-500">Discourage seen tokens.</p>
+          </div>
+          <div>
+            <label class="block text-gray-700 font-medium mb-1">Repetition Penalty <span class="text-gray-400">(0–2)</span></label>
+            <input id="set_repetition_penalty" type="number" min="0" max="2" step="0.1" class="w-full rounded-xl border border-gray-300 px-3 py-2" placeholder="1.0" />
+            <p class="mt-1 text-xs text-gray-500">Reduce verbatim echoes.</p>
+          </div>
+          <div>
+            <label class="block text-gray-700 font-medium mb-1">Min P <span class="text-gray-400">(0–1)</span></label>
+            <input id="set_min_p" type="number" min="0" max="1" step="0.01" class="w-full rounded-xl border border-gray-300 px-3 py-2" placeholder="0.0" />
+            <p class="mt-1 text-xs text-gray-500">Minimum token prob vs best.</p>
+          </div>
+          <div>
+            <label class="block text-gray-700 font-medium mb-1">Top A <span class="text-gray-400">(0–1)</span></label>
+            <input id="set_top_a" type="number" min="0" max="1" step="0.01" class="w-full rounded-xl border border-gray-300 px-3 py-2" placeholder="0.0" />
+            <p class="mt-1 text-xs text-gray-500">Adaptive nucleus filter.</p>
+          </div>
         </div>
       </div>
 
-      <div class="flex items-center justify-end gap-2 pt-2 border-t">
+      <div id="panelPrompt" class="p-4 space-y-4 hidden">
+        <div>
+          <label class="block text-gray-700 font-medium mb-1">System Prompt</label>
+          <textarea id="set_system_prompt" rows="8" class="w-full rounded-xl border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-black/20" placeholder="Enter a system prompt to guide the assistant"></textarea>
+          <p class="mt-1 text-xs text-gray-500">Saved locally; sent as a system message with each request.</p>
+        </div>
+      </div>
+
+      <!-- Actions -->
+      <div class="flex items-center justify-end gap-2 px-4 py-3 border-t">
         <button type="button" id="cancelSettings" class="px-3 py-2 rounded-xl border bg-white hover:bg-gray-50">Cancel</button>
         <button type="submit" class="px-3 py-2 rounded-xl bg-black text-white hover:bg-black/90">Save</button>
       </div>
@@ -158,6 +178,12 @@
       settingsForm: document.getElementById('settingsForm'),
       closeSettings: document.getElementById('closeSettings'),
       cancelSettings: document.getElementById('cancelSettings'),
+      // tab buttons & panels
+      tabModel: document.getElementById('tabModel'),
+      tabPrompt: document.getElementById('tabPrompt'),
+      panelModel: document.getElementById('panelModel'),
+      panelPrompt: document.getElementById('panelPrompt'),
+      // inputs
       set_model: document.getElementById('set_model'),
       set_temperature: document.getElementById('set_temperature'),
       set_top_p: document.getElementById('set_top_p'),
@@ -167,6 +193,7 @@
       set_repetition_penalty: document.getElementById('set_repetition_penalty'),
       set_min_p: document.getElementById('set_min_p'),
       set_top_a: document.getElementById('set_top_a'),
+      set_system_prompt: document.getElementById('set_system_prompt'),
     };
 
     // === Local storage ===
@@ -176,6 +203,9 @@
       set apiKey(v) { localStorage.setItem('openrouter_api_key', v || ''); updateStatus(); },
       get model() { return localStorage.getItem('openrouter_model') || DEFAULT_MODEL; },
       set model(v) { localStorage.setItem('openrouter_model', v || DEFAULT_MODEL); },
+      // system prompt
+      get system_prompt() { return localStorage.getItem('openrouter_system_prompt') || ''; },
+      set system_prompt(v) { localStorage.setItem('openrouter_system_prompt', v || ''); },
 
       // sampling params
       get temperature() { return num(localStorage.getItem('openrouter_temperature'), 1.0); },
@@ -317,9 +347,14 @@
       }
       try {
         state.controller = new AbortController();
+        // Build messages with optional system prompt
+        const msgs = [];
+        if (store.system_prompt) msgs.push({ role: 'system', content: store.system_prompt });
+        msgs.push(...state.messages.filter(m => m.role !== 'system'));
+
         const body = payloadWithSampling({
           model,
-          messages: state.messages.filter(m => m.role !== 'system'),
+          messages: msgs,
           stream: true,
         });
         const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
@@ -409,10 +444,26 @@
       el.set_repetition_penalty.value = store.repetition_penalty;
       el.set_min_p.value = store.min_p;
       el.set_top_a.value = store.top_a;
+      el.set_system_prompt.value = store.system_prompt;
+      showModelTab();
       el.settingsModal.classList.remove('hidden');
     }
     function closeSettings() {
       el.settingsModal.classList.add('hidden');
+    }
+
+    // Tab toggling
+    function showModelTab() {
+      el.tabModel.classList.add('border-black');
+      el.tabPrompt.classList.remove('border-black');
+      el.panelModel.classList.remove('hidden');
+      el.panelPrompt.classList.add('hidden');
+    }
+    function showPromptTab() {
+      el.tabPrompt.classList.add('border-black');
+      el.tabModel.classList.remove('border-black');
+      el.panelPrompt.classList.remove('hidden');
+      el.panelModel.classList.add('hidden');
     }
 
     el.closeSettings.addEventListener('click', closeSettings);
@@ -420,6 +471,9 @@
     el.settingsModal.addEventListener('click', (e) => {
       if (e.target === el.settingsModal || e.target.classList.contains('bg-black/30')) closeSettings();
     });
+
+    el.tabModel.addEventListener('click', showModelTab);
+    el.tabPrompt.addEventListener('click', showPromptTab);
 
     el.settingsForm.addEventListener('submit', (e) => {
       e.preventDefault();
@@ -444,6 +498,7 @@
       store.repetition_penalty = repetition_penalty;
       store.min_p = min_p;
       store.top_a = top_a;
+      store.system_prompt = el.set_system_prompt.value.trim();
 
       closeSettings();
     });
