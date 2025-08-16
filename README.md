@@ -7,5 +7,5 @@ v0.7: correctly remember assistant name & model
 v0.8: introducing sunes
 v0.9: htmx
 v0.10: sune pin, rename, and pfp
-v0.11:
+v0.11: top center avatar match sune pfp
 ```
