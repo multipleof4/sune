@@ -9,4 +9,5 @@ v0.9: htmx
 v0.10: sune pin, rename, and pfp
 v0.11: top center avatar match sune pfp
 v0.12: ✺
+v0.13: lucide sparkles
 ```
