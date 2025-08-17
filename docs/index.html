@@ -113,7 +113,7 @@ const el=Object.fromEntries(['chat','messages','composer','input','sendBtn','set
 const clamp=(v,min,max)=>Math.max(min,Math.min(max,v)),num=(v,d)=>v==null||v===''||isNaN(+v)?d:+v,int=(v,d)=>v==null||v===''||isNaN(parseInt(v))?d:parseInt(v),gid=()=>Math.random().toString(36).slice(2,9),esc=s=>String(s).replace(/[&<>'"`]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;","`":"&#96;"}[c]))
 const globalStore={get apiKey(){return localStorage.getItem('openrouter_api_key')||DEFAULT_API_KEY||''},set apiKey(v){localStorage.setItem('openrouter_api_key',v||'')}}
 const su={key:'sunes_v1',activeKey:'active_sune_id',load(){try{return JSON.parse(localStorage.getItem(this.key)||'[]')}catch{return[]}},save(list){localStorage.setItem(this.key,JSON.stringify(list||[]))},getActiveId(){return localStorage.getItem(this.activeKey)||null},setActiveId(id){localStorage.setItem(this.activeKey,id||'')}}
-const defaultSettings={model:DEFAULT_MODEL,temperature:1,top_p:1,top_k:0,frequency_penalty:0,presence_penalty:0,repetition_penalty:1,min_p:0,top_a:0,system_prompt:''}
+const defaultSettings={model:DEFAULT_MODEL,temperature:1,top_p:0.97,top_k:0,frequency_penalty:0,presence_penalty:0,repetition_penalty:1,min_p:0,top_a:0,system_prompt:''}
 const makeSune=(p={})=>({id:p.id||gid(),name:p.name?.trim()||'Default',pinned:!!p.pinned,avatar:p.avatar||'',settings:Object.assign({},defaultSettings,p.settings||{})})
 let sunes=(su.load()||[]).map(makeSune)
 if(!sunes.length){const def=makeSune({name:'Default'});sunes=[def];su.save(sunes);su.setActiveId(def.id)}
