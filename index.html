@@ -34,9 +34,11 @@
 <main id="chat" class="flex-1 overflow-y-auto no-scrollbar"><div id="messages" class="mx-auto w-full max-w-none px-0 py-4 sm:py-6 space-y-4" hx-on="click: if(event.target.closest('.msg-avatar')){document.getElementById('sidebar').classList.remove('-translate-x-full');document.getElementById('sidebarOverlay').classList.remove('hidden')}"></div><div class="h-24"></div></main>
 <footer id="footer" class="sticky bottom-0 z-10 bg-gradient-to-t from-white via-white/95 to-white/40 pt-3 pb-[calc(12px+var(--safe-bottom))] border-t border-gray-200">
   <div class="mx-auto w-full max-w-none px-0">
-    <form id="composer" class="group relative flex items-end gap-2 px-4">
+    <form id="composer" class="group relative flex items-center gap-2 px-4">
       <textarea id="input" rows="1" placeholder="Send a message" spellcheck="false" autocapitalize="none" autocomplete="off" autocorrect="off" inputmode="text" enterkeyhint="send" class="flex-1 resize-none rounded-2xl border border-gray-300 bg-white px-4 py-3 text-[14px] leading-6 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-black/20 focus:border-gray-300 max-h-40 overflow-hidden"></textarea>
-      <button id="sendBtn" type="submit" aria-label="Send" class="shrink-0 rounded-2xl bg-black text-white h-10 w-10 inline-flex items-center justify-center shadow-sm hover:bg-black/90 active:scale-[.98] transition"><svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14M12 5l7 7-7 7"/></svg></button>
+      <button id="sendBtn" type="submit" aria-label="Send" class="shrink-0 rounded-2xl bg-black text-white h-10 w-10 inline-flex items-center justify-center shadow-sm hover:bg-black/90 active:scale-[.98] transition">
+        <i data-lucide="sparkles" class="h-5 w-5"></i>
+      </button>
     </form>
   </div>
 </footer>
