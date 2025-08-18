@@ -21,7 +21,7 @@
 .menu-item:hover{background:#f9fafb}
 </style>
 <script src="https://unpkg.com/htmx.org@1.9.12"></script>
-</head>
+<link rel="manifest" href="/manifest.webmanifest"><script id="vite-plugin-pwa:register-sw" src="/registerSW.js"></script></head>
 <body class="bg-white text-gray-900 selection:bg-black/10" hx-on="click: if(!document.getElementById('historyMenu').contains(event.target)&&!event.target.closest('[data-thread-menu]')) hideHistoryMenu(); if(!document.getElementById('suneMenu').contains(event.target)&&!event.target.closest('[data-sune-menu]')) hideSuneMenu(); if(!document.getElementById('userMenu').contains(event.target)&&!document.getElementById('userMenuBtn').contains(event.target)) document.getElementById('userMenu').classList.add('hidden')">
 <div class="flex flex-col h-dvh max-h-dvh">
 <header class="sticky top-0 z-20 bg-white/80 backdrop-blur border-b border-gray-200">
