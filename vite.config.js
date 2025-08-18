@@ -18,7 +18,7 @@ export default defineConfig({
         background_color: '#000000',
         categories: ['productivity', 'utilities'],
         icons: [
-          { src: 'https://sune.planetrenox.com/appstore_content/✺.png', sizes: '1024x1024', type: 'image/png' }
+          { src: 'https://sune.planetrenox.com/appstore_content/sune.png', sizes: '1024x1024', type: 'image/png' }
         ]
       }
     })
