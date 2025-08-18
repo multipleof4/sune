@@ -2,6 +2,7 @@
 
 ![Sunes](./docs/appstore_content/screenshot2.jpg)
 
+![Setting](./docs/appstore_content/screenshot3.jpg)
 ```
 v0.3: added dedup threads functionality
 v0.4: mobile keyboard bug fixes
