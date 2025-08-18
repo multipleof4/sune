@@ -3,7 +3,7 @@
     "relation": ["delegate_permission/common.handle_all_urls"],
     "target": {
       "namespace": "android_app",
-      "package_name": "com.planetrenox.sune",
+      "package_name": "com.planetrenox.sune.twa",
       "sha256_cert_fingerprints": [
         "E8:7D:70:60:C2:7D:EF:CB:4D:4D:2B:E2:2E:5E:37:ED:F7:0B:1E:F5:77:D7:04:1F:6B:07:EC:B8:1D:78:6D:43"
       ]
