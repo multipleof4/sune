@@ -12,7 +12,7 @@ export default defineConfig({
         start_url: '.', 
         display: 'standalone', 
         icons: [ 
-          { src: 'https://sune.planetrenox.com/✺.png', sizes: '1024x1024', type: 'image/png' }
+          { src: 'https://sune.planetrenox.com/appstore_content/✺.png', sizes: '1024x1024', type: 'image/png' }
         ] 
       } 
     }) 
