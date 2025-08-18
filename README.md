@@ -11,4 +11,5 @@ v0.11: top center avatar match sune pfp
 v0.12: ✺
 v0.13: lucide sparkles & top_p
 v0.14: vite-plugin-pwa
+v0.15.1: android apk first release
 ```
