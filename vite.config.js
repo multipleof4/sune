@@ -19,10 +19,6 @@ export default defineConfig({
         categories: ['productivity', 'utilities'],
         icons: [
           { src: 'https://sune.planetrenox.com/appstore_content/✺.png', sizes: '1024x1024', type: 'image/png' }
-        ],
-        screenshots: [
-          { src: 'https://sune.planetrenox.com/appstore_content/screenshot1.jpg', sizes: '1344x2693', type: 'image/jpeg' },
-          { src: 'https://sune.planetrenox.com/appstore_content/screenshot2.jpg', sizes: '1344x2699', type: 'image/jpeg' }
         ]
       }
     })
