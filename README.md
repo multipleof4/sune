@@ -18,3 +18,6 @@ v0.13: lucide sparkles & top_p
 v0.14: vite-plugin-pwa
 v0.15.1: android apk first release
 ```
+
+
+The issues tab in this repo isn't only for issues. You can open an issue to just say Hi.
