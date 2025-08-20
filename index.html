@@ -106,6 +106,7 @@
 <script src="https://unpkg.com/lucide@latest"></script>
 <script src="https://cdn.jsdelivr.net/npm/markdown-it@13.0.1/dist/markdown-it.min.js"></script>
 <script src="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.9.0/build/highlight.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/tiny-ripple@0.2.0"></script>
 <script>
 const DEFAULT_MODEL='openai/gpt-5-chat',DEFAULT_API_KEY=''
 const el=Object.fromEntries(['chat','messages','composer','input','sendBtn','settingsBtnTop','settingsModal','settingsForm','closeSettings','cancelSettings','tabModel','tabPrompt','panelModel','panelPrompt','set_model','set_temperature','set_top_p','set_top_k','set_frequency_penalty','set_presence_penalty','set_repetition_penalty','set_min_p','set_top_a','set_reasoning_effort','set_system_prompt','deleteSuneBtn','sidebar','sidebarOverlay','sidebarBtn','suneList','newSuneBtn','userMenuBtn','userMenu','apiKeyOption','sunesImportOption','sunesExportOption','threadsImportOption','threadsExportOption','threadsDedupOption','importInput','historyBtn','historyPanel','historyOverlay','historyList','closeHistory','historyMenu','suneMenu','footer'].map(id=>[id,document.getElementById(id)]))
