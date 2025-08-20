@@ -20,6 +20,7 @@ v0.15.1: android apk first release
 v0.16: icons & removed bad tips
 v0.17: reasoning effort setting
 v0.18: touch ripple effect
+v0.19: import/export keeps last updated
 ```
 
 
