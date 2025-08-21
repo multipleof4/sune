@@ -22,6 +22,7 @@ v0.17: reasoning effort setting
 v0.18: touch ripple effect
 v0.19: import/export keeps last updated
 v0.20: token counting
+v0.21.0: restyled input ui
 ```
 
 
