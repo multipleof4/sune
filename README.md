@@ -24,6 +24,7 @@ v0.19: import/export keeps last updated
 v0.20: token counting
 v0.21: restyled input ui
 v0.22: jpg, webp, png, gif, pdf, mp3, wav
+v0.23: attachment badge bugs
 ```
 
 
