@@ -2,6 +2,9 @@
 
 <html lang="en">
 <head>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
+<title>Sune</title>
+<link rel="icon" type="image/avif" href="https://sune.planetrenox.com/✺.avif">
 <script src="https://cdn.tailwindcss.com"></script>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/github-markdown-css@5.5.1/github-markdown-light.min.css"/>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.9.0/build/styles/github.min.css"/>
@@ -13,7 +16,7 @@
 .msg-avatar{font-size:16px}
 .menu-card{position:fixed;z-index:60;min-width:12rem;border-radius:0.75rem;border:1px solid #e5e7eb;background:#fff;box-shadow:0 10px 20px rgba(0,0,0,.08)}
 .menu-item{width:100%;text-align:left;padding:.5rem .75rem;font-size:.875rem;display:flex;align-items:center;gap:.5rem}
-#scriptEditor{outline:none}
+#scriptEditor,#htmlEditor{outline:none}
 </style>
 <script src="https://unpkg.com/htmx.org@1.9.12"></script>
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
@@ -100,7 +103,12 @@
           <div><label class="block text-gray-700 font-medium mb-1">System Prompt</label><textarea id="set_system_prompt" rows="8" class="w-full rounded-xl border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-black/20" placeholder="Enter a system prompt to guide the sune"></textarea><p class="mt-1 text-xs text-gray-500">Saved per sune.</p></div>
         </div>
         <div id="panelScript" class="p-4 space-y-3 hidden">
-          <div><pre id="scriptEditor" class="w-full h-[50vh] p-3 rounded-xl border border-gray-300 bg-white overflow-auto font-mono text-[12px] leading-5" contenteditable="plaintext-only" spellcheck="false"></pre><p class="mt-1 text-xs text-gray-500">Sunes can function call exported JS functions. (WIP)</p></div>
+          <div class="grid grid-cols-2 gap-2 text-xs font-medium">
+            <button type="button" id="subTabHTML" class="py-2 px-3 rounded-xl bg-gray-100 border border-gray-200">HTML</button>
+            <button type="button" id="subTabJS" class="py-2 px-3 rounded-xl bg-black text-white">JavaScript</button>
+          </div>
+          <div id="panelHTML" class=""><pre id="htmlEditor" class="w-full h-[50vh] p-3 rounded-xl border border-gray-300 bg-white overflow-auto font-mono text-[12px] leading-5" contenteditable="plaintext-only" spellcheck="false"></pre></div>
+          <div id="panelJS" class=""><pre id="scriptEditor" class="w-full h=[50vh] h-[50vh] p-3 rounded-xl border border-gray-300 bg-white overflow-auto font-mono text-[12px] leading-5" contenteditable="plaintext-only" spellcheck="false"></pre><p class="mt-1 text-xs text-gray-500">Sunes can function call exported JS functions. (WIP)</p></div>
         </div>
         <div class="flex items-center justify-between gap-2 px-4 py-3 border-t">
           <button type="button" id="deleteSuneBtn" class="inline-flex items-center gap-2 px-3 py-2 rounded-xl border border-red-200 text-red-700 hover:bg-red-50"><svg viewBox="0 0 24 24" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 6h18M8 6v12a2 2 0 0 0 2 2h4a2 2 0 0 0 2-2V6m-9 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg><span>Delete sune</span></button>
@@ -113,10 +121,11 @@
 <script src="https://unpkg.com/lucide@latest"></script>
 <script src="https://cdn.jsdelivr.net/npm/markdown-it@13.0.1/dist/markdown-it.min.js"></script>
 <script src="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.9.0/build/highlight.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/tiny-ripple@0.2.0"></script>
 <script src="https://cdn.jsdelivr.net/npm/localforage@1.10.0/dist/localforage.min.js"></script>
 <script>
 const DEFAULT_MODEL='openai/gpt-5-chat',DEFAULT_API_KEY=''
-const el=Object.fromEntries(['chat','messages','composer','input','sendBtn','settingsBtnTop','settingsModal','settingsForm','closeSettings','cancelSettings','tabModel','tabPrompt','tabScript','panelModel','panelPrompt','panelScript','set_model','set_temperature','set_top_p','set_top_k','set_frequency_penalty','set_presence_penalty','set_repetition_penalty','set_min_p','set_top_a','set_reasoning_effort','set_system_prompt','deleteSuneBtn','sidebar','sidebarOverlay','sidebarBtn','suneList','newSuneBtn','userMenuBtn','userMenu','apiKeyOption','sunesImportOption','sunesExportOption','threadsImportOption','threadsExportOption','importInput','historyBtn','historyPanel','historyOverlay','historyList','closeHistory','historyMenu','suneMenu','footer','attachBtn','attachBadge','fileInput','scriptEditor'].map(id=>[id,document.getElementById(id)]))
+const el=Object.fromEntries(['chat','messages','composer','input','sendBtn','settingsBtnTop','settingsModal','settingsForm','closeSettings','cancelSettings','tabModel','tabPrompt','tabScript','panelModel','panelPrompt','panelScript','set_model','set_temperature','set_top_p','set_top_k','set_frequency_penalty','set_presence_penalty','set_repetition_penalty','set_min_p','set_top_a','set_reasoning_effort','set_system_prompt','deleteSuneBtn','sidebar','sidebarOverlay','sidebarBtn','suneList','newSuneBtn','userMenuBtn','userMenu','apiKeyOption','sunesImportOption','sunesExportOption','threadsImportOption','threadsExportOption','importInput','historyBtn','historyPanel','historyOverlay','historyList','closeHistory','historyMenu','suneMenu','footer','attachBtn','attachBadge','fileInput','scriptEditor','htmlEditor','subTabHTML','subTabJS','panelHTML','panelJS'].map(id=>[id,document.getElementById(id)]))
 const icons=()=>window.lucide&&lucide.createIcons()
 const clamp=(v,min,max)=>Math.max(min,Math.min(max,v)),num=(v,d)=>v==null||v===''||isNaN(+v)?d:+v,int=(v,d)=>v==null||v===''||isNaN(parseInt(v))?d:parseInt(v),gid=()=>Math.random().toString(36).slice(2,9),esc=s=>String(s).replace(/[&<>'"`]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;","`":"&#96;"}[c]))
 const fmtSize=b=>{const u=['B','KB','MB','GB','TB'];let i=0,x=b;while(x>=1024&&i<u.length-1){x/=1024;i++}return (x>=10?Math.round(x):Math.round(x*10)/10)+' '+u[i]}
@@ -124,7 +133,7 @@ const asDataURL=f=>new Promise(r=>{const fr=new FileReader();fr.onload=()=>r(Str
 const b64=x=>x.split(',')[1]||''
 const globalStore={get apiKey(){return localStorage.getItem('openrouter_api_key')||DEFAULT_API_KEY||''},set apiKey(v){localStorage.setItem('openrouter_api_key',v||'')}}
 const su={key:'sunes_v1',activeKey:'active_sune_id',load(){try{return JSON.parse(localStorage.getItem(this.key)||'[]')}catch{return[]}},save(list){localStorage.setItem(this.key,JSON.stringify(list||[]))},getActiveId(){return localStorage.getItem(this.activeKey)||null},setActiveId(id){localStorage.setItem(this.activeKey,id||'')}}
-const defaultSettings={model:DEFAULT_MODEL,temperature:1,top_p:0.97,top_k:0,frequency_penalty:0,presence_penalty:0,repetition_penalty:1,min_p:0,top_a:0,reasoning_effort:'default',system_prompt:'',script:''}
+const defaultSettings={model:DEFAULT_MODEL,temperature:1,top_p:0.97,top_k:0,frequency_penalty:0,presence_penalty:0,repetition_penalty:1,min_p:0,top_a:0,reasoning_effort:'default',system_prompt:'',script:'',html:''}
 const makeSune=(p={})=>({id:p.id||gid(),name:p.name?.trim()||'Default',pinned:!!p.pinned,avatar:p.avatar||'',updatedAt:p.updatedAt||Date.now(),settings:Object.assign({},defaultSettings,p.settings||{})})
 let sunes=(su.load()||[]).map(makeSune)
 if(!sunes.length){const def=makeSune({name:'Default'});sunes=[def];su.save(sunes);su.setActiveId(def.id)}
@@ -178,11 +187,12 @@ el.attachBtn.addEventListener('click',()=>{if(state.busy)return;if(state.attachm
 el.fileInput.addEventListener('change',async()=>{const files=[...(el.fileInput.files||[])];if(!files.length)return;for(const f of files){const at=await toAttach(f).catch(()=>null);if(at)state.attachments.push(at)}updateAttachBadge()})
 el.messages.addEventListener('click',async e=>{const a=e.target.closest('a[href^="#dl-"]');if(!a)return; e.preventDefault();const m=a.getAttribute('href').match(/^#dl-([^-]+)-(\d+)$/);if(!m)return;const id=m[1],i=+m[2];const msg=state.messages.find(x=>x.id===id),meta=msg?.attachmentsMeta?.[i];if(!meta)return;let blob;if(meta.mode==='dataURL'){blob=await (await fetch(meta.data)).blob()}else{const bin=Uint8Array.from(atob(meta.data),c=>c.charCodeAt(0));blob=new Blob([bin],{type:meta.mime||'application/octet-stream'})}const url=URL.createObjectURL(blob),dl=document.createElement('a');dl.href=url;dl.download=meta.name||'download';document.body.appendChild(dl);dl.click();dl.remove();URL.revokeObjectURL(url)})
 el.composer.addEventListener('submit',async e=>{e.preventDefault();if(state.busy)return;const text=el.input.value.trim();if(!text&&!state.attachments.length)return;if(state.messages.length===0)state.currentThreadId=null;await ensureThreadOnFirstUser(text||'(attachments)');el.input.value='';const parts=[];if(text)parts.push({type:'text',text});state.attachments.forEach(a=>parts.push(a.part));addMessage({role:'user',content:text||'(sent attachments)',contentParts:parts});if(state.attachments.length)addAttachmentTree('user',state.attachments);state.busy=true;setBtnStop();const a=getActiveSune();const suneMeta={sune_name:a.name,model:store.model,avatar:a.avatar||''};const suneBubble=addSuneBubbleStreaming(suneMeta);let buf='',completed=false;await askOpenRouterStreaming((delta,done)=>{buf+=delta;renderMarkdown(suneBubble,buf,{enhance:false});if(done&&!completed){completed=true;setBtnSend();state.busy=false;enhanceCodeBlocks(suneBubble,true);state.messages.push({role:'assistant',content:buf,...suneMeta});persistThread();queueMicrotask(()=>el.chat.scrollTo({top:el.chat.scrollHeight,behavior:'smooth'}))}});state.attachments=[];updateAttachBadge()})
-let jar=null;const ensureJar=async()=>{if(jar)return jar;const mod=await import('https://medv.io/codejar/codejar.js');const CodeJar=mod.CodeJar||mod.default;const hl=ed=>{ed.innerHTML=hljs.highlight(ed.textContent,{language:'javascript'}).value};jar=CodeJar(el.scriptEditor,hl,{tab:'  '});return jar}
+let jars={js:null,html:null};const ensureJars=async()=>{if(jars.js&&jars.html)return jars;const mod=await import('https://medv.io/codejar/codejar.js');const CodeJar=mod.CodeJar||mod.default;const mk=(elx,lang)=>CodeJar(elx,ed=>{ed.innerHTML=hljs.highlight(ed.textContent,{language:lang}).value},{tab:'  '});if(!jars.js)jars.js=mk(el.scriptEditor,'javascript');if(!jars.html)jars.html=mk(el.htmlEditor,'xml');return jars}
 function openSettings(){const a=getActiveSune(),s=a.settings;el.set_model.value=s.model;el.set_temperature.value=s.temperature;el.set_top_p.value=s.top_p;el.set_top_k.value=s.top_k;el.set_frequency_penalty.value=s.frequency_penalty;el.set_presence_penalty.value=s.presence_penalty;el.set_repetition_penalty.value=s.repetition_penalty;el.set_min_p.value=s.min_p;el.set_top_a.value=s.top_a;el.set_reasoning_effort.value=s.reasoning_effort||'default';el.set_system_prompt.value=s.system_prompt;showTab('Model');el.settingsModal.classList.remove('hidden')}
 const closeSettings=()=>{el.settingsModal.classList.add('hidden')}
 const tabs={Model:['tabModel','panelModel'],Prompt:['tabPrompt','panelPrompt'],Script:['tabScript','panelScript']}
-function showTab(key){Object.entries(tabs).forEach(([k,[tb,pn]])=>{el[tb].classList.toggle('border-black',k===key);el[pn].classList.toggle('hidden',k!==key)});if(key==='Script')ensureJar().then(j=>j.updateCode(getActiveSune().settings.script||''))}
+function showScriptSubTab(key){['HTML','JS'].forEach(k=>{const on=k===key;el['subTab'+k].classList.toggle('bg-black',on);el['subTab'+k].classList.toggle('text-white',on);el['subTab'+k].classList.toggle('bg-gray-100',!on);el['panel'+(k==='HTML'?'HTML':'JS')].classList.toggle('hidden',!on)})}
+function showTab(key){Object.entries(tabs).forEach(([k,[tb,pn]])=>{el[tb].classList.toggle('border-black',k===key);el[pn].classList.toggle('hidden',k!==key)});if(key==='Script'){ensureJars().then(({js,html})=>{const s=getActiveSune().settings;js.updateCode(s.script||'');html.updateCode(s.html||'')});showScriptSubTab('JS')}}
 el.settingsBtnTop.addEventListener('click',openSettings)
 el.closeSettings.addEventListener('click',closeSettings)
 el.cancelSettings.addEventListener('click',closeSettings)
@@ -190,7 +200,9 @@ el.settingsModal.addEventListener('click',e=>{if(e.target===el.settingsModal||e.
 el.tabModel.addEventListener('click',()=>showTab('Model'))
 el.tabPrompt.addEventListener('click',()=>showTab('Prompt'))
 el.tabScript.addEventListener('click',()=>showTab('Script'))
-el.settingsForm.addEventListener('submit',e=>{e.preventDefault();const a=getActiveSune(),s=a.settings;s.model=(el.set_model.value||DEFAULT_MODEL).trim();s.temperature=clamp(num(el.set_temperature.value,1.0),0,2);s.top_p=clamp(num(el.set_top_p.value,1.0),0,1);s.top_k=Math.max(0,int(el.set_top_k.value,0));s.frequency_penalty=clamp(num(el.set_frequency_penalty.value,0.0),-2,2);s.presence_penalty=clamp(num(el.set_presence_penalty.value,0.0),-2,2);s.repetition_penalty=clamp(num(el.set_repetition_penalty.value,1.0),0,2);s.min_p=clamp(num(el.set_min_p.value,0.0),0,1);s.top_a=clamp(num(el.set_top_a.value,0.0),0,1);s.reasoning_effort=(el.set_reasoning_effort.value||'default');s.system_prompt=el.set_system_prompt.value.trim();s.script=el.scriptEditor?.textContent||'';a.updatedAt=Date.now();su.save(sunes);closeSettings();reflectActiveSune()})
+el.subTabHTML.addEventListener('click',()=>showScriptSubTab('HTML'))
+el.subTabJS.addEventListener('click',()=>showScriptSubTab('JS'))
+el.settingsForm.addEventListener('submit',e=>{e.preventDefault();const a=getActiveSune(),s=a.settings;s.model=(el.set_model.value||DEFAULT_MODEL).trim();s.temperature=clamp(num(el.set_temperature.value,1.0),0,2);s.top_p=clamp(num(el.set_top_p.value,1.0),0,1);s.top_k=Math.max(0,int(el.set_top_k.value,0));s.frequency_penalty=clamp(num(el.set_frequency_penalty.value,0.0),-2,2);s.presence_penalty=clamp(num(el.set_presence_penalty.value,0.0),-2,2);s.repetition_penalty=clamp(num(el.set_repetition_penalty.value,1.0),0,2);s.min_p=clamp(num(el.set_min_p.value,0.0),0,1);s.top_a=clamp(num(el.set_top_a.value,0.0),0,1);s.reasoning_effort=(el.set_reasoning_effort.value||'default');s.system_prompt=el.set_system_prompt.value.trim();s.script=el.scriptEditor?.textContent||'';s.html=el.htmlEditor?.textContent||'';a.updatedAt=Date.now();su.save(sunes);closeSettings();reflectActiveSune()})
 el.deleteSuneBtn.addEventListener('click',()=>{const activeId=su.getActiveId(),active=getActiveSune(),name=active?.name||'this sune';if(!confirm(`Delete "${name}"?`))return;sunes=sunes.filter(a=>a.id!==activeId);su.save(sunes);if(sunes.length===0){const def=createDefaultSune();sunes=[def];su.save(sunes);su.setActiveId(def.id)}else{su.setActiveId(sunes[0].id)}renderSidebar();reflectActiveSune();state.currentThreadId=null;clearChat();closeSettings()})
 el.newSuneBtn.addEventListener('click',()=>{const name=prompt('Name your sune:');if(!name)return;const id=gid();sunes.unshift({id,name:name.trim(),pinned:false,avatar:'',updatedAt:Date.now(),settings:Object.assign({},defaultSettings)});su.save(sunes);su.setActiveId(id);renderSidebar();reflectActiveSune();state.currentThreadId=null;clearChat();document.getElementById('sidebar').classList.add('-translate-x-full');document.getElementById('sidebarOverlay').classList.add('hidden')})
 el.apiKeyOption.addEventListener('click',()=>{el.userMenu.classList.add('hidden');const cur=store.apiKey?'********':'';const input=prompt('Enter OpenRouter API key (stored locally):',cur);if(input!==null){store.apiKey=input==='********'?store.apiKey:input.trim();alert(store.apiKey?'API key saved locally.':'API key cleared.')}})
