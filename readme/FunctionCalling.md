@@ -2,7 +2,7 @@ Sune function call (have Sunes attach files to their latest bubble)
 
 In your Sune script, call:
 ```js
-await window.suneAttach(files, { toAPI: true, tree: true })
+await window.suneAttach(files, { toAPI: false, tree: true })
 ```
 files can be File objects or simple objects like:
 ```js
