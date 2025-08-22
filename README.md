@@ -28,6 +28,7 @@ v0.23: attachment badge bugs
 v0.24: sune scripting tab 🕯️
 v0.25: script tab tip
 v0.26: indexeddb replaced w localforage
+v0.27: removed ios styling
 ```
 
 
