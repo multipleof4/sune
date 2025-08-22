@@ -29,7 +29,5 @@ v0.24: sune scripting tab 🕯️
 v0.25: script tab tip
 v0.26: indexeddb replaced w localforage
 v0.27: removed ios styling
+v0.28: downloadable attachments & file sizes
 ```
-
-
-The issues tab in this repo isn't only for issues. You can open an issue to just say Hi.
