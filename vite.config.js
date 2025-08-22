@@ -14,8 +14,8 @@ export default defineConfig({
         start_url: 'https://sune.planetrenox.com/',
         display: 'standalone',
         orientation: 'portrait',
-        theme_color: 'white',
-        background_color: 'black',
+        theme_color: '#FFFFFF',
+        background_color: '#000000',
         categories: ['productivity', 'utilities'],
         icons: [
           { src: 'https://sune.planetrenox.com/appstore_content/✺.png', sizes: '1024x1024', type: 'image/png' }
