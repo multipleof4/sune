@@ -24,8 +24,10 @@ const pwa = VitePWA({
 })
 
 const html = createHtmlPlugin({
+  minify: false,
   inject: {
     tags: [
+      { tag: 'meta', attrs: { charset: 'utf-8' }, injectTo: 'head' },
       { tag: 'title', children: 'Sune', injectTo: 'head' },
       { tag: 'link', attrs: { rel: 'icon', type: 'image/avif', href: 'https://sune.planetrenox.com/✺.avif' }, injectTo: 'head' },
       { tag: 'script', attrs: { src: 'https://cdn.jsdelivr.net/npm/tiny-ripple@0.2.0' }, injectTo: 'head' },
@@ -34,4 +36,4 @@ const html = createHtmlPlugin({
   }
 })
 
-export default defineConfig({ build: { outDir: 'docs' }, plugins: [pwa, html] })
+export default defineConfig({ build: { outDir: 'docs', minify: false }, plugins: [pwa, html] })
