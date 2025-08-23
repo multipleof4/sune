@@ -1,6 +1,6 @@
 ![Main](./docs/appstore_content/screenshot1.jpg)
 
-![Sunes](./docs/appstore_content/screenshot2.jpg)
+![Sunes](./docs/appstore_content/screenshot6.jpg)
 
 ![Setting](./docs/appstore_content/screenshot3.jpg)
 
