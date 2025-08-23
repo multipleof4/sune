@@ -3,6 +3,13 @@
 ![Sunes](./docs/appstore_content/screenshot2.jpg)
 
 ![Setting](./docs/appstore_content/screenshot3.jpg)
+
+You can script inside the app either to function call or extend functionality of the app almost like modding.
+![Scripting](./docs/appstore_content/screenshot4.jpg)
+Here is an example of some HTML/JS artwork.
+![Art](./docs/appstore_content/screenshot5.jpg)
+
+
 ```
 v0.3: added dedup threads functionality
 v0.4: mobile keyboard bug fixes
