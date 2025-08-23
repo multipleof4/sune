@@ -1,68 +1,227 @@
-const DB_NAME = "sune-sw-db";
-const STORE = "kv";
-const KEY = "lastSession";
-function idbOpen() {
-  return new Promise((resolve, reject) => {
-    const r = indexedDB.open(DB_NAME, 1);
-    r.onupgradeneeded = () => {
-      r.result.createObjectStore(STORE);
+importScripts("https://cdn.jsdelivr.net/npm/localforage@1.10.0/dist/localforage.min.js");
+const TARGET_SUBSTRING = "openrouter.ai/api/v1/chat/completions";
+const THREADS_KEY = "threads_v1";
+const BUFFER_SAVE_BYTES = 32 * 1024;
+const SAVE_INTERVAL_MS = 2e3;
+const gid = () => Math.random().toString(36).slice(2, 9) + "-" + Date.now().toString(36);
+function now() {
+  return Date.now();
+}
+async function readThreads() {
+  try {
+    const v = await localforage.getItem(THREADS_KEY);
+    return Array.isArray(v) ? v : [];
+  } catch (e) {
+    console.error("sw: idb read error", e);
+    return [];
+  }
+}
+async function writeThreads(arr) {
+  try {
+    await localforage.setItem(THREADS_KEY, arr);
+  } catch (e) {
+    console.error("sw: idb write error", e);
+    throw e;
+  }
+}
+function pickThread(threads) {
+  if (!threads || threads.length === 0) return null;
+  threads.sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0));
+  return threads[0];
+}
+async function upsertStreamMessage(streamId, text, meta = {}) {
+  const threads = await readThreads();
+  let th = pickThread(threads);
+  const createdNow = now();
+  if (!th) {
+    th = {
+      id: "sw-" + gid(),
+      title: "Missed while backgrounded",
+      pinned: false,
+      updatedAt: createdNow,
+      messages: []
     };
-    r.onsuccess = () => resolve(r.result);
-    r.onerror = () => reject(r.error || new Error("idb open error"));
+    threads.unshift(th);
+  }
+  let msgIndex = -1;
+  for (let i = th.messages.length - 1; i >= 0; i--) {
+    const m = th.messages[i];
+    if (m && m.sw_streamId === streamId) {
+      msgIndex = i;
+      break;
+    }
+  }
+  const contentParts = [{ type: "text", text }];
+  if (msgIndex >= 0) {
+    const existing = th.messages[msgIndex];
+    existing.content = text;
+    existing.contentParts = contentParts;
+    existing.updatedAt = createdNow;
+    existing._sw_lastSave = createdNow;
+    existing._sw_meta = Object.assign({}, existing._sw_meta || {}, meta);
+  } else {
+    const msg = {
+      id: "swmsg-" + gid(),
+      role: "assistant",
+      content: text,
+      contentParts,
+      kind: "assistant",
+      sw_saved: true,
+      sw_streamId: streamId,
+      createdAt: createdNow,
+      updatedAt: createdNow,
+      _sw_meta: Object.assign({}, meta)
+    };
+    th.messages.push(msg);
+  }
+  th.updatedAt = createdNow;
+  await writeThreads(threads);
+  return { threadId: th.id };
+}
+async function finalizeStream(streamId, meta = {}) {
+  const threads = await readThreads();
+  const th = pickThread(threads);
+  if (!th) return;
+  for (let i = th.messages.length - 1; i >= 0; i--) {
+    const m = th.messages[i];
+    if (m && m.sw_streamId === streamId) {
+      m._sw_meta = Object.assign({}, m._sw_meta || {}, meta, { completeAt: now() });
+      m.updatedAt = now();
+      th.updatedAt = now();
+      break;
+    }
+  }
+  await writeThreads(threads);
+  const clientsList = await self.clients.matchAll({ includeUncontrolled: true, type: "window" });
+  clientsList.forEach((c) => {
+    try {
+      c.postMessage({ type: "stream-saved", streamId, meta });
+    } catch (e) {
+    }
   });
 }
-function idbGet(key) {
-  return idbOpen().then((db) => new Promise((res, rej) => {
-    const tx = db.transaction(STORE, "readonly");
-    const req = tx.objectStore(STORE).get(key);
-    req.onsuccess = () => res(req.result);
-    req.onerror = () => rej(req.error);
-  }));
+async function notifyClients(msg) {
+  try {
+    const list = await self.clients.matchAll({ includeUncontrolled: true, type: "window" });
+    for (const c of list) {
+      try {
+        c.postMessage(msg);
+      } catch (e) {
+      }
+    }
+  } catch (e) {
+  }
 }
-function idbSet(key, val) {
-  return idbOpen().then((db) => new Promise((res, rej) => {
-    const tx = db.transaction(STORE, "readwrite");
-    const req = tx.objectStore(STORE).put(val, key);
-    req.onsuccess = () => res(true);
-    req.onerror = () => rej(req.error);
-  }));
-}
-const SESSION_ID = Date.now().toString(36) + "-" + Math.floor(Math.random() * 1e9).toString(36);
-const STARTED_AT = Date.now();
-self.addEventListener("install", (ev) => {
+self.addEventListener("fetch", (event) => {
+  try {
+    const url = event.request.url || "";
+    if (!url.includes(TARGET_SUBSTRING)) {
+      return;
+    }
+    event.respondWith((async () => {
+      const upstream = await fetch(event.request);
+      if (!upstream || !upstream.body) return upstream;
+      const streamId = "swstream-" + gid();
+      const headers = new Headers(upstream.headers);
+      const [clientStream, swStream] = upstream.body.tee();
+      const savePromise = (async () => {
+        try {
+          const reader = swStream.getReader();
+          const dec = new TextDecoder("utf-8");
+          let bufferText = "";
+          let bufferedBytes = 0;
+          let lastSaveAt = 0;
+          const saveIfNeeded = async (force = false) => {
+            const nowMs = Date.now();
+            if (!force && bufferedBytes < BUFFER_SAVE_BYTES && nowMs - lastSaveAt < SAVE_INTERVAL_MS) return;
+            try {
+              await upsertStreamMessage(streamId, bufferText, { partialBytes: bufferedBytes, savedAt: Date.now() });
+              lastSaveAt = nowMs;
+            } catch (e) {
+              console.error("sw: upsert save error", e);
+            }
+          };
+          while (true) {
+            const { value, done } = await reader.read();
+            if (done) break;
+            const chunkText = dec.decode(value, { stream: true });
+            bufferText += chunkText;
+            bufferedBytes += value && value.byteLength ? value.byteLength : chunkText.length;
+            await saveIfNeeded(false);
+          }
+          await saveIfNeeded(true);
+          await finalizeStream(streamId, { totalBytes: bufferedBytes });
+        } catch (err) {
+          console.error("sw: error saving stream", err);
+          try {
+            await finalizeStream(streamId, { error: String(err) });
+          } catch (e) {
+          }
+        }
+      })();
+      event.waitUntil(savePromise);
+      return new Response(clientStream, {
+        status: upstream.status,
+        statusText: upstream.statusText,
+        headers
+      });
+    })());
+  } catch (err) {
+    console.error("sw: fetch handler error", err);
+  }
+});
+self.addEventListener("message", (event) => {
+  const data = event.data || {};
+  try {
+    if (data && data.type === "PING") {
+      if (event.ports && event.ports[0]) {
+        try {
+          event.ports[0].postMessage({ type: "PONG", ts: Date.now(), ok: true });
+        } catch (e) {
+        }
+      } else {
+        if (event.source && typeof event.source.postMessage === "function") {
+          try {
+            event.source.postMessage({ type: "PONG", ts: Date.now(), ok: true });
+          } catch (e) {
+          }
+        } else {
+          notifyClients({ type: "PONG", ts: Date.now(), ok: true });
+        }
+      }
+      return;
+    }
+    if (data && data.type === "list-sw-streams") {
+      (async () => {
+        const threads = await readThreads();
+        const found = [];
+        for (const t of threads || []) {
+          for (const m of t.messages || []) {
+            if (m && m.sw_streamId) found.push({ threadId: t.id, threadTitle: t.title, messageId: m.id, sw_streamId: m.sw_streamId, summary: (m.content || "").slice(0, 200), updatedAt: m.updatedAt });
+          }
+        }
+        if (event.ports && event.ports[0]) {
+          event.ports[0].postMessage({ type: "sw-streams-list", streams: found });
+        } else if (event.source && typeof event.source.postMessage === "function") {
+          event.source.postMessage({ type: "sw-streams-list", streams: found });
+        } else {
+          notifyClients({ type: "sw-streams-list", streams: found });
+        }
+      })();
+      return;
+    }
+  } catch (e) {
+    console.error("sw: message handler error", e);
+  }
+});
+self.addEventListener("install", (event) => {
   self.skipWaiting();
 });
-self.addEventListener("activate", (ev) => {
-  ev.waitUntil(self.clients.claim());
-});
-self.addEventListener("message", (ev) => {
-  const data = ev.data || {};
-  if (data.type !== "PING") return;
-  const respond = async () => {
+self.addEventListener("activate", (event) => {
+  event.waitUntil((async () => {
     try {
-      const last = await idbGet(KEY);
-      const restarted = !!last && last !== SESSION_ID;
-      await idbSet(KEY, SESSION_ID);
-      const payload = {
-        type: "PONG",
-        ts: Date.now(),
-        sessionId: SESSION_ID,
-        lastSessionId: last || null,
-        restarted,
-        uptimeMs: Date.now() - STARTED_AT,
-        ok: true
-      };
-      if (ev.ports && ev.ports[0]) {
-        ev.ports[0].postMessage(payload);
-      } else {
-        const clients = await self.clients.matchAll({ includeUncontrolled: true });
-        clients.forEach((c) => c.postMessage(payload));
-      }
-    } catch (err) {
-      const errPayload = { type: "PONG", ok: false, error: String(err), ts: Date.now() };
-      if (ev.ports && ev.ports[0]) ev.ports[0].postMessage(errPayload);
+      await self.clients.claim();
+    } catch (e) {
     }
-  };
-  if (ev.waitUntil) ev.waitUntil(Promise.resolve(respond()));
-  else respond();
+  })());
 });
