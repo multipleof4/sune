@@ -46,4 +46,5 @@ v0.32: custom sw.js
 v0.33: sw wip
 v0.34: sune editor bug fix
 v0.35: sw are useless
+v0.36: API msg format update
 ```
