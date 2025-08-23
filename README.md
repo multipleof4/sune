@@ -44,4 +44,5 @@ v0.30: sune html tab
 v0.31: html is functional 🌐
 v0.32: custom sw.js
 v0.33: sw wip
+v0.34: sune editor bug fix
 ```
