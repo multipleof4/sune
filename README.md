@@ -45,4 +45,5 @@ v0.31: html is functional 🌐
 v0.32: custom sw.js
 v0.33: sw wip
 v0.34: sune editor bug fix
+v0.35: sw are useless
 ```
