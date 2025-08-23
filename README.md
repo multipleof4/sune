@@ -4,7 +4,9 @@
 
 ![Setting](./docs/appstore_content/screenshot3.jpg)
 
-You can script inside the app either to function call or extend functionality of the app almost like modding.
+💠 New! 
+
+You can script inside the app either to function call or extend functionality of the app almost like modding. Each sune is like a module. You can have many. And share them.
 ![Scripting](./docs/appstore_content/screenshot4.jpg)
 Here is an example of some HTML/JS artwork.
 ![Art](./docs/appstore_content/screenshot5.jpg)
