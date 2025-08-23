@@ -1,139 +1,90 @@
-// /sw.js
-// Service worker that detects if it was restarted (killed) between pings.
-// - Uses IndexedDB to persist restartCount and lastPingRestartCount
-// - Replies to message {type: 'PING'} by responding on the provided MessagePort
-//   with a {type:'PONG', ...} payload the sune logs already.
+// /sw.js - minimal worker that reports if it was restarted (killed)
+'use strict';
 
-// Basic small IDB helper (promisified key-value store)
-const DB_NAME = 'sune-sw-test-db';
+const DB_NAME = 'sune-sw-db';
 const STORE = 'kv';
+const KEY = 'lastSession';
 
-function openDb() {
+// tiny IndexedDB helpers
+function idbOpen() {
   return new Promise((resolve, reject) => {
-    const req = indexedDB.open(DB_NAME, 1);
-    req.onupgradeneeded = () => {
-      const db = req.result;
-      if (!db.objectStoreNames.contains(STORE)) {
-        db.createObjectStore(STORE, { keyPath: 'k' });
-      }
+    const r = indexedDB.open(DB_NAME, 1);
+    r.onupgradeneeded = () => {
+      r.result.createObjectStore(STORE);
     };
-    req.onsuccess = () => resolve(req.result);
-    req.onerror = () => reject(req.error);
+    r.onsuccess = () => resolve(r.result);
+    r.onerror = () => reject(r.error || new Error('idb open error'));
   });
 }
-
-async function idbGet(key) {
-  const db = await openDb();
-  return new Promise((resolve, reject) => {
+function idbGet(key) {
+  return idbOpen().then(db => new Promise((res, rej) => {
     const tx = db.transaction(STORE, 'readonly');
-    const s = tx.objectStore(STORE);
-    const r = s.get(key);
-    r.onsuccess = () => resolve(r.result ? r.result.v : undefined);
-    r.onerror = () => reject(r.error);
-  });
+    const req = tx.objectStore(STORE).get(key);
+    req.onsuccess = () => res(req.result);
+    req.onerror = () => rej(req.error);
+  }));
 }
-
-async function idbPut(key, value) {
-  const db = await openDb();
-  return new Promise((resolve, reject) => {
+function idbSet(key, val) {
+  return idbOpen().then(db => new Promise((res, rej) => {
     const tx = db.transaction(STORE, 'readwrite');
-    const s = tx.objectStore(STORE);
-    const r = s.put({ k: key, v: value });
-    r.onsuccess = () => resolve();
-    r.onerror = () => reject(r.error);
-  });
+    const req = tx.objectStore(STORE).put(val, key);
+    req.onsuccess = () => res(true);
+    req.onerror = () => rej(req.error);
+  }));
 }
 
-// Instance info set at startup
-const INSTANCE_ID = (self.crypto && self.crypto.randomUUID) ? crypto.randomUUID() : String(Math.random()).slice(2);
+// lightweight session identity
+const SESSION_ID = Date.now().toString(36) + '-' + Math.floor(Math.random() * 1e9).toString(36);
 const STARTED_AT = Date.now();
-const VERSION = '1.0.0'; // bump if you change behavior
 
-// Keys used in IDB
-const KEY_RESTART_COUNT = 'restartCount';
-const KEY_LAST_PING_RESTART_COUNT = 'lastPingRestartCount';
-const KEY_LAST_PING_TIME = 'lastPingTime';
-
-// On install/activate: increment persistent restart counter so we can detect restarts.
-self.addEventListener('install', (ev) => {
-  // activate immediately so testing is easier
+self.addEventListener('install', ev => {
+  // activate immediately so the page can become controlled quickly
   self.skipWaiting();
 });
 
-self.addEventListener('activate', (ev) => {
-  ev.waitUntil((async () => {
-    // claim clients quickly
-    await self.clients.claim();
-
-    try {
-      const current = (await idbGet(KEY_RESTART_COUNT)) || 0;
-      const next = current + 1;
-      await idbPut(KEY_RESTART_COUNT, next);
-      console.log(`[sw] activated — instance=${INSTANCE_ID} start=${new Date(STARTED_AT).toISOString()} restartCount=${next}`);
-    } catch (err) {
-      console.error('[sw] activate idb error', err);
-    }
-  })());
+self.addEventListener('activate', ev => {
+  // claim clients so the page becomes controlled without reload where possible
+  ev.waitUntil(self.clients.claim());
 });
 
-// Helper to reply on message port or broadcast fallback
-async function replyToMessage(event, payload) {
-  // Prefer using provided MessagePort (sune sends one)
-  if (event.ports && event.ports[0]) {
+// respond to messages (works with MessageChannel from the sune)
+self.addEventListener('message', ev => {
+  const data = ev.data || {};
+  // only handle PING to keep this tiny
+  if (data.type !== 'PING') return;
+
+  const respond = async () => {
     try {
-      event.ports[0].postMessage(payload);
-      return;
+      const last = await idbGet(KEY); // may be undefined on first run
+      const restarted = !!last && last !== SESSION_ID; // true if there was a previous session different than this one
+      // store current session id for subsequent comparisons
+      await idbSet(KEY, SESSION_ID);
+
+      const payload = {
+        type: 'PONG',
+        ts: Date.now(),
+        sessionId: SESSION_ID,
+        lastSessionId: last || null,
+        restarted: restarted,
+        uptimeMs: Date.now() - STARTED_AT,
+        ok: true
+      };
+
+      // prefer replying on the provided port
+      if (ev.ports && ev.ports[0]) {
+        ev.ports[0].postMessage(payload);
+      } else {
+        // fallback: postMessage to all clients
+        const clients = await self.clients.matchAll({includeUncontrolled: true});
+        clients.forEach(c => c.postMessage(payload));
+      }
     } catch (err) {
-      console.warn('[sw] reply via port failed', err);
+      const errPayload = {type:'PONG', ok:false, error: String(err), ts: Date.now()};
+      if (ev.ports && ev.ports[0]) ev.ports[0].postMessage(errPayload);
     }
-  }
+  };
 
-  // Fallback: send to the client who sent the message (if event.source) or broadcast
-  try {
-    if (event.source && typeof event.source.postMessage === 'function') {
-      event.source.postMessage(payload);
-      return;
-    }
-  } catch (err) {
-    // ignore
-  }
-
-  // Last resort: broadcast to all clients
-  const clients = await self.clients.matchAll({ includeUncontrolled: true });
-  for (const c of clients) {
-    try { c.postMessage(payload); } catch (e) { /* ignore per-client errors */ }
-  }
-}
-
-// Message handler
-self.addEventListener('message', (event) => {
-  const data = event.data || {};
-  if (data && data.type === 'PING') {
-    (async () => {
-      try {
-        const now = Date.now();
-        const restartCount = (await idbGet(KEY_RESTART_COUNT)) || 0;
-        const lastPingRestartCount = (await idbGet(KEY_LAST_PING_RESTART_COUNT));
-        const lastPingTime = (await idbGet(KEY_LAST_PING_TIME)) || null;
-
-        // If there was a previously-recorded lastPingRestartCount and current restartCount
-        // is greater, that means the worker was restarted since the last ping.
-        const lostConnection = (typeof lastPingRestartCount !== 'undefined') && (restartCount > lastPingRestartCount);
-
-        // Build response payload
-        const payload = {
-          type: 'PONG',
-          ts: data.ts || null,
-          now,
-          sw: {
-            version: VERSION,
-            instanceId: INSTANCE_ID,
-            startedAt: STARTED_AT,
-            restartCount,
-          },
-          lastPing: {
-            time: lastPingTime,
-            lastPingRestartCount: lastPingRestartCount
-          },
-          lostConnectionSinceLastPing: !!lostConnection,
-          note: lostConnection ? '
+  // ensure the work completes even if the worker might otherwise be stopped
+  if (ev.waitUntil) ev.waitUntil(Promise.resolve(respond()));
+  else respond();
+});
