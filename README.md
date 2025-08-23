@@ -32,4 +32,5 @@ v0.27: removed ios styling
 v0.28: downloadable attachments & file sizes
 v0.29: update v0.27 was a mistake
 v0.30: sune html tab
+v0.31: html is functional 🌐
 ```
