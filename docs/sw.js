@@ -1,32 +1,56 @@
-importScripts("https://cdn.jsdelivr.net/npm/localforage@1.10.0/dist/localforage.min.js");
-const TARGET_SUBSTRING = "openrouter.ai/api/v1/chat/completions";
+const LF_CDN = "https://cdn.jsdelivr.net/npm/localforage@1.10.0/dist/localforage.min.js";
 const THREADS_KEY = "threads_v1";
-const SAVE_BYTES_THRESHOLD = 8 * 1024;
-const SAVE_TIME_THRESHOLD = 1e3;
-const BROADCAST_THROTTLE_MS = 700;
+const TARGET_SUBSTRING = "openrouter.ai/api/v1/chat/completions";
+const SAVE_BYTES_THRESHOLD = 6 * 1024;
+const SAVE_TIME_THRESHOLD = 800;
+const BROADCAST_THROTTLE_MS = 600;
 const gid = () => Math.random().toString(36).slice(2, 9) + "-" + Date.now().toString(36);
 const now = () => Date.now();
-async function readThreads() {
+let localforageAvailable = false;
+let lfLoadError = null;
+try {
+  importScripts(LF_CDN);
+  if (self.localforage) {
+    localforageAvailable = true;
+    try {
+      localforage.config({ name: "sw-localforage" });
+    } catch (e) {
+    }
+  } else {
+    lfLoadError = "localforage not present after importScripts";
+  }
+} catch (e) {
+  lfLoadError = String(e && e.message ? e.message : e);
+}
+const state = {
+  totalIntercepted: 0,
+  activeStreams: {},
+  // streamId -> meta
+  lastStreamSummary: null,
+  debugWrites: []
+  // ids of test threads written by SW
+};
+async function safeReadThreads() {
+  if (!localforageAvailable) throw new Error("localforage not available: " + lfLoadError);
   try {
     const v = await localforage.getItem(THREADS_KEY);
     return Array.isArray(v) ? v : [];
-  } catch (e) {
-    console.error("sw: readThreads error", e);
-    return [];
+  } catch (err) {
+    throw err;
   }
 }
-async function writeThreads(arr) {
+async function safeWriteThreads(arr) {
+  if (!localforageAvailable) throw new Error("localforage not available: " + lfLoadError);
   try {
     await localforage.setItem(THREADS_KEY, arr);
-  } catch (e) {
-    console.error("sw: writeThreads error", e);
-    throw e;
+  } catch (err) {
+    throw err;
   }
 }
 function pickLastThread(threads) {
   if (!threads || threads.length === 0) return null;
-  let sorted = [...threads].sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0));
-  return sorted[0];
+  const copy = [...threads].sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0));
+  return copy[0] || null;
 }
 function upsertAssistantInThreadObj(threadObj, streamId, text) {
   threadObj.updatedAt = now();
@@ -67,14 +91,16 @@ async function broadcast(msg) {
   } catch (e) {
   }
 }
-self.addEventListener("install", (e) => self.skipWaiting());
-self.addEventListener("activate", (e) => e.waitUntil(self.clients.claim()));
-const state = {
-  totalIntercepted: 0,
-  activeStreams: {},
-  // streamId => meta
-  lastStream: null
-};
+function logDebug(text) {
+  console.log("[sw-debug]", text);
+  broadcast({ type: "sw-debug-log", ts: now(), text: String(text) });
+}
+self.addEventListener("install", (ev) => {
+  self.skipWaiting();
+});
+self.addEventListener("activate", (ev) => {
+  ev.waitUntil(self.clients.claim());
+});
 self.addEventListener("fetch", (event) => {
   try {
     const url = String(event.request.url || "");
@@ -99,34 +125,28 @@ self.addEventListener("fetch", (event) => {
           try {
             const nowMs = now();
             if (!force && sinceLastSaveBytes < SAVE_BYTES_THRESHOLD && nowMs - lastSaveAt < SAVE_TIME_THRESHOLD) return;
-            const threads = await readThreads();
+            if (!localforageAvailable) {
+              logDebug("flushToLastThread: localforage not available: " + lfLoadError);
+              return;
+            }
+            const threads = await safeReadThreads();
             let thread = pickLastThread(threads);
-            const createdAt = nowMs;
             if (!thread) {
-              thread = {
-                id: "sw-thread-" + gid(),
-                title: "Missed while backgrounded",
-                pinned: false,
-                updatedAt: createdAt,
-                messages: []
-              };
+              thread = { id: "sw-thread-" + gid(), title: "Missed while backgrounded", pinned: false, updatedAt: nowMs, messages: [] };
               threads.unshift(thread);
+              logDebug("flush: created fallback thread " + thread.id);
             }
             upsertAssistantInThreadObj(thread, streamId, accumulated);
-            await writeThreads(threads);
+            await safeWriteThreads(threads);
             sinceLastSaveBytes = 0;
             lastSaveAt = nowMs;
             const now2 = Date.now();
             if (now2 - lastBroadcastAt > BROADCAST_THROTTLE_MS) {
               lastBroadcastAt = now2;
-              broadcast({
-                type: "sw-intercept-progress",
-                streamId,
-                meta: { bytes: meta.bytes, savedAt: lastSaveAt, snippet: accumulated.slice(-1024) }
-              });
+              broadcast({ type: "sw-intercept-progress", streamId, meta: { bytes: meta.bytes, savedAt: lastSaveAt, snippet: accumulated.slice(-1024) } });
             }
           } catch (err) {
-            console.error("sw: flushToLastThread error", err);
+            logDebug("flushToLastThread error: " + (err && err.message ? err.message : String(err)));
           }
         }
         try {
@@ -139,7 +159,7 @@ self.addEventListener("fetch", (event) => {
             } catch (e) {
               try {
                 chunkText = String(value);
-              } catch (ee) {
+              } catch (_) {
                 chunkText = "";
               }
             }
@@ -153,7 +173,7 @@ self.addEventListener("fetch", (event) => {
           await flushToLastThread(true);
           meta.status = "finished";
           meta.endedAt = now();
-          state.lastStream = { streamId, url: meta.url, startedAt: meta.startedAt, endedAt: meta.endedAt, totalBytes: meta.bytes };
+          state.lastStreamSummary = { streamId, url: meta.url, startedAt: meta.startedAt, endedAt: meta.endedAt, totalBytes: meta.bytes };
           delete state.activeStreams[streamId];
           broadcast({ type: "sw-intercept-end", streamId, meta: { totalBytes: meta.bytes, endedAt: meta.endedAt } });
         } catch (err) {
@@ -161,7 +181,7 @@ self.addEventListener("fetch", (event) => {
           meta.error = String(err && err.message ? err.message : err);
           delete state.activeStreams[streamId];
           broadcast({ type: "sw-intercept-error", streamId, meta: { error: meta.error } });
-          console.error("sw: savePromise error", err);
+          logDebug("savePromise error: " + meta.error);
         }
       })();
       event.waitUntil(savePromise);
@@ -172,7 +192,7 @@ self.addEventListener("fetch", (event) => {
       });
     })());
   } catch (err) {
-    console.error("sw: fetch handler error", err);
+    logDebug("fetch handler error: " + (err && err.message ? err.message : String(err)));
   }
 });
 self.addEventListener("message", (event) => {
@@ -197,36 +217,132 @@ self.addEventListener("message", (event) => {
         ts: now(),
         totalIntercepted: state.totalIntercepted || 0,
         activeStreams: Object.entries(state.activeStreams).map(([id, m]) => ({ streamId: id, url: m.url, bytes: m.bytes, status: m.status, startedAt: m.startedAt })),
-        lastStream: state.lastStream || null
+        lastStreamSummary: state.lastStreamSummary || null,
+        lfAvailable: localforageAvailable,
+        lfLoadError
       };
-      if (event.ports && event.ports[0]) {
-        event.ports[0].postMessage(reply);
-      } else if (event.source && typeof event.source.postMessage === "function") {
-        try {
-          event.source.postMessage(reply);
-        } catch (e) {
+      if (event.ports && event.ports[0]) event.ports[0].postMessage(reply);
+      else if (event.source && event.source.postMessage) event.source.postMessage(reply);
+      else broadcast(reply);
+      return;
+    }
+    if (data && data.type === "TEST_WRITE") {
+      (async () => {
+        if (!localforageAvailable) {
+          const res = { type: "TEST_WRITE_RESULT", ok: false, error: "localforage not available: " + lfLoadError };
+          if (event.ports && event.ports[0]) event.ports[0].postMessage(res);
+          else event.source && event.source.postMessage ? event.source.postMessage(res) : broadcast(res);
+          return;
         }
-      } else {
-        broadcast(reply);
-      }
+        try {
+          const threads = await safeReadThreads();
+          const tid = "sw-test-" + gid();
+          const nowMs = now();
+          const testThread = {
+            id: tid,
+            title: "SW test thread " + nowMs,
+            pinned: false,
+            updatedAt: nowMs,
+            messages: [
+              { id: "swtestmsg-" + gid(), role: "assistant", content: "sw test write @" + new Date(nowMs).toISOString(), contentParts: [{ type: "text", text: "sw test write @" + new Date(nowMs).toISOString() }], createdAt: nowMs, updatedAt: nowMs }
+            ]
+          };
+          threads.unshift(testThread);
+          await safeWriteThreads(threads);
+          state.debugWrites = (state.debugWrites || []).concat(tid);
+          const res = { type: "TEST_WRITE_RESULT", ok: true, tid, now: nowMs };
+          if (event.ports && event.ports[0]) event.ports[0].postMessage(res);
+          else event.source && event.source.postMessage ? event.source.postMessage(res) : broadcast(res);
+          logDebug("TEST_WRITE created " + tid);
+        } catch (err) {
+          const res = { type: "TEST_WRITE_RESULT", ok: false, error: String(err && err.message ? err.message : err) };
+          if (event.ports && event.ports[0]) event.ports[0].postMessage(res);
+          else event.source && event.source.postMessage ? event.source.postMessage(res) : broadcast(res);
+          logDebug("TEST_WRITE error: " + res.error);
+        }
+      })();
+      return;
+    }
+    if (data && data.type === "CHECK_LF") {
+      (async () => {
+        if (!localforageAvailable) {
+          const res = { type: "CHECK_LF_RESULT", ok: false, error: "localforage not available: " + lfLoadError };
+          if (event.ports && event.ports[0]) event.ports[0].postMessage(res);
+          else event.source && event.source.postMessage ? event.source.postMessage(res) : broadcast(res);
+          return;
+        }
+        try {
+          const threads = await safeReadThreads();
+          const res = { type: "CHECK_LF_RESULT", ok: true, threadsCount: Array.isArray(threads) ? threads.length : 0, sample: threads && threads[0] ? threads[0] : null };
+          if (event.ports && event.ports[0]) event.ports[0].postMessage(res);
+          else event.source && event.source.postMessage ? event.source.postMessage(res) : broadcast(res);
+          logDebug("CHECK_LF returned " + (Array.isArray(threads) ? threads.length : "?") + " threads");
+        } catch (err) {
+          const res = { type: "CHECK_LF_RESULT", ok: false, error: String(err && err.message ? err.message : err) };
+          if (event.ports && event.ports[0]) event.ports[0].postMessage(res);
+          else event.source && event.source.postMessage ? event.source.postMessage(res) : broadcast(res);
+          logDebug("CHECK_LF error: " + res.error);
+        }
+      })();
       return;
     }
     if (data && data.type === "LIST_SW_SAVED") {
       (async () => {
-        const threads = await readThreads();
-        const found = [];
-        for (const t of threads || []) {
-          for (const m of t.messages || []) {
-            if (m && m.sw_streamId) found.push({ threadId: t.id, threadTitle: t.title, messageId: m.id, sw_streamId: m.sw_streamId, snippet: (m.content || "").slice(0, 200), updatedAt: m.updatedAt });
-          }
+        if (!localforageAvailable) {
+          const res = { type: "LIST_SW_SAVED_RESULT", ok: false, error: "localforage not available: " + lfLoadError };
+          if (event.ports && event.ports[0]) event.ports[0].postMessage(res);
+          else event.source && event.source.postMessage ? event.source.postMessage(res) : broadcast(res);
+          return;
         }
-        if (event.ports && event.ports[0]) event.ports[0].postMessage({ type: "LIST_SW_SAVED_RESULT", streams: found });
-        else if (event.source && typeof event.source.postMessage === "function") event.source.postMessage({ type: "LIST_SW_SAVED_RESULT", streams: found });
-        else broadcast({ type: "LIST_SW_SAVED_RESULT", streams: found });
+        try {
+          const threads = await safeReadThreads();
+          const found = [];
+          for (const t of threads || []) {
+            for (const m of t.messages || []) {
+              if (m && m.sw_streamId) found.push({ threadId: t.id, threadTitle: t.title, messageId: m.id, sw_streamId: m.sw_streamId, snippet: (m.content || "").slice(0, 200), updatedAt: m.updatedAt });
+            }
+          }
+          const res = { type: "LIST_SW_SAVED_RESULT", ok: true, found };
+          if (event.ports && event.ports[0]) event.ports[0].postMessage(res);
+          else event.source && event.source.postMessage ? event.source.postMessage(res) : broadcast(res);
+          logDebug("LIST_SW_SAVED returned " + found.length + " messages");
+        } catch (err) {
+          const res = { type: "LIST_SW_SAVED_RESULT", ok: false, error: String(err && err.message ? err.message : err) };
+          if (event.ports && event.ports[0]) event.ports[0].postMessage(res);
+          else event.source && event.source.postMessage ? event.source.postMessage(res) : broadcast(res);
+          logDebug("LIST_SW_SAVED error: " + res.error);
+        }
       })();
       return;
     }
-  } catch (e) {
-    console.error("sw: message handler error", e);
+    if (data && data.type === "CLEAR_TESTS") {
+      (async () => {
+        if (!localforageAvailable) {
+          const res = { type: "CLEAR_TESTS_RESULT", ok: false, error: "localforage not available: " + lfLoadError };
+          if (event.ports && event.ports[0]) event.ports[0].postMessage(res);
+          else broadcast(res);
+          return;
+        }
+        try {
+          const threads = await safeReadThreads();
+          const before = threads.length;
+          const cleaned = threads.filter((t) => !(t.id && (String(t.id).startsWith("sw-test-") || String(t.id).startsWith("sw-thread-") || state.debugWrites.includes(t.id))));
+          await safeWriteThreads(cleaned);
+          const removed = before - cleaned.length;
+          state.debugWrites = [];
+          const res = { type: "CLEAR_TESTS_RESULT", ok: true, removed };
+          if (event.ports && event.ports[0]) event.ports[0].postMessage(res);
+          else broadcast(res);
+          logDebug("CLEAR_TESTS removed " + removed);
+        } catch (err) {
+          const res = { type: "CLEAR_TESTS_RESULT", ok: false, error: String(err && err.message ? err.message : err) };
+          if (event.ports && event.ports[0]) event.ports[0].postMessage(res);
+          else broadcast(res);
+        }
+      })();
+      return;
+    }
+  } catch (err) {
+    logDebug("message handler error: " + (err && err.message ? err.message : String(err)));
   }
 });
