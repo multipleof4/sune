@@ -1,336 +1,257 @@
-// /sw.js
-// Service worker that uses localforage inside the worker to read/write 'threads_v1'.
-// It tees streaming responses and continuously overwrites the last thread with accumulated assistant text.
-
+// /sw.js — tee streaming response and persist to localforage exactly like index (no stream id)
 try {
   importScripts('https://cdn.jsdelivr.net/npm/localforage@1.10.0/dist/localforage.min.js');
 } catch (e) {
-  // importScripts may throw if blocked by CSP — we'll detect later and broadcast error
+  // importScripts may be blocked by CSP; we'll report via PING_STATUS
 }
 
-// Config / constants
 const TARGET_SUBSTRING = 'openrouter.ai/api/v1/chat/completions';
 const THREADS_KEY = 'threads_v1';
-const SAVE_BYTES_THRESHOLD = 6 * 1024;
-const SAVE_TIME_THRESHOLD = 800;
-const BROADCAST_THROTTLE_MS = 600;
-
 const gid = () => Math.random().toString(36).slice(2,9) + '-' + Date.now().toString(36);
 const now = () => Date.now();
 
 let lfAvailable = (typeof localforage !== 'undefined');
-let lfLoadError = lfAvailable ? null : 'localforage not loaded (importScripts failed or blocked)';
+let lfLoadError = lfAvailable ? null : 'localforage not present in SW';
 
 async function broadcast(msg) {
   try {
     const clients = await self.clients.matchAll({ includeUncontrolled: true, type: 'window' });
     for (const c of clients) {
-      try { c.postMessage(msg); } catch (_) {}
+      try { c.postMessage(msg); } catch (e) { /* ignore per-client errors */ }
     }
-  } catch (_) {}
+  } catch (e) { /* ignore */ }
 }
 
-function logDebug(text) {
-  // console and broadcast
-  try { console.log('[sw] ' + text); } catch {}
-  broadcast({ type: 'sw-debug-log', ts: now(), text: String(text) });
-}
-
-/** sanitize to structured-cloneable value */
-function sanitizeForIDB(v) {
-  try {
-    return JSON.parse(JSON.stringify(v));
-  } catch (e) {
-    // shallow fallback - keep minimal properties
-    try {
-      if (!Array.isArray(v)) return [];
-      return v.map(t => ({
-        id: t && t.id,
-        title: t && t.title,
-        updatedAt: t && t.updatedAt,
-        messages: Array.isArray(t && t.messages) ? t.messages.map(m => ({ id: m && m.id, role: m && m.role, content: String((m && m.content) || '') })) : []
-      }));
-    } catch (_) {
-      return [];
-    }
-  }
-}
-
-/** write threads with localforage.setItem and fallback to string if needed */
-async function writeThreadsViaLocalForage(threadsArr) {
+/* read/write exactly like index */
+async function readThreads() {
   if (!lfAvailable) throw new Error('localforage unavailable: ' + lfLoadError);
-  const safeVal = sanitizeForIDB(threadsArr || []);
-  try {
-    await localforage.setItem(THREADS_KEY, safeVal);
-    return { ok: true, method: 'localforage.setItem', storedAs: 'object' };
-  } catch (err1) {
-    // fallback: store as JSON string (always cloneable)
-    try {
-      await localforage.setItem(THREADS_KEY, JSON.stringify(safeVal));
-      return { ok: true, method: 'localforage.setItem(stringified)', storedAs: 'string' };
-    } catch (err2) {
-      // both failed
-      throw new Error('setItem failed: ' + (err2 && err2.message ? err2.message : String(err1)));
-    }
-  }
+  const v = await localforage.getItem(THREADS_KEY);
+  return Array.isArray(v) ? v : (v ? v : []);
 }
-
-async function readThreadsViaLocalForage() {
+async function writeThreads(threads) {
   if (!lfAvailable) throw new Error('localforage unavailable: ' + lfLoadError);
-  try {
-    const v = await localforage.getItem(THREADS_KEY);
-    // if value is a JSON string (fallback), try parse
-    if (typeof v === 'string') {
-      try { const parsed = JSON.parse(v); return Array.isArray(parsed) ? parsed : []; } catch { return []; }
-    }
-    return Array.isArray(v) ? v : [];
-  } catch (err) {
-    throw err;
-  }
+  return localforage.setItem(THREADS_KEY, threads);
 }
 
-/* pick last thread heuristic (newest updatedAt) */
+/* choose last thread by updatedAt, fallback to threads[0] or null */
 function pickLastThread(threads) {
-  if (!threads || threads.length === 0) return null;
-  const sorted = [...threads].sort((a,b) => (b.updatedAt||0) - (a.updatedAt||0));
-  return sorted[0];
+  if (!Array.isArray(threads) || threads.length === 0) return null;
+  return threads.slice().sort((a,b)=> (b.updatedAt||0) - (a.updatedAt||0))[0];
 }
 
-/* upsert assistant message with sw_streamId into thread object */
-function upsertAssistantInThreadObj(threadObj, streamId, text) {
-  threadObj.updatedAt = now();
-  threadObj.messages = threadObj.messages || [];
-  for (let i = threadObj.messages.length - 1; i >= 0; i--) {
-    const m = threadObj.messages[i];
-    if (m && m.sw_streamId === streamId) {
-      m.content = text;
-      m.contentParts = [{ type:'text', text }];
-      m.updatedAt = now();
-      m._sw_savedAt = now();
-      return threadObj;
-    }
-  }
-  // append
-  const msg = {
-    id: 'swmsg-' + gid(),
-    role: 'assistant',
-    content: text,
-    contentParts: [{ type:'text', text }],
-    kind: 'assistant',
-    sw_saved: true,
-    sw_streamId: streamId,
-    createdAt: now(),
-    updatedAt: now(),
-    _sw_savedAt: now()
-  };
-  threadObj.messages.push(msg);
-  return threadObj;
-}
-
-/* write helper used while streaming */
-async function flushToLastThreadUsingLF(streamId, accumulated, meta) {
-  // read threads via localforage, update last thread, write back via localforage
-  try {
-    const threads = await readThreadsViaLocalForage();
-    let thread = pickLastThread(threads);
-    const createdAt = now();
-    if (!thread) {
-      thread = { id: 'sw-thread-' + gid(), title: 'Missed while backgrounded', pinned:false, updatedAt: createdAt, messages: [] };
-      threads.unshift(thread);
-    }
-    upsertAssistantInThreadObj(thread, streamId, accumulated);
-    const writeRes = await writeThreadsViaLocalForage(threads);
-    return { ok: true, threadId: thread.id, writeRes };
-  } catch (err) {
-    // propagate error
-    return { ok: false, error: String(err && err.message ? err.message : err) };
+/* upsert: if last message is assistant -> update it, else append one.
+   message shape matches index: { role:'assistant', content, contentParts:[{type:'text',text}] } */
+function upsertAssistantInThread(thread, text) {
+  thread.updatedAt = now();
+  thread.messages = thread.messages || [];
+  const last = thread.messages.length ? thread.messages[thread.messages.length - 1] : null;
+  if (last && last.role === 'assistant') {
+    last.content = text;
+    last.contentParts = [{ type: 'text', text }];
+    last.updatedAt = now();
+    return { threadId: thread.id, messageId: last.id || null, action: 'updated' };
+  } else {
+    const msg = {
+      // intentionally do not add extra custom ids/flags beyond minimal fields
+      role: 'assistant',
+      content: text,
+      contentParts: [{ type: 'text', text }]
+    };
+    thread.messages.push(msg);
+    return { threadId: thread.id, messageId: msg.id || null, action: 'appended' };
   }
 }
 
 /* lifecycle */
-self.addEventListener('install', ev => { self.skipWaiting(); });
-self.addEventListener('activate', ev => { ev.waitUntil(self.clients.claim()); });
+self.addEventListener('install', ev => self.skipWaiting());
+self.addEventListener('activate', ev => ev.waitUntil(self.clients.claim()));
 
-/* in-memory state */
-const state = { totalIntercepted: 0, activeStreams: {}, lastStream: null };
-
-/* fetch handler */
+/* fetch handler: tee and persist chunks */
 self.addEventListener('fetch', event => {
   try {
     const url = String(event.request.url || '');
-    if (!url.includes(TARGET_SUBSTRING)) return; // not relevant
+    if (!url.includes(TARGET_SUBSTRING)) return; // ignore unrelated fetches
+
     event.respondWith((async () => {
-      const upstream = await fetch(event.request);
-      if (!upstream || !upstream.body) return upstream;
+      const resUp = await fetch(event.request);
+      if (!resUp || !resUp.body) return resUp;
 
-      const streamId = 'sw-' + gid();
-      const meta = { url, startedAt: now(), bytes: 0, status: 'started' };
-      state.totalIntercepted = (state.totalIntercepted || 0) + 1;
-      state.activeStreams[streamId] = meta;
-      broadcast({ type: 'sw-intercept-start', streamId, meta });
+      // minimal meta for broadcasts
+      const meta = { url, startedAt: now(), bytes: 0 };
+      broadcast({ type: 'INTERCEPT_START', meta });
 
-      const [clientStream, swStream] = upstream.body.tee();
-
+      const [clientStream, swStream] = resUp.body.tee();
       const saveTask = (async () => {
         const reader = swStream.getReader();
         const decoder = new TextDecoder('utf-8');
         let acc = '';
-        let sinceBytes = 0;
-        let lastSaveAt = 0;
-        let lastBroadcastAt = 0;
-
-        async function maybeFlush(force = false) {
-          const nowMs = now();
-          if (!force && sinceBytes < SAVE_BYTES_THRESHOLD && (nowMs - lastSaveAt) < SAVE_TIME_THRESHOLD) return;
-          // attempt localforage write
-          const res = await flushToLastThreadUsingLF(streamId, acc, { bytes: meta.bytes });
-          lastSaveAt = nowMs;
-          sinceBytes = 0;
-          if (res.ok) {
-            const now2 = Date.now();
-            if (now2 - lastBroadcastAt > BROADCAST_THROTTLE_MS) {
-              lastBroadcastAt = now2;
-              broadcast({ type:'sw-intercept-progress', streamId, meta: { bytes: meta.bytes, savedAt: lastSaveAt, snippet: acc.slice(-1024), threadId: res.threadId, writeRes: res.writeRes } });
-            }
-          } else {
-            broadcast({ type:'sw-intercept-error', streamId, meta: { error: res.error } });
-          }
-        }
+        let lastSavedText = null;
 
         try {
           while (true) {
             const { value, done } = await reader.read();
             if (done) break;
-            let chunk = '';
-            try { chunk = decoder.decode(value, { stream: true }); } catch (e) { chunk = ''; }
+            const chunk = decoder.decode(value, { stream: true });
             acc += chunk;
-            const bytes = value ? (value.byteLength || 0) : chunk.length;
-            meta.bytes += bytes;
-            sinceBytes += bytes;
-            // flush according to thresholds
-            await maybeFlush(false);
+            meta.bytes += (value ? (value.byteLength || 0) : chunk.length);
+
+            // only attempt save if text actually changed since last save
+            if (lastSavedText !== acc) {
+              const p = (async () => {
+                try {
+                  const threads = await readThreads();
+                  let thread = pickLastThread(threads);
+                  if (!thread) {
+                    // create thread if none — keep shape index uses
+                    thread = { id: 'sw-thread-' + gid(), title: 'Missed while backgrounded', pinned:false, updatedAt: now(), messages: [] };
+                    threads.unshift(thread);
+                  }
+                  const res = upsertAssistantInThread(thread, acc);
+                  await writeThreads(threads); // exact index call
+                  lastSavedText = acc;
+                  broadcast({ type: 'INTERCEPT_SAVE', meta: { threadId: res.threadId, action: res.action, bytes: meta.bytes, textLen: acc.length } });
+                } catch (err) {
+                  broadcast({ type: 'INTERCEPT_ERROR', meta: { error: String(err && err.message ? err.message : err) } });
+                }
+              })();
+
+              // attach save promise to SW lifecycle
+              try { event.waitUntil(p); } catch (e) { /* ignore in some runtimes */ }
+            }
           }
-          // final flush
-          await maybeFlush(true);
-          meta.status = 'finished';
-          meta.endedAt = now();
-          state.lastStream = { streamId, url: meta.url, startedAt: meta.startedAt, endedAt: meta.endedAt, totalBytes: meta.bytes };
-          delete state.activeStreams[streamId];
-          broadcast({ type:'sw-intercept-end', streamId, meta: { totalBytes: meta.bytes, endedAt: meta.endedAt } });
+
+          // final flush if needed (if lastSavedText changed)
+          if (lastSavedText !== acc) {
+            try {
+              const threads = await readThreads();
+              let thread = pickLastThread(threads);
+              if (!thread) {
+                thread = { id: 'sw-thread-' + gid(), title: 'Missed while backgrounded', pinned:false, updatedAt: now(), messages: [] };
+                threads.unshift(thread);
+              }
+              const res = upsertAssistantInThread(thread, acc);
+              await writeThreads(threads);
+              broadcast({ type: 'INTERCEPT_SAVE', meta: { threadId: res.threadId, action: res.action, bytes: meta.bytes, textLen: acc.length } });
+            } catch (err) {
+              broadcast({ type: 'INTERCEPT_ERROR', meta: { error: String(err && err.message ? err.message : err) } });
+            }
+          }
+
+          broadcast({ type: 'INTERCEPT_END', meta: { bytes: meta.bytes, endedAt: now() } });
         } catch (err) {
-          meta.status = 'error';
-          meta.error = String(err && err.message ? err.message : err);
-          delete state.activeStreams[streamId];
-          broadcast({ type:'sw-intercept-error', streamId, meta: { error: meta.error } });
+          broadcast({ type: 'INTERCEPT_ERROR', meta: { error: String(err && err.message ? err.message : err) } });
         }
       })();
 
-      // keep alive while saving
-      event.waitUntil(saveTask);
+      // keep SW alive while saves run
+      try { event.waitUntil(saveTask); } catch (e) { /* ignore */ }
 
       return new Response(clientStream, {
-        status: upstream.status,
-        statusText: upstream.statusText,
-        headers: upstream.headers
+        status: resUp.status,
+        statusText: resUp.statusText,
+        headers: resUp.headers
       });
     })());
   } catch (err) {
-    logDebug('fetch handler top-level error: ' + (err && err.message ? err.message : String(err)));
+    broadcast({ type: 'INTERCEPT_ERROR', meta: { error: String(err && err.message ? err.message : err) } });
   }
 });
 
-/* message handler for debug commands */
+/* message handler: concise debug commands */
 self.addEventListener('message', event => {
   const data = event.data || {};
   (async () => {
     try {
-      if (data && data.type === 'PING') {
-        if (event.ports && event.ports[0]) event.ports[0].postMessage({ type:'PONG', ts: now(), ok:true });
-        else broadcast({ type:'PONG', ts: now(), ok:true });
+      if (data.type === 'PING') {
+        if (event.ports && event.ports[0]) event.ports[0].postMessage({ type: 'PONG', ts: now() });
+        else broadcast({ type: 'PONG', ts: now() });
         return;
       }
-      if (data && data.type === 'PING_STATUS') {
-        const reply = { type:'PONG_STATUS', ts: now(), lfAvailable, lfLoadError, totalIntercepted: state.totalIntercepted||0, lastStream: state.lastStream || null };
+
+      if (data.type === 'PING_STATUS') {
+        const reply = { type: 'PONG_STATUS', ts: now(), lfAvailable, lfLoadError };
         if (event.ports && event.ports[0]) event.ports[0].postMessage(reply);
         else broadcast(reply);
         return;
       }
 
-      if (data && data.type === 'TEST_WRITE') {
+      if (data.type === 'TEST_WRITE') {
         if (!lfAvailable) {
-          const res = { type:'TEST_WRITE_RESULT', ok:false, error: 'localforage unavailable: ' + lfLoadError };
-          if (event.ports && event.ports[0]) event.ports[0].postMessage(res); else broadcast(res);
+          const out = { type: 'TEST_WRITE_RESULT', ok: false, error: 'localforage unavailable: ' + lfLoadError };
+          if (event.ports && event.ports[0]) event.ports[0].postMessage(out); else broadcast(out);
           return;
         }
         try {
-          const threads = await readThreadsViaLocalForage();
+          const threads = await readThreads();
           const tid = 'sw-test-' + gid();
           const nowMs = now();
-          const t = { id: tid, title: 'SW test ' + new Date(nowMs).toISOString(), pinned:false, updatedAt: nowMs, messages: [ { id:'swtest-'+gid(), role:'assistant', content:'sw test write @ ' + new Date(nowMs).toISOString(), contentParts:[{type:'text',text:'sw test write'}], createdAt: nowMs, updatedAt: nowMs } ] };
+          const t = { id: tid, title: 'SW test ' + new Date(nowMs).toISOString(), pinned:false, updatedAt: nowMs, messages: [ { role:'assistant', content:'sw test write @ ' + new Date(nowMs).toISOString(), contentParts:[{type:'text',text:'sw test write'}] } ] };
           threads.unshift(t);
-          const writeRes = await writeThreadsViaLocalForage(threads);
-          const out = { type:'TEST_WRITE_RESULT', ok:true, tid, writeRes };
+          await writeThreads(threads);
+          const out = { type: 'TEST_WRITE_RESULT', ok:true, tid };
           if (event.ports && event.ports[0]) event.ports[0].postMessage(out); else broadcast(out);
         } catch (err) {
-          const out = { type:'TEST_WRITE_RESULT', ok:false, error: String(err && err.message ? err.message : err) };
+          const out = { type: 'TEST_WRITE_RESULT', ok:false, error: String(err && err.message ? err.message : err) };
           if (event.ports && event.ports[0]) event.ports[0].postMessage(out); else broadcast(out);
         }
         return;
       }
 
-      if (data && data.type === 'READ_KEY') {
+      if (data.type === 'READ_KEY') {
         const key = data.key || THREADS_KEY;
         if (!lfAvailable) {
-          const res = { type:'READ_KEY_RESULT', ok:false, key, error: 'localforage unavailable: ' + lfLoadError };
+          const res = { type: 'READ_KEY_RESULT', ok:false, key, error: 'localforage unavailable: ' + lfLoadError };
           if (event.ports && event.ports[0]) event.ports[0].postMessage(res); else broadcast(res);
           return;
         }
         try {
-          const val = await localforage.getItem(key);
-          const parsed = (typeof val === 'string') ? ( (() => { try { return JSON.parse(val); } catch { return val; } })() ) : val;
-          const out = { type:'READ_KEY_RESULT', ok:true, key, value: parsed };
+          const value = await localforage.getItem(key);
+          const out = { type: 'READ_KEY_RESULT', ok:true, key, value };
           if (event.ports && event.ports[0]) event.ports[0].postMessage(out); else broadcast(out);
         } catch (err) {
-          const out = { type:'READ_KEY_RESULT', ok:false, key, error: String(err && err.message ? err.message : err) };
+          const out = { type: 'READ_KEY_RESULT', ok:false, key, error: String(err && err.message ? err.message : err) };
           if (event.ports && event.ports[0]) event.ports[0].postMessage(out); else broadcast(out);
         }
         return;
       }
 
-      if (data && data.type === 'LIST_SW_SAVED') {
+      if (data.type === 'LIST_SW_SAVED') {
         if (!lfAvailable) {
           const res = { type:'LIST_SW_SAVED_RESULT', ok:false, error: 'localforage unavailable: ' + lfLoadError };
           if (event.ports && event.ports[0]) event.ports[0].postMessage(res); else broadcast(res);
           return;
         }
         try {
-          const threads = await readThreadsViaLocalForage();
+          const threads = await readThreads();
           const found = [];
-          for (const t of (threads||[])) {
-            for (const m of (t.messages||[])) {
-              if (m && m.sw_streamId) found.push({ threadId: t.id, threadTitle: t.title, messageId: m.id, sw_streamId: m.sw_streamId, snippet: (m.content||'').slice(0,200), updatedAt: m.updatedAt });
+          for (const t of (threads || [])) {
+            for (const m of (t.messages || [])) {
+              if (m && m.role === 'assistant') {
+                // we can't know whether assistant messages were created by SW or page; include short snippet
+                found.push({ threadId: t.id, snippet: (m.content||'').slice(0,200) });
+              }
             }
           }
-          const out = { type:'LIST_SW_SAVED_RESULT', ok:true, found };
+          const out = { type: 'LIST_SW_SAVED_RESULT', ok: true, found };
           if (event.ports && event.ports[0]) event.ports[0].postMessage(out); else broadcast(out);
         } catch (err) {
-          const out = { type:'LIST_SW_SAVED_RESULT', ok:false, error: String(err && err.message ? err.message : err) };
+          const out = { type: 'LIST_SW_SAVED_RESULT', ok:false, error: String(err && err.message ? err.message : err) };
           if (event.ports && event.ports[0]) event.ports[0].postMessage(out); else broadcast(out);
         }
         return;
       }
 
-      if (data && data.type === 'CLEAR_TESTS') {
+      if (data.type === 'CLEAR_TESTS') {
         if (!lfAvailable) {
           const res = { type:'CLEAR_TESTS_RESULT', ok:false, error: 'localforage unavailable: ' + lfLoadError };
           if (event.ports && event.ports[0]) event.ports[0].postMessage(res); else broadcast(res);
           return;
         }
         try {
-          const threads = await readThreadsViaLocalForage();
+          const threads = await readThreads();
           const before = threads.length;
           const cleaned = threads.filter(t => !(t.id && String(t.id).startsWith('sw-test-')));
-          await writeThreadsViaLocalForage(cleaned);
+          await writeThreads(cleaned);
           const removed = before - cleaned.length;
           const out = { type:'CLEAR_TESTS_RESULT', ok:true, removed };
           if (event.ports && event.ports[0]) event.ports[0].postMessage(out); else broadcast(out);
@@ -342,7 +263,7 @@ self.addEventListener('message', event => {
       }
 
     } catch (err) {
-      const r = { type:'SW_ERROR', error: String(err && err.message ? err.message : err) };
+      const r = { type: 'SW_ERROR', error: String(err && err.message ? err.message : err) };
       if (event.ports && event.ports[0]) event.ports[0].postMessage(r); else broadcast(r);
     }
   })();
