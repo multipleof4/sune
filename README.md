@@ -42,10 +42,5 @@ v0.28: downloadable attachments & file sizes
 v0.29: update v0.27 was a mistake
 v0.30: sune html tab
 v0.31: html is functional 🌐
-v0.32: custom sw.js
-v0.33: sw wip
-v0.34: sune editor bug fix
-v0.35: sw are useless
-v0.36: API msg format update
-v0.37: HTML not saving bug
+v0.32: sune html/js fix
 ```
