@@ -49,4 +49,5 @@ v0.32: sune html/js fix
 v0.33: api json format update
 v0.34: scroll past sune html
 v0.35: ws intro
+v0.36: resume after app gets backgrounded
 ```
