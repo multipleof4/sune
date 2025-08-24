@@ -155,7 +155,6 @@ const clearChat=()=>{state.messages=[];el.messages.innerHTML='';state.attachment
 const payloadWithSampling=b=>Object.assign({},b,{temperature:store.temperature,top_p:store.top_p,top_k:store.top_k,frequency_penalty:store.frequency_penalty,presence_penalty:store.presence_penalty,repetition_penalty:store.repetition_penalty,min_p:store.min_p,top_a:store.top_a})
 function setBtnStop(){const b=el.sendBtn;b.dataset.mode='stop';b.type='button';b.setAttribute('aria-label','Stop');b.innerHTML='<i data-lucide="square" class="h-5 w-5"></i>';icons();b.onclick=()=>{state.abortRequested=true;state.controller?.abort?.()}}
 function setBtnSend(){const b=el.sendBtn;b.dataset.mode='send';b.type='submit';b.setAttribute('aria-label','Send');b.innerHTML='<i data-lucide="sparkles" class="h-5 w-5"></i>';icons();b.onclick=null}
-async function askOpenRouterStreaming(onDelta){const apiKey=store.apiKey,model=store.model;if(!apiKey){const text=localDemoReply(state.messages[state.messages.length-1]?.content||'');onDelta(text,true);return {ok:true,text}}try{state.controller=new AbortController();const msgs=[];if(store.system_prompt)msgs.push({role:'system',content:[{type:'text',text:store.system_prompt}]});msgs.push(...state.messages.filter(m=>m.role!=='system').map(m=>({role:m.role,content:m.content})));let body=payloadWithSampling({model,messages:msgs,stream:true});const re=store.reasoning_effort; if(re&&re!=='default')body.reasoning={effort:re};const res=await fetch('https://openrouter.ai/api/v1/chat/completions',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+apiKey},body:JSON.stringify(body),signal:state.controller.signal});if(!res.ok){const errText=await res.text().catch(()=> '');throw new Error(errText||('HTTP '+res.status))}const reader=res.body.getReader(),decoder=new TextDecoder('utf-8');let buffer='',full='',finished=false;const doneOnce=()=>{if(finished)return;finished=true;onDelta('',true)};while(true){const {value,done}=await reader.read();if(done)break;buffer+=decoder.decode(value,{stream:true});let idx;while((idx=buffer.indexOf('\n\n'))!==-1){const chunk=buffer.slice(0,idx).trim();buffer=buffer.slice(idx+2);if(!chunk)continue;if(chunk.startsWith('data:')){const data=chunk.slice(5).trim();if(data==='[DONE]'){doneOnce();continue}try{const json=JSON.parse(data);const delta=json.choices?.[0]?.delta?.content??'';if(delta){full+=delta;onDelta(delta,false)}const finish=json.choices?.[0]?.finish_reason;if(finish)doneOnce()}catch{}}}}doneOnce();return {ok:true,text:full}}catch(e){const msg=String(e?.message||e),aborted=e?.name==='AbortError'||/abort/i.test(msg)||state.controller?.signal?.aborted||state.abortRequested;if(aborted){onDelta('',true);return {ok:false,text:'',aborted:true}}let hint='Request failed.';if(/401|unauthorized/i.test(msg))hint='Unauthorized (check API key).';else if(/429|rate/i.test(msg))hint='Rate limited (slow down or upgrade).';else if(/access|forbidden|403/i.test(msg))hint='Forbidden (model or key scope).';const fallback='\n\n'+hint;onDelta(fallback,true);return {ok:false,text:fallback}}finally{state.controller=null;state.abortRequested=false}}
 function localDemoReply(){return 'Tip: open the sidebar → Account & Backup to set your OpenRouter API key.'}
 let threads=[];const titleFrom=t=>(t||'').replace(/\s+/g,' ').trim().slice(0,60)||'Untitled'
 const TKEY='threads_v1',tload=()=>localforage.getItem(TKEY).then(v=>Array.isArray(v)?v:[]),tsave=v=>localforage.setItem(TKEY,v)
@@ -216,63 +215,9 @@ window.addEventListener('resize',()=>{hideHistoryMenu();hideSuneMenu()})
 init()
 </script>
 <script>
-const WS_URL="wss://orp.awww.workers.dev/ws";
-
-const buildBody=()=>{const msgs=[];if(store.system_prompt)msgs.push({role:"system",content:[{type:"text",text:store.system_prompt}]});msgs.push(...state.messages.filter(m=>m.role!=="system").map(m=>({role:m.role,content:m.content})));const b=payloadWithSampling({model:store.model,messages:msgs,stream:true});if(store.reasoning_effort&&store.reasoning_effort!=="default")b.reasoning={effort:store.reasoning_effort};return b};
-
-class RunWS{
-  constructor(onDelta){
-    this.onDelta=onDelta;
-    this.ws=null;
-    this.seq=-1;
-    this.done=false;
-    this.manual=false;
-    this.signaled=false;
-    this.rid=Math.random().toString(36).slice(2);
-    this.backoff=300;
-  }
-  start(){ this.open("begin") }
-  abort(){
-    this.manual=true; this.done=true;
-    try{ this.ws?.send(JSON.stringify({type:"stop",rid:this.rid})) }catch{}
-    try{ this.ws?.close() }catch{}
-    if(!this.signaled){ this.signaled=true; this.onDelta("",true) } // ensure UI resets
-  }
-  open(mode){
-    if(this.done)return;
-    this.ws=new WebSocket(WS_URL);
-    this.ws.onopen=()=>this.ws.send(JSON.stringify(
-      mode==="begin"
-        ? {type:"begin",rid:this.rid,apiKey:store.apiKey,or_body:buildBody()}
-        : {type:"resume",rid:this.rid,after:this.seq}
-    ));
-    this.ws.onmessage=e=>{
-      let m; try{ m=JSON.parse(e.data) }catch{ return }
-      if(m.type==="delta"&&typeof m.seq==="number"&&m.seq>this.seq){
-        this.seq=m.seq; this.onDelta(m.text,false);
-      }else if(m.type==="done"){
-        this.done=true; if(!this.signaled){this.signaled=true; this.onDelta("",true)}; this.ws.close();
-      }else if(m.type==="err"){
-        this.done=true; if(!this.signaled){this.signaled=true; this.onDelta("\n\n"+(m.message||"error"),true)}; this.ws.close();
-      }
-    };
-    this.ws.onclose=()=>{
-      if(!this.done&&!this.manual){
-        setTimeout(()=>this.open("resume"), this.backoff=Math.min(this.backoff*1.5,5000));
-      }
-    };
-    this.ws.onerror=()=>{};
-  }
-}
-
-async function askViaWS(onDelta){
-  const r=new RunWS(onDelta);
-  state.controller={abort:()=>r.abort()};
-  r.start();
-  return {ok:true};
-}
-
-askOpenRouterStreaming=askViaWS;
+const WS_URL='wss://orp.awww.workers.dev/ws'
+const buildBody=()=>{const msgs=[];if(store.system_prompt)msgs.push({role:'system',content:[{type:'text',text:store.system_prompt}]});msgs.push(...state.messages.filter(m=>m.role!=='system').map(m=>({role:m.role,content:m.content})));const b=payloadWithSampling({model:store.model,messages:msgs,stream:true});if(store.reasoning_effort&&store.reasoning_effort!=='default')b.reasoning={effort:store.reasoning_effort};return b}
+async function askOpenRouterStreaming(onDelta){if(!store.apiKey){const t=localDemoReply();onDelta(t,true);return {ok:true,text:t}}const r={rid:Math.random().toString(36).slice(2),seq:-1,done:false,manual:false,signaled:false,backoff:300,ws:null};const signal=t=>{if(!r.signaled){r.signaled=true;onDelta(t||'',true)}};const open=mode=>{if(r.done)return;r.ws=new WebSocket(WS_URL);r.ws.onopen=()=>r.ws.send(JSON.stringify(mode==='begin'?{type:'begin',rid:r.rid,apiKey:store.apiKey,or_body:buildBody()}:{type:'resume',rid:r.rid,after:r.seq}));r.ws.onmessage=e=>{let m;try{m=JSON.parse(e.data)}catch{return}if(m.type==='delta'&&typeof m.seq==='number'&&m.seq>r.seq){r.seq=m.seq;onDelta(m.text||'',false)}else if(m.type==='done'){r.done=true;signal('');r.ws.close()}else if(m.type==='err'){r.done=true;signal('\n\n'+(m.message||'error'));r.ws.close()}};r.ws.onclose=()=>{if(!r.done&&!r.manual)setTimeout(()=>open('resume'),r.backoff=Math.min(r.backoff*1.5,5000))};r.ws.onerror=()=>{}};state.controller={abort:()=>{r.manual=true;r.done=true;try{r.ws?.send(JSON.stringify({type:'stop',rid:r.rid}))}catch{}try{r.ws?.close()}catch{}signal('')}};open('begin');return {ok:true}}
 </script>
 </body>
 </html>
