@@ -44,4 +44,5 @@ v0.30: sune html tab
 v0.31: html is functional 🌐
 v0.32: sune html/js fix
 v0.33: api json format update
+v0.34: scroll past sune html
 ```
