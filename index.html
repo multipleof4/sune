@@ -117,7 +117,7 @@
 <script src="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.9.0/build/highlight.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/localforage@1.10.0/dist/localforage.min.js"></script>
 <script>
-const DEFAULT_MODEL='openai/gpt-5-chat',DEFAULT_API_KEY=''
+const DEFAULT_MODEL='openai/gpt-5',DEFAULT_API_KEY=''
 const el=Object.fromEntries(['chat','messages','composer','input','sendBtn','settingsBtnTop','settingsModal','settingsForm','closeSettings','cancelSettings','tabModel','tabPrompt','tabScript','panelModel','panelPrompt','panelScript','set_model','set_temperature','set_top_p','set_top_k','set_frequency_penalty','set_presence_penalty','set_repetition_penalty','set_min_p','set_top_a','set_reasoning_effort','set_system_prompt','deleteSuneBtn','sidebar','sidebarOverlay','sidebarBtn','suneList','newSuneBtn','userMenuBtn','userMenu','apiKeyOption','sunesImportOption','sunesExportOption','threadsImportOption','threadsExportOption','importInput','historyBtn','historyPanel','historyOverlay','historyList','closeHistory','historyMenu','suneMenu','footer','attachBtn','attachBadge','fileInput','scriptEditor','htmlEditor','subTabHTML','subTabJS','panelHTML','panelJS','suneHtml'].map(id=>[id,document.getElementById(id)]))
 const icons=()=>window.lucide&&lucide.createIcons()
 const clamp=(v,min,max)=>Math.max(min,Math.min(max,v)),num=(v,d)=>v==null||v===''||isNaN(+v)?d:+v,int=(v,d)=>v==null||v===''||isNaN(parseInt(v))?d:parseInt(v),gid=()=>Math.random().toString(36).slice(2,9),esc=s=>String(s).replace(/[&<>'"`]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;","`":"&#96;"}[c]))
