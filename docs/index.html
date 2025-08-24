@@ -215,5 +215,64 @@ async function init(){threads=await tload();await renderHistory();renderSidebar(
 window.addEventListener('resize',()=>{hideHistoryMenu();hideSuneMenu()})
 init()
 </script>
+<script>
+const WS_URL="wss://orp.awww.workers.dev/ws";
+
+const buildBody=()=>{const msgs=[];if(store.system_prompt)msgs.push({role:"system",content:[{type:"text",text:store.system_prompt}]});msgs.push(...state.messages.filter(m=>m.role!=="system").map(m=>({role:m.role,content:m.content})));const b=payloadWithSampling({model:store.model,messages:msgs,stream:true});if(store.reasoning_effort&&store.reasoning_effort!=="default")b.reasoning={effort:store.reasoning_effort};return b};
+
+class RunWS{
+  constructor(onDelta){
+    this.onDelta=onDelta;
+    this.ws=null;
+    this.seq=-1;
+    this.done=false;
+    this.manual=false;
+    this.signaled=false;
+    this.rid=Math.random().toString(36).slice(2);
+    this.backoff=300;
+  }
+  start(){ this.open("begin") }
+  abort(){
+    this.manual=true; this.done=true;
+    try{ this.ws?.send(JSON.stringify({type:"stop",rid:this.rid})) }catch{}
+    try{ this.ws?.close() }catch{}
+    if(!this.signaled){ this.signaled=true; this.onDelta("",true) } // ensure UI resets
+  }
+  open(mode){
+    if(this.done)return;
+    this.ws=new WebSocket(WS_URL);
+    this.ws.onopen=()=>this.ws.send(JSON.stringify(
+      mode==="begin"
+        ? {type:"begin",rid:this.rid,apiKey:store.apiKey,or_body:buildBody()}
+        : {type:"resume",rid:this.rid,after:this.seq}
+    ));
+    this.ws.onmessage=e=>{
+      let m; try{ m=JSON.parse(e.data) }catch{ return }
+      if(m.type==="delta"&&typeof m.seq==="number"&&m.seq>this.seq){
+        this.seq=m.seq; this.onDelta(m.text,false);
+      }else if(m.type==="done"){
+        this.done=true; if(!this.signaled){this.signaled=true; this.onDelta("",true)}; this.ws.close();
+      }else if(m.type==="err"){
+        this.done=true; if(!this.signaled){this.signaled=true; this.onDelta("\n\n"+(m.message||"error"),true)}; this.ws.close();
+      }
+    };
+    this.ws.onclose=()=>{
+      if(!this.done&&!this.manual){
+        setTimeout(()=>this.open("resume"), this.backoff=Math.min(this.backoff*1.5,5000));
+      }
+    };
+    this.ws.onerror=()=>{};
+  }
+}
+
+async function askViaWS(onDelta){
+  const r=new RunWS(onDelta);
+  state.controller={abort:()=>r.abort()};
+  r.start();
+  return {ok:true};
+}
+
+askOpenRouterStreaming=askViaWS;
+</script>
 </body>
 </html>
