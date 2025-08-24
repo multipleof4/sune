@@ -43,4 +43,5 @@ v0.29: update v0.27 was a mistake
 v0.30: sune html tab
 v0.31: html is functional 🌐
 v0.32: sune html/js fix
+v0.33: api json format update
 ```
