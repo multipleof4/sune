@@ -132,7 +132,7 @@
 <script src="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.9.0/build/highlight.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/localforage@1.10.0/dist/localforage.min.js"></script>
 <script>
-const DEFAULT_MODEL='openai/gpt-5',DEFAULT_API_KEY=''
+const DEFAULT_MODEL='openai/gpt-4o',DEFAULT_API_KEY=''
 const el=Object.fromEntries(['chat','messages','composer','input','sendBtn','settingsBtnTop','settingsModal','settingsForm','closeSettings','cancelSettings','tabModel','tabPrompt','tabScript','panelModel','panelPrompt','panelScript','set_model','set_temperature','set_top_p','set_top_k','set_frequency_penalty','set_presence_penalty','set_repetition_penalty','set_min_p','set_top_a','set_max_tokens','set_verbosity','set_reasoning_effort','set_system_prompt','deleteSuneBtn','sidebar','sidebarOverlay','sidebarBtn','suneList','newSuneBtn','userMenuBtn','userMenu','accountSettingsOption','sunesImportOption','sunesExportOption','threadsImportOption','threadsExportOption','importInput','historyBtn','historyPanel','historyOverlay','historyList','closeHistory','historyMenu','suneMenu','footer','attachBtn','attachBadge','fileInput','scriptEditor','htmlEditor','subTabHTML','subTabJS','panelHTML','panelJS','suneHtml','accountSettingsModal','accountSettingsForm','closeAccountSettings','cancelAccountSettings','set_master_prompt','set_provider','set_api_key_or','set_api_key_oai','copySystemPrompt','pasteSystemPrompt','copyHTML','pasteHTML','copyJS','pasteJS'].map(id=>[id,document.getElementById(id)]))
 const icons=()=>window.lucide&&lucide.createIcons()
 const clamp=(v,min,max)=>Math.max(min,Math.min(max,v)),num=(v,d)=>v==null||v===''||isNaN(+v)?d:+v,int=(v,d)=>v==null||v===''||isNaN(parseInt(v))?d:parseInt(v),gid=()=>Math.random().toString(36).slice(2,9),esc=s=>String(s).replace(/[&<>'"`]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;","`":"&#96;"}[c]))
@@ -140,6 +140,8 @@ const sid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,6)
 const fmtSize=b=>{const u=['B','KB','MB','GB','TB'];let i=0,x=b;while(x>=1024&&i<u.length-1){x/=1024;i++}return (x>=10?Math.round(x):Math.round(x*10)/10)+' '+u[i]}
 const asDataURL=f=>new Promise(r=>{const fr=new FileReader();fr.onload=()=>r(String(fr.result||''));fr.readAsDataURL(f)})
 const b64=x=>x.split(',')[1]||''
+// ADDED: Stable user ID for Durable Object addressing
+const getUserId=()=>{let u=localStorage.getItem('sune_user_id');if(!u){u='user_'+Math.random().toString(36).slice(2,15);localStorage.setItem('sune_user_id',u)}return u}
 const globalStore={get provider(){return localStorage.getItem('provider')||'openrouter'},set provider(v){localStorage.setItem('provider',v==='openai'?'openai':'openrouter')},get apiKeyOR(){return localStorage.getItem('openrouter_api_key')||DEFAULT_API_KEY||''},set apiKeyOR(v){localStorage.setItem('openrouter_api_key',v||'')},get apiKeyOAI(){return localStorage.getItem('openai_api_key')||''},set apiKeyOAI(v){localStorage.setItem('openai_api_key',v||'')},get masterPrompt(){return localStorage.getItem('master_prompt')||''},set masterPrompt(v){localStorage.setItem('master_prompt',v||'')}}
 const su={key:'sunes_v1',activeKey:'active_sune_id',load(){try{return JSON.parse(localStorage.getItem(this.key)||'[]')}catch{return[]}},save(list){localStorage.setItem(this.key,JSON.stringify(list||[]))},getActiveId(){return localStorage.getItem(this.activeKey)||null},setActiveId(id){localStorage.setItem(this.activeKey,id||'')}}
 const defaultSettings={model:DEFAULT_MODEL,temperature:1,top_p:0.97,top_k:0,frequency_penalty:0,presence_penalty:0,repetition_penalty:1,min_p:0,top_a:0,max_tokens:0,verbosity:'',reasoning_effort:'default',system_prompt:'',script:'',html:''}
@@ -221,12 +223,38 @@ function kbBind(){if(window.visualViewport){['resize','scroll'].forEach(ev=>visu
 function activeMeta(){const a=getActiveSune();return {sune_name:a.name,model:store.model,avatar:a.avatar||''}}
 window.SUNE={attach:async(files,opts={})=>{const arr=[];for(const f of files||[])arr.push(await toAttach(f));const clean=arr.filter(Boolean);if(!clean.length)return;await ensureThreadOnFirstUser(clean[0]?.name||'(attachments)');const meta=activeMeta();const o=typeof opts==='boolean'?{toAPI:opts,tree:true}:(opts||{});const toAPI=('toAPI'in o)?!!o.toAPI:(('toapi'in o)?!!o.toapi:true);const tree=('tree'in o)?!!o.tree:true;if(toAPI){const parts=clean.map(a=>a.part);addMessage({role:'assistant',content:parts,...meta})}if(tree)addAttachmentTree('assistant',clean);await persistThread()},log:async s=>{const t=String(s??'').trim();if(!t)return;await ensureThreadOnFirstUser(t);addMessage({role:'assistant',content:[{type:'text',text:t}],...activeMeta()});await persistThread()}}
 window.USER={log:async s=>{const t=String(s??'').trim();if(!t)return;await ensureThreadOnFirstUser(t);addMessage({role:'user',content:[{type:'text',text:t}]});await persistThread()}}
-async function init(){threads=await tload();await renderHistory();renderSidebar();reflectActiveSune();clearChat();icons();kbBind();kbUpdate()}
+async function init(){
+    threads=await tload();
+    await renderHistory();
+    renderSidebar();
+    reflectActiveSune();
+    clearChat();
+    icons();
+    kbBind();
+    kbUpdate();
+    // ADDED: Attempt to recover a lost message on cold boot
+    await recoverLastRun();
+}
 window.addEventListener('resize',()=>{hideHistoryMenu();hideSuneMenu()})
 init()
 const WS_BASE='wss://orp.awww.workers.dev/ws'
 const buildBody=()=>{const msgs=[];if(store.masterPrompt)msgs.push({role:'system',content:[{type:'text',text:store.masterPrompt}]});if(store.system_prompt)msgs.push({role:'system',content:[{type:'text',text:store.system_prompt}]});msgs.push(...state.messages.filter(m=>m.role!=='system').map(m=>({role:m.role,content:m.content})));const b=payloadWithSampling({model:store.model,messages:msgs,stream:true});if(store.reasoning_effort&&store.reasoning_effort!=='default')b.reasoning={effort:store.reasoning_effort};if(store.verbosity)b.verbosity=store.verbosity;return b}
-async function askOpenRouterStreaming(onDelta,streamId){if(!store.apiKey){const t=localDemoReply();onDelta(t,true);return {ok:true,rid:streamId||null}}const r={rid:streamId||gid(),seq:-1,done:false,signaled:false,ws:null};const signal=t=>{if(!r.signaled){r.signaled=true;onDelta(t||'',true)}};const ws=new WebSocket(WS_BASE+'?uid='+encodeURIComponent(r.rid));r.ws=ws;ws.onopen=()=>ws.send(JSON.stringify({type:'begin',rid:r.rid,provider:store.provider,apiKey:store.apiKey,or_body:buildBody()}));ws.onmessage=e=>{let m;try{m=JSON.parse(e.data)}catch{return}if(m.type==='delta'&&typeof m.seq==='number'&&m.seq>r.seq){r.seq=m.seq;onDelta(m.text||'',false)}else if(m.type==='done'){r.done=true;signal('');ws.close()}else if(m.type==='err'){r.done=true;signal('\n\n'+(m.message||'error'));ws.close()}};ws.onclose=()=>{};ws.onerror=()=>{};state.controller={abort:()=>{r.done=true;try{if(ws.readyState===1)ws.send(JSON.stringify({type:'stop',rid:r.rid}))}catch{}signal('')}};return {ok:true,rid:r.rid}}
+async function askOpenRouterStreaming(onDelta,streamId){
+    if(!store.apiKey){const t=localDemoReply();onDelta(t,true);return {ok:true,rid:streamId||null}}
+    const r={rid:streamId||gid(),seq:-1,done:false,signaled:false,ws:null};
+    const signal=t=>{if(!r.signaled){r.signaled=true;onDelta(t||'',true)}};
+    // CHANGED: Use the stable user ID for the WebSocket connection
+    const userId = getUserId();
+    const ws=new WebSocket(WS_BASE+'?uid='+encodeURIComponent(userId));
+    r.ws=ws;
+    // The 'begin' message still contains the unique run ID (rid)
+    ws.onopen=()=>ws.send(JSON.stringify({type:'begin',rid:r.rid,provider:store.provider,apiKey:store.apiKey,or_body:buildBody()}));
+    ws.onmessage=e=>{let m;try{m=JSON.parse(e.data)}catch{return}if(m.type==='delta'&&typeof m.seq==='number'&&m.seq>r.seq){r.seq=m.seq;onDelta(m.text||'',false)}else if(m.type==='done'){r.done=true;signal('');ws.close()}else if(m.type==='err'){r.done=true;signal('\n\n'+(m.message||'error'));ws.close()}};
+    ws.onclose=()=>{};
+    ws.onerror=()=>{};
+    state.controller={abort:()=>{r.done=true;try{if(ws.readyState===1)ws.send(JSON.stringify({type:'stop',rid:r.rid}))}catch{}signal('')}};
+    return {ok:true,rid:r.rid}
+}
 function openAccountSettings(){el.set_provider.value=store.provider||'openrouter';el.set_api_key_or.value=store.apiKeyOR||'';el.set_api_key_oai.value=store.apiKeyOAI||'';el.set_master_prompt.value=store.masterPrompt||'';el.accountSettingsModal.classList.remove('hidden')}
 function closeAccountSettings(){el.accountSettingsModal.classList.add('hidden')}
 el.accountSettingsOption.addEventListener('click',()=>{el.userMenu.classList.add('hidden');openAccountSettings()})
@@ -235,7 +263,7 @@ el.cancelAccountSettings.addEventListener('click',closeAccountSettings)
 el.accountSettingsModal.addEventListener('click',e=>{if(e.target===el.accountSettingsModal||e.target.classList.contains('bg-black/30'))closeAccountSettings()})
 el.accountSettingsForm.addEventListener('submit',e=>{e.preventDefault();store.provider=el.set_provider.value||'openrouter';store.apiKeyOR=String(el.set_api_key_or.value||'').trim();store.apiKeyOAI=String(el.set_api_key_oai.value||'').trim();store.masterPrompt=String(el.set_master_prompt.value||'').trim();closeAccountSettings()})
 const HTTP_BASE = "https://orp.awww.workers.dev/ws"
-async function fetchTranscript(id){try{const r=await fetch(HTTP_BASE+'?uid='+encodeURIComponent(id));if(!r.ok)return null;return await r.json()}catch{return null}}
+async function fetchTranscript(id){try{const r=await fetch(HTTP_BASE+'?uid='+encodeURIComponent(getUserId()));if(!r.ok)return null;return await r.json()}catch{return null}}
 const lastAssistantId=()=>{const a=[...el.messages.querySelectorAll('.msg-bubble')];for(let i=a.length-1;i>=0;i--){const b=a[i],h=b.previousElementSibling;if(!h)continue;const you=/^\s*You\b/.test(h.textContent||'');if(!you)return b.dataset.mid||null}return null}
 const getBubbleById=id=>el.messages.querySelector(`.msg-bubble[data-mid="${CSS.escape(id)}"]`)
 async function syncTranscript(){const id=lastAssistantId();if(!id)return false;const bubble=getBubbleById(id);if(!bubble)return false;const j=await fetchTranscript(id).catch(()=>null);if(!j||j.rid!==id){if(j&&j.error){setBtnSend();state.busy=false;const t=(bubble.textContent||'')+'\n\n'+j.error;renderMarkdown(bubble,t,{enhance:false});enhanceCodeBlocks(bubble,true);const i=state.messages.findIndex(m=>m.id===id);if(i>=0)state.messages[i].content=[{type:'text',text:t}];else state.messages.push({id,role:'assistant',content:[{type:'text',text:t}]});persistThread()}return false}const t=j.text||'';renderMarkdown(bubble,t,{enhance:false});if(j.error||j.done||j.phase==='done'){setBtnSend();state.busy=false;enhanceCodeBlocks(bubble,true);const i=state.messages.findIndex(m=>m.id===id);if(i>=0)state.messages[i].content=[{type:'text',text:t}];else state.messages.push({id,role:'assistant',content:[{type:'text',text:t}]});persistThread();return false}return true}
@@ -250,6 +278,59 @@ el.copyHTML.addEventListener('click',async()=>{try{await navigator.clipboard.wri
 el.pasteHTML.addEventListener('click',async()=>{try{const t=await navigator.clipboard.readText();const j=(await ensureJars()).html;j.updateCode?j.updateCode(t):el.htmlEditor.textContent=t}catch{}})
 el.copyJS.addEventListener('click',async()=>{try{await navigator.clipboard.writeText(el.scriptEditor.textContent||'')}catch{}})
 el.pasteJS.addEventListener('click',async()=>{try{const t=await navigator.clipboard.readText();const j=(await ensureJars()).js;j.updateCode?j.updateCode(t):el.scriptEditor.textContent=t}catch{}})
+
+// ADDED: Function to recover a lost message after a cold boot
+async function recoverLastRun() {
+    try {
+        const resp = await fetch(HTTP_BASE + '?uid=' + encodeURIComponent(getUserId()));
+        if (!resp.ok) return;
+
+        const remoteRun = await resp.json();
+
+        // Check if the server has a completed run with a valid ID
+        if (remoteRun && remoteRun.rid && (remoteRun.phase === 'done' || remoteRun.phase === 'error')) {
+            if (threads.length > 0) {
+                // Find the most recently updated local thread
+                const latestThread = [...threads].sort((a,b) => b.updatedAt - a.updatedAt)[0];
+                const messages = latestThread.messages || [];
+
+                // Check if we already have this message ID locally
+                const alreadyExists = messages.some(m => m.id === remoteRun.rid);
+
+                if (!alreadyExists) {
+                    console.log(`Recovering lost message: ${remoteRun.rid}`);
+                    const newMsg = {
+                        id: remoteRun.rid,
+                        role: 'assistant',
+                        // Sune metadata is not stored on the DO, so we use fallbacks. This is acceptable for recovery.
+                        sune_name: 'Unknown', 
+                        model: 'Unknown',
+                        content: [{ type: 'text', text: remoteRun.text + (remoteRun.error ? `\n\nError: ${remoteRun.error}`: '') }]
+                    };
+                    latestThread.messages.push(newMsg);
+                    latestThread.updatedAt = Date.now(); // Mark as updated
+                    
+                    await tsave(threads); // Persist the recovered data
+                    await renderHistory(); // Update the history panel
+                    
+                    // If the app is on an empty chat or the recovered thread, reload the view
+                    if (!state.currentThreadId || state.currentThreadId === latestThread.id) {
+                        state.currentThreadId = latestThread.id;
+                        clearChat();
+                        state.messages = [...latestThread.messages];
+                        for (const m of state.messages) {
+                            const b = msgRow(m);
+                            b.dataset.mid = m.id || '';
+                            renderMarkdown(b, partsToText(m.content));
+                        }
+                    }
+                }
+            }
+        }
+    } catch (e) {
+        console.error("Failed to recover last run:", e);
+    }
+}
 </script>
 </body>
 </html>
