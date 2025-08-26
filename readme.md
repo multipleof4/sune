@@ -1,18 +1,18 @@
-![Main](./docs/appstore_content/screenshot1.jpg)
+![Main](./public/appstore_content/screenshot1.jpg)
 
 > Each sune is like a module. You can have many. And share them.
 
-![Sunes](./docs/appstore_content/screenshot6.jpg)
+![Sunes](./public/appstore_content/screenshot6.jpg)
 
-![Setting](./docs/appstore_content/screenshot3.jpg)
+![Setting](./public/appstore_content/screenshot3.jpg)
 
 💠 New! 
 
 > You can have scripts which run on the page of each sune — either to function call or extend functionality of the app or sune.
 
-![Scripting](./docs/appstore_content/screenshot4.jpg)
+![Scripting](./public/appstore_content/screenshot4.jpg)
 Here is an example of some HTML/JS artwork.
-![Art](./docs/appstore_content/screenshot5.jpg)
+![Art](./public/appstore_content/screenshot5.jpg)
 
 
 ```
