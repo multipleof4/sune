@@ -32,7 +32,7 @@ export default defineConfig({
           { tag:'script', attrs:{ src:'https://cdn.jsdelivr.net/npm/tiny-ripple@0.2.0' }, injectTo:'head' },
           { tag:'style', children:':root{--safe-bottom:env(safe-area-inset-bottom)}::-webkit-scrollbar{height:8px;width:8px}::-webkit-scrollbar-thumb{background:#e5e7eb;border-radius:999px}.no-scrollbar::-webkit-scrollbar{display:none}.no-scrollbar{-ms-overflow-style:none;scrollbar-width:none}', injectTo:'head' },
           { tag:'style', children:'html,body{overscroll-behavior-y:contain}', injectTo:'head' },
-          { tag:'style', children:'#htmlEditor{outline:none;white-space:pre!important}', injectTo:'head' }
+          { tag:'style', children:'', injectTo:'head' }
         ]
       }
     })
