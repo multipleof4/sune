@@ -75,7 +75,7 @@
   <div class="absolute inset-0 bg-black/30"></div>
   <div class="absolute inset-x-0 top-12 mx-auto w-full max-w-md px-4">
     <div class="rounded-2xl bg-white shadow-xl border border-gray-200 overflow-hidden">
-      <div class="px-4 py-3 border-b text-sm font-semibold flex items-center justify-between"><span>Sune Settings</span><button id="closeSettings" class="p-1 rounded hover:bg-gray-100" aria-label="Close"><svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg></button></div>
+      <div class="px-4 py-3 border-b text-sm font-semibold flex items-center gap-2"><input id="settingsAddress" type="text" placeholder="github.com/sune-org/.sune/welcome/" class="flex-1 min-w-0 h-10 rounded-xl border-0 bg-gray-50 px-3 text-gray-400 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-200 focus:bg-white text-xs font-mono focus:text-black"/><button id="refreshSettings" class="p-1.5 rounded hover:bg-gray-100" aria-label="Refresh"><i data-lucide="refresh-cw" class="h-5 w-5"></i></button></div>
       <form id="settingsForm" class="text-sm">
         <div class="border-b flex text-xs font-medium"><button type="button" id="tabModel" class="flex-1 py-2 px-3 text-center border-b-2 border-black">Model & Sampling</button><button type="button" id="tabPrompt" class="flex-1 py-2 px-3 text-center border-b-2 border-transparent hover:border-gray-300">System Prompt</button><button type="button" id="tabScript" class="flex-1 py-2 px-3 text-center border-b-2 border-transparent hover:border-gray-300">Script</button></div>
         <div id="panelModel" class="p-4 space-y-4">
@@ -209,7 +209,7 @@ const tabs={Model:['tabModel','panelModel'],Prompt:['tabPrompt','panelPrompt'],S
 function showScriptSubTab(key){['HTML','JS'].forEach(k=>{const on=k===key;el['subTab'+k].classList.toggle('bg-black',on);el['subTab'+k].classList.toggle('text-white',on);el['subTab'+k].classList.toggle('bg-gray-100',!on);el['panel'+(k==='HTML'?'HTML':'JS')].classList.toggle('hidden',!on)});if(key==='HTML')openedHTML=true;else openedJS=true}
 function showTab(key){Object.entries(tabs).forEach(([k,[tb,pn]])=>{el[tb].classList.toggle('border-black',k===key);el[pn].classList.toggle('hidden',k!==key)});if(key==='Script'){ensureJars().then(({js,html})=>{const s=getActiveSune().settings;js.updateCode(s.script||'');html.updateCode(s.html||'')});showScriptSubTab('HTML')}}
 el.settingsBtnTop.addEventListener('click',openSettings)
-el.closeSettings.addEventListener('click',closeSettings)
+el.closeSettings?.addEventListener('click',closeSettings)
 el.cancelSettings.addEventListener('click',closeSettings)
 el.settingsModal.addEventListener('click',e=>{if(e.target===el.settingsModal||e.target.classList.contains('bg-black/30'))closeSettings()})
 el.tabModel.addEventListener('click',()=>showTab('Model'))
