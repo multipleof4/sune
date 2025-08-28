@@ -25,7 +25,7 @@
     <div class="justify-self-end"><button id="historyBtn" class="h-8 w-8 rounded-xl bg-gray-100 hover:bg-gray-200 active:scale-[.99] transition flex items-center justify-center" title="Threads" hx-on="click:renderHistory();document.getElementById('historyPanel').classList.remove('translate-x-full');document.getElementById('historyOverlay').classList.remove('hidden')"><i data-lucide="panel-right" class="h-5 w-5"></i></button></div>
   </div>
 </header>
-<main id="chat" class="flex-1 overflow-y-auto no-scrollbar"><section id="suneHtml" class="px-0 py-3 border-b border-gray-200 hidden"></section><div id="messages" class="mx-auto w-full max-w-none px-0 py-4 sm:py-6 space-y-4" hx-on="click: if(event.target.closest('.msg-avatar')){document.getElementById('sidebar').classList.remove('-translate-x-full');document.getElementById('sidebarOverlay').classList.remove('hidden')}"></div><div class="h-24"></div></main>
+<main id="chat" class="flex-1 overflow-y-auto no-scrollbar"><section id="suneHtml" class="px-1 py-3 border-b border-gray-200 hidden"></section><div id="messages" class="mx-auto w-full max-w-none px-0 py-4 sm:py-6 space-y-4" hx-on="click: if(event.target.closest('.msg-avatar')){document.getElementById('sidebar').classList.remove('-translate-x-full');document.getElementById('sidebarOverlay').classList.remove('hidden')}"></div><div class="h-24"></div></main>
 <footer id="footer" class="sticky bottom-0 z-10 bg-gradient-to-t from-white via-white/95 to-white/40 pt-2 pb-[calc(12px+var(--safe-bottom))] border-t border-gray-200">
   <div class="mx-auto w-full max-w-none px-0">
     <form id="composer" class="group relative flex items-start gap-2 px-3">
