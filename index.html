@@ -47,12 +47,12 @@
     <button id="userMenuBtn" class="w-full flex items-center justify-between px-3 py-2 rounded-xl bg-gray-100 hover:bg-gray-200 active:scale-[.99] transition" hx-on="click:event.stopPropagation();document.getElementById('userMenu').classList.toggle('hidden')"><span class="flex items-center gap-2"><span class="h-6 w-6 rounded-full bg-gray-900 text-white flex items-center justify-center">👤</span><span class="text-sm">Account & Backup</span></span><i data-lucide="chevron-down" class="h-4 w-4"></i></button>
     <div id="userMenu" class="absolute left-3 right-3 bottom-16 translate-y-2 rounded-xl border border-gray-200 bg-white shadow-lg hidden overflow-hidden">
       <button id="accountSettingsOption" class="menu-item"><i data-lucide="settings" class="h-4 w-4"></i><span>Settings</span></button>
-      <button id="sunesImportOption" class="menu-item">Import sunes (.json)</button>
+      <button id="sunesImportOption" class="menu-item">Import sunes (.sune)</button>
       <button id="sunesExportOption" class="menu-item">Export sunes (.sune)</button>
       <button id="threadsImportOption" class="menu-item">Import threads (.json)</button>
       <button id="threadsExportOption" class="menu-item">Export threads (.json)</button>
     </div>
-    <input id="importInput" type="file" accept="application/json,.json" class="hidden"/>
+    <input id="importInput" type="file" accept="application/json,.json,.sune" class="hidden"/>
   </div>
 </aside>
 <div id="sidebarOverlayRight" class="fixed inset-0 z-40 bg-black/20 hidden" hx-on="click:this.classList.add('hidden');document.getElementById('sidebarRight').classList.add('translate-x-full')"></div>
