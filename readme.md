@@ -1,4 +1,4 @@
-ITS ALL JUST A SINGLE INDEX.HTML
+It's all just a single index.html
 
 ![Main](./public/appstore_content/screenshot1.jpg)
 
