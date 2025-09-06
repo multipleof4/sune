@@ -267,6 +267,7 @@ el.pasteSystemPrompt.addEventListener('click',async()=>{try{el.set_system_prompt
 const getActiveHtmlParts=()=>!el.htmlEditor.classList.contains('hidden')?[el.htmlEditor,jars.html]:[el.extensionHtmlEditor,jars.extension]
 el.copyHTML.addEventListener('click',async()=>{try{await navigator.clipboard.writeText(getActiveHtmlParts()[0].textContent||'')}catch{}})
 el.pasteHTML.addEventListener('click',async()=>{try{const t=await navigator.clipboard.readText();const[editor,jar]=getActiveHtmlParts();if(jar&&jar.updateCode)jar.updateCode(t);else if(editor)editor.textContent=t}catch{}})
+Object.assign(window,{icons,haptic,clamp,num,int,gid,esc,positionPopover,sid,fmtSize,asDataURL,b64,makeSune,getModelShort,resolveSuneSrc,processSuneIncludes,renderSuneHTML,reflectActiveSune,suneRow,enhanceCodeBlocks,getSuneLabel,msgRow,partsToText,addSuneBubbleStreaming,clearChat,payloadWithSampling,setBtnStop,setBtnSend,localDemoReply,titleFrom,tload,tsave,ensureThreadOnFirstUser,generateTitleWithAI,persistThread,threadRow,renderThreads,hideThreadPopover,showThreadPopover,hideSunePopover,showSunePopover,updateAttachBadge,toAttach,attachmentsText,addAttachmentTree,ensureJars,openSettings,closeSettings,showTab,dl,ts,kbUpdate,kbBind,activeMeta,init,showHtmlTab,buildBody,askOpenRouterStreaming,showAccountTab,openAccountSettings,closeAccountSettings,lastAssistantId,getBubbleById,syncActiveThread,syncWhileBusy,onForeground,getActiveHtmlParts});
 </script>
 </body>
 </html>
