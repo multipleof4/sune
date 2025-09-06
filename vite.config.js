@@ -32,7 +32,8 @@ export default defineConfig({
           { tag:'script', attrs:{ src:'https://cdn.jsdelivr.net/npm/tiny-ripple@0.2.0' }, injectTo:'head' },
           { tag:'style', children:':root{--safe-bottom:env(safe-area-inset-bottom)}::-webkit-scrollbar{height:8px;width:8px}::-webkit-scrollbar-thumb{background:#e5e7eb;border-radius:999px}.no-scrollbar::-webkit-scrollbar{display:none}.no-scrollbar{-ms-overflow-style:none;scrollbar-width:none}', injectTo:'head' },
           { tag:'style', children:'html,body{overscroll-behavior-y:contain}', injectTo:'head' },
-          { tag:'style', children:'', injectTo:'head' }
+          { tag:'style', children:'', injectTo:'head' },
+          { tag:'script', children:"(()=>{let k,v=visualViewport;const f=()=>{removeEventListener('popstate',f),document.activeElement?.blur()};v.onresize=()=>{let o=v.height<innerHeight;o!=k&&((k=o)?(history.pushState({k:1},''),addEventListener('popstate',f)):(removeEventListener('popstate',f),history.state?.k&&history.back()))}})()", injectTo:'head' }
         ]
       }
     })
