@@ -15,8 +15,8 @@
 .menu-item{width:100%;text-align:left;padding:.5rem .75rem;font-size:0.875rem;display:flex;align-items:center;gap:.5rem}
 #htmlEditor,#extensionHtmlEditor{outline:none;white-space:pre!important;font-size:11px;line-height:1.5;}
 </style>
-<script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.1/dist/cdn.min.js"></script>
 <script defer src="https://cdn.jsdelivr.net/npm/cash-dom/dist/cash.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.1/dist/cdn.min.js"></script>
 </head>
 <body class="bg-white text-gray-900 selection:bg-black/10" x-data @click.window="if($event.target.closest('button')) haptic(); if(!document.getElementById('threadPopover').contains($event.target)&&!$event.target.closest('[data-thread-menu]')) hideThreadPopover(); if(!document.getElementById('sunePopover').contains($event.target)&&!$event.target.closest('[data-sune-menu]')) hideSunePopover(); if(!document.getElementById('userMenu').contains($event.target)&&!document.getElementById('userMenuBtn').contains($event.target)) document.getElementById('userMenu').classList.add('hidden')">
 <div class="flex flex-col h-dvh max-h-dvh">
