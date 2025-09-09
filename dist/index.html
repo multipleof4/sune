@@ -16,6 +16,7 @@
 #htmlEditor,#extensionHtmlEditor{outline:none;white-space:pre!important;font-size:11px;line-height:1.5;}
 </style>
 <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.1/dist/cdn.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/cash-dom/dist/cash.min.js"></script>
   <meta charset="utf-8">
   <title>Sune</title>
   <link rel="icon" type="image/avif" href="https://sune.planetrenox.com/✺.avif">
@@ -152,7 +153,6 @@
 <script src="https://cdn.jsdelivr.net/npm/markdown-it@13.0.1/dist/markdown-it.min.js"></script>
 <script src="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.9.0/build/highlight.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/localforage@1.10.0/dist/localforage.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/cash-dom/dist/cash.min.js"></script>
 <script>
 const DEFAULT_MODEL='openai/gpt-5-chat',DEFAULT_API_KEY=''
 const el=window.el=Object.fromEntries(['topbar','chat','messages','composer','input','sendBtn','suneBtnTop','suneModal','suneURL','settingsForm','closeSettings','cancelSettings','tabModel','tabPrompt','tabScript','panelModel','panelPrompt','panelScript','set_model','set_temperature','set_top_p','set_top_k','set_frequency_penalty','set_repetition_penalty','set_min_p','set_top_a','set_verbosity','set_reasoning_effort','set_system_prompt','set_hide_composer','deleteSuneBtn','sidebarLeft','sidebarOverlayLeft','sidebarBtnLeft','suneList','newSuneBtn','userMenuBtn','userMenu','accountSettingsOption','sunesImportOption','sunesExportOption','threadsImportOption','threadsExportOption','importInput','sidebarBtnRight','sidebarRight','sidebarOverlayRight','threadList','closeThreads','threadPopover','sunePopover','footer','attachBtn','attachBadge','fileInput','htmlEditor','extensionHtmlEditor','htmlTab_index','htmlTab_extension','suneHtml','accountSettingsModal','accountSettingsForm','closeAccountSettings','cancelAccountSettings','set_master_prompt','set_provider','set_api_key_or','set_api_key_oai','set_api_key_g','set_title_model','copySystemPrompt','pasteSystemPrompt','copyHTML','pasteHTML','accountTabGeneral','accountTabAPI','accountPanelGeneral','accountPanelAPI','set_gh_token','importAccountSettings','exportAccountSettings','importAccountSettingsInput'].map(id=>[id,document.getElementById(id)]))
