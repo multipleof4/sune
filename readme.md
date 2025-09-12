@@ -19,4 +19,5 @@
 ![Miku](./public/appstore_content/screenshot_miku.png)
 
 > There is a marketplace.
+
 ![Marketplace](./public/appstore_content/screenshot_marketplace.jpg)
