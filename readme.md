@@ -14,5 +14,5 @@ It's mostly a single index.html
 
 ![Scripting](./public/appstore_content/screenshot4.jpg)
 Here is an example of some HTML/JS artwork.
-![Art](./public/appstore_content/screenshot5.jpg)
+![Miku](./public/appstore_content/screenshot_miku.jpg)
 ![Marketplace](./public/appstore_content/screenshot_marketplace.jpg)
