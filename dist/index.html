@@ -1,21 +1,27 @@
-<!doctype html>
-<html lang="en">
+<!doctype html><html lang="en">
 <head>
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Hi Language</title>
+<link rel="preconnect" href="https://cdn.jsdelivr.net">
 <script src="https://cdn.tailwindcss.com"></script>
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/github-markdown-css@5.8.1/github-markdown-light.min.css"/>
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.11.1/build/styles/github.min.css"/>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/github-markdown-css@5.8.1/github-markdown-light.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.11.1/build/styles/github.min.css">
 <style>
-.markdown-body{font-size:14px;line-height:1.6}.markdown-body pre{overflow:auto}
-.msg-bubble{overflow-x:auto}
-.msg-avatar{font-size:16px}
-.menu-card{position:fixed;z-index:60;min-width:12rem;border-radius:0.75rem;border:1px solid #e5e7eb;background:#fff;box-shadow:0 10px 20px rgba(0,0,0,.08)}
-.menu-item{width:100%;text-align:left;padding:.5rem .75rem;font-size:0.875rem;display:flex;align-items:center;gap:.5rem}
-#htmlEditor,#extensionHtmlEditor,#jsonSchemaEditor{outline:none;white-space:pre!important;font-size:11px;line-height:1.5;}
-:not(pre)>code{font-size:85%;padding:.2em .4em;margin:0;border-radius:6px;background-color:rgba(175,184,193,0.2)}
+*{scroll-behavior:smooth}
+.markdown-body{font-size:16px;line-height:1.7}
+.markdown-body pre{overflow:auto}
+.markdown-body code:not(pre code){background:rgba(175,184,193,.2);padding:.2em .4em;border-radius:6px}
+.no-scrollbar::-webkit-scrollbar{display:none}.no-scrollbar{scrollbar-width:none}
+.btn{transition:.15s transform}.btn:active{transform:scale(.98)}
+.anchor{scroll-margin-top:72px}
+pre{position:relative;border:1px solid #e5e7eb;border-radius:.75rem}
+.code-actions{position:absolute;top:.5rem;right:.5rem;display:flex;gap:.5rem;align-items:center}
+.copy-btn{background:#0f172a;color:#fff;border-radius:.5rem;padding:.2rem .5rem;font-size:.75rem;opacity:.9}
+.char-c{font-size:.75rem;color:#64748b}
+@media (max-width:480px){.char-c{display:none}}
+.anchor-link{margin-left:.5rem;color:#9ca3af;text-decoration:none}.anchor-link:hover{color:#6b7280}
 </style>
-<script defer src="https://cdn.jsdelivr.net/npm/cash-dom/dist/cash.min.js"></script>
-<script defer src="//unpkg.com/alpinejs"></script>
   <meta charset="utf-8">
   <title>Sune</title>
   <link rel="icon" type="image/avif" href="https://sune.planetrenox.com/✺.avif">
@@ -25,263 +31,286 @@
   <style></style>
   <script>(()=>{let k,v=visualViewport;const f=()=>{removeEventListener('popstate',f),document.activeElement?.blur()};v.onresize=()=>{let o=v.height<innerHeight;o!=k&&((k=o)?(history.pushState({k:1},''),addEventListener('popstate',f)):(removeEventListener('popstate',f),history.state?.k&&history.back()))}})()</script>
 <link rel="manifest" href="/manifest.webmanifest"><script id="vite-plugin-pwa:register-sw" src="/registerSW.js"></script></head>
-<body class="bg-white text-gray-900 selection:bg-black/10" x-data @click.window="if($event.target.closest('button')) haptic(); if(!document.getElementById('threadPopover').contains($event.target)&&!$event.target.closest('[data-thread-menu]')) hideThreadPopover(); if(!document.getElementById('sunePopover').contains($event.target)&&!$event.target.closest('[data-sune-menu]')) hideSunePopover(); if(!document.getElementById('userMenu').contains($event.target)&&!document.getElementById('userMenuBtn').contains($event.target)) document.getElementById('userMenu').classList.add('hidden')">
+<body class="bg-white text-gray-900 selection:bg-black/10">
 <div class="flex flex-col h-dvh max-h-dvh overflow-hidden">
-<header id="topbar" class="sticky top-0 z-20 bg-white/80 backdrop-blur border-b border-gray-200">
-  <div class="mx-auto w-full max-w-none px-4 py-3 grid grid-cols-3 items-center">
-    <button id="sidebarBtnLeft" class="h-8 w-8 rounded-xl bg-gray-100 hover:bg-gray-200 active:scale-[.99] transition flex items-center justify-center" title="Sunes" @click="document.getElementById('sidebarLeft').classList.remove('-translate-x-full');document.getElementById('sidebarOverlayLeft').classList.remove('hidden')"><i data-lucide="panel-left" class="h-5 w-5"></i></button>
-    <button id="suneBtnTop" class="justify-self-center h-8 w-8 rounded-full bg-gray-200 text-gray-900 flex items-center justify-center hover:bg-gray-300 active:scale-[.99] transition" title="Sune settings">✺</button>
-    <div class="justify-self-end"><button id="sidebarBtnRight" class="h-8 w-8 rounded-xl bg-gray-100 hover:bg-gray-200 active:scale-[.99] transition flex items-center justify-center" title="Threads" @click="renderThreads();document.getElementById('sidebarRight').classList.remove('translate-x-full');document.getElementById('sidebarOverlayRight').classList.remove('hidden')"><i data-lucide="panel-right" class="h-5 w-5"></i></button></div>
-  </div>
-</header>
-<main id="chat" class="flex-1 overflow-y-auto no-scrollbar"><section id="suneHtml" class="px-0 border-b border-gray-200 hidden"></section><div id="messages" class="mx-auto w-full max-w-none px-0 py-4 sm:py-6 space-y-4" @click="if($event.target.closest('.msg-avatar')){document.getElementById('sidebarLeft').classList.remove('-translate-x-full');document.getElementById('sidebarOverlayLeft').classList.remove('hidden')}"></div><div class="h-24"></div></main>
-<footer id="footer" class="sticky bottom-0 z-10 bg-gradient-to-t from-white via-white/95 to-white/40 pt-2 pb-[calc(12px+var(--safe-bottom))] border-t border-gray-200">
-  <div class="mx-auto w-full max-w-none px-0">
-    <form id="composer" class="group relative flex items-start gap-2 px-3">
-      <textarea id="input" rows="1" placeholder="Send a message" spellcheck="false" autocapitalize="none" autocomplete="off" autocorrect="off" inputmode="text" enterkeyhint="enter" class="flex-1 resize-none rounded-2xl border-none bg-white px-3 py-2 text-[14px] leading-6 placeholder:text-gray-400 focus:outline-none focus:ring-0 max-h-52 overflow-y-auto min-h-[96px]"></textarea>
-      <div class="flex flex-col gap-2 self-stretch justify-center">
-        <button id="sendBtn" type="submit" aria-label="Send" class="shrink-0 rounded-2xl bg-black text-white h-10 w-10 inline-flex items-center justify-center shadow-sm hover:bg-black/90 active:scale-[.98] transition"><i data-lucide="sparkles" class="h-5 w-5"></i></button>
-        <button id="attachBtn" type="button" aria-label="Attach" class="relative shrink-0 rounded-2xl bg-gray-100 text-gray-900 h-10 w-10 inline-flex items-center justify-center shadow-sm hover:bg-gray-200 active:scale-[.98] transition"><i data-lucide="paperclip" class="h-5 w-5"></i><span id="attachBadge" class="hidden absolute -top-1 -right-1 h-4 min-w-4 px-1 rounded-full bg-black text-white text-[10px] leading-4 text-center"></span></button>
+  <header class="sticky top-0 z-20 bg-white/80 backdrop-blur border-b border-gray-200">
+    <div class="mx-auto w-full max-w-none px-4 py-3 grid grid-cols-3 items-center">
+      <button id="menuBtn" class="h-9 w-9 rounded-xl bg-gray-100 hover:bg-gray-200 flex items-center justify-center btn" title="Menu"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M3 12h18M3 18h18"/></svg></button>
+      <div class="justify-self-center text-base font-semibold select-none pointer-events-none">Hi Language</div>
+      <div class="justify-self-end"><a href="https://github.com/hi-language" class="h-9 w-9 rounded-xl bg-gray-100 hover:bg-gray-200 flex items-center justify-center btn" target="_blank" rel="noopener" title="GitHub"><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 .5A12 12 0 0 0 0 12.64a12.15 12.15 0 0 0 8.2 11.55c.6.11.82-.27.82-.6v-2.17c-3.34.74-4.05-1.65-4.05-1.65a3.29 3.29 0 0 0-1.36-1.82c-1.1-.78.09-.77.09-.77a2.6 2.6 0 0 1 1.89 1.29 2.64 2.64 0 0 0 3.61 1 2.66 2.66 0 0 1 .78-1.65c-2.67-.31-5.47-1.36-5.47-6.06A4.8 4.8 0 0 1 6 7.57a4.45 4.45 0 0 1 .12-3.29s1-.33 3.3 1.26a11.39 11.39 0 0 1 6 0c2.3-1.59 3.3-1.26 3.3-1.26.44 1.03.48 2.2.12 3.29a4.79 4.79 0 0 1 1.27 3.32c0 4.72-2.8 5.75-5.47 6.06a2.97 2.97 0 0 1 .84 2.31v3.43c0 .34.22.73.83.6A12.16 12.16 0 0 0 24 12.64 12 12 0 0 0 12 .5Z"/></svg></a></div>
+    </div>
+  </header>
+  <main class="flex-1 overflow-y-auto no-scrollbar">
+    <section id="hero" class="px-6 sm:px-8 py-10 border-b">
+      <div class="max-w-3xl mx-auto">
+        <h1 class="text-3xl sm:text-4xl font-bold tracking-tight">Hi — a corely symbolic language</h1>
+        <p class="mt-3 text-gray-600">Inspired by JavaScript. Few keywords, many symbols. Designed so the core reads naturally across languages, for the whole world.</p>
       </div>
-      <input id="fileInput" type="file" class="hidden" multiple accept="image/png,image/jpeg,image/webp,image/gif,application/pdf,audio/wav,audio/x-wav,audio/mpeg,audio/mp3"/>
-    </form>
-  </div>
-</footer>
+    </section>
+    <div id="docs-content" class="markdown-body max-w-3xl mx-auto px-6 sm:px-8 py-8"></div>
+  </main>
 </div>
-<div id="sidebarOverlayLeft" class="fixed inset-0 z-40 bg-black/20 hidden" @click="document.getElementById('sidebarLeft').classList.add('-translate-x-full');$el.classList.add('hidden');document.getElementById('sidebarRight').classList.add('translate-x-full');document.getElementById('sidebarOverlayRight').classList.add('hidden');hideThreadPopover();hideSunePopover()"></div>
-<aside id="sidebarLeft" class="fixed inset-y-0 left-0 z-50 w-72 max-w-[85vw] bg-white border-r border-gray-200 shadow-xl transform -translate-x-full transition-transform duration-200 ease-out flex flex-col">
-  <div class="p-3 border-b flex items-center gap-2"><button id="newSuneBtn" class="px-3 py-2 rounded-xl bg-black text-white text-sm hover:bg-black/90">New sune</button><span class="text-xs text-gray-500">Click name to equip</span></div>
-  <div id="suneList" class="flex-1 overflow-y-auto divide-y"></div>
-  <div class="p-3 border-t relative">
-    <button id="userMenuBtn" class="w-full flex items-center justify-between px-3 py-2 rounded-xl bg-gray-100 hover:bg-gray-200 active:scale-[.99] transition" @click.stop="document.getElementById('userMenu').classList.toggle('hidden')"><span class="flex items-center gap-2"><span class="h-6 w-6 rounded-full bg-gray-900 text-white flex items-center justify-center">👤</span><span class="text-sm">Account & Backup</span></span><i data-lucide="chevron-down" class="h-4 w-4"></i></button>
-    <div id="userMenu" class="absolute left-3 right-3 bottom-16 translate-y-2 rounded-xl border border-gray-200 bg-white shadow-lg hidden overflow-hidden">
-      <button id="accountSettingsOption" class="menu-item"><i data-lucide="settings" class="h-4 w-4"></i><span>Settings</span></button>
-      <button id="sunesImportOption" class="menu-item">Import sunes (.sune)</button>
-      <button id="sunesExportOption" class="menu-item">Export sunes (.sune)</button>
-      <button id="threadsImportOption" class="menu-item">Import threads (.json)</button>
-      <button id="threadsExportOption" class="menu-item">Export threads (.json)</button>
-    </div>
-    <input id="importInput" type="file" accept="application/json,.json,.sune" class="hidden"/>
-  </div>
+
+<div id="sidebarOverlay" class="fixed inset-0 z-40 bg-black/20 hidden"></div>
+<aside id="sidebar" class="fixed inset-y-0 left-0 z-50 w-72 max-w-[85vw] bg-white border-r border-gray-200 shadow-xl transform -translate-x-full transition-transform duration-200 ease-out flex flex-col">
+  <div class="p-3 border-b flex items-center gap-2"><span class="h-7 w-7 rounded-full bg-gray-900 text-white inline-flex items-center justify-center">✺</span><span class="font-medium truncate">Hi Language Docs</span></div>
+  <nav id="sideNav" class="flex-1 p-2 text-sm no-scrollbar overflow-y-auto divide-y"></nav>
 </aside>
-<div id="sidebarOverlayRight" class="fixed inset-0 z-40 bg-black/20 hidden" @click="$el.classList.add('hidden');document.getElementById('sidebarRight').classList.add('translate-x-full')"></div>
-<aside id="sidebarRight" class="fixed inset-y-0 right-0 z-50 w-80 max-w-[90vw] bg-white border-l border-gray-200 shadow-xl transform translate-x-full transition-transform duration-200 ease-out flex flex-col">
-  <div class="p-3 border-b text-sm font-medium flex items-center justify-between"><span>Threads</span><button id="closeThreads" class="p-1 rounded hover:bg-gray-100" aria-label="Close" @click="document.getElementById('sidebarOverlayRight').classList.add('hidden');document.getElementById('sidebarRight').classList.add('translate-x-full')"><svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg></button></div>
-  <div id="threadList" class="flex-1 overflow-y-auto divide-y"></div>
-</aside>
-<div id="threadPopover" class="menu-card hidden">
-  <button data-action="pin" class="menu-item"><i data-lucide="pin" class="h-4 w-4"></i><span>Pin to top</span></button>
-  <button data-action="rename" class="menu-item"><i data-lucide="edit-3" class="h-4 w-4"></i><span>Rename</span></button>
-  <button data-action="delete" class="menu-item text-red-600"><i data-lucide="trash-2" class="h-4 w-4"></i><span>Delete</span></button>
-  <button data-action="count_tokens" class="menu-item"><i data-lucide="hash" class="h-4 w-4"></i><span>Count tokens (approx.)</span></button>
-</div>
-<div id="sunePopover" class="menu-card hidden">
-  <button data-action="pin" class="menu-item"><i data-lucide="pin" class="h-4 w-4"></i><span>Pin to top</span></button>
-  <button data-action="rename" class="menu-item"><i data-lucide="edit-3" class="h-4 w-4"></i><span>Rename</span></button>
-  <button data-action="pfp" class="menu-item"><i data-lucide="image" class="h-4 w-4"></i><span>Change pfp</span></button>
-  <button data-action="export" class="menu-item"><i data-lucide="download" class="h-4 w-4"></i><span>Export sune (.sune)</span></button>
-</div>
-<div id="suneModal" class="hidden fixed inset-0 z-50">
-  <div class="absolute inset-0 bg-black/30"></div>
-  <div class="absolute inset-x-0 top-12 mx-auto w-full max-w-md px-4">
-    <div class="rounded-2xl bg-white shadow-xl border border-gray-200 overflow-hidden">
-      <div class="px-4 py-3 border-b text-sm font-semibold flex items-center gap-2"><input id="suneURL" type="text" placeholder="" class="flex-1 min-w-0 h-10 rounded-xl border-0 bg-gray-50 px-3 text-gray-400 placeholder:text-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-200 focus:bg-white text-xs font-mono focus:text-black"/><button id="syncSune" class="p-1.5 rounded hover:bg-gray-100" aria-label="Refresh"><i data-lucide="refresh-cw" class="h-5 w-5"></i></button></div>
-      <form id="settingsForm" class="text-sm">
-        <div class="border-b flex text-xs font-medium"><button type="button" id="tabModel" class="flex-1 py-2 px-3 text-center border-b-2 border-black">Model & Sampling</button><button type="button" id="tabPrompt" class="flex-1 py-2 px-3 text-center border-b-2 border-transparent hover:border-gray-300">System Prompt</button><button type="button" id="tabScript" class="flex-1 py-2 px-3 text-center border-b-2 border-transparent hover:border-gray-300">HTML</button></div>
-        <div id="panelModel" class="p-4 space-y-4">
-          <div class="grid grid-cols-2 gap-3"><div><label class="block text-gray-700 font-medium mb-1">Model name</label><input id="set_model" type="text" class="w-full rounded-xl border border-gray-300 px-3 py-2" placeholder="google/gemini-2.5-pro"/></div><div><label class="block text-gray-700 font-medium mb-1">Reasoning Effort</label><select id="set_reasoning_effort" class="w-full rounded-xl border border-gray-300 px-3 py-2"><option value="default">Omitted</option><option value="low">Low</option><option value="medium">Medium</option><option value="high">High</option></select></div></div>
-          <div class="grid grid-cols-2 gap-3">
-            <div><label class="block text-gray-700 font-medium mb-1">Temperature <span class="text-gray-400">(0–2)</span></label><input id="set_temperature" type="number" min="0" max="2" step="0.1" class="w-full rounded-xl border border-gray-300 px-3 py-2" placeholder="1.0"/></div>
-            <div><label class="block text-gray-700 font-medium mb-1">Top P <span class="text-gray-400">(0–1)</span></label><input id="set_top_p" type="number" min="0" max="1" step="0.01" class="w-full rounded-xl border border-gray-300 px-3 py-2" placeholder="1.0"/></div>
-            <div><label class="block text-gray-700 font-medium mb-1">Top K</label><input id="set_top_k" type="number" min="0" step="1" class="w-full rounded-xl border border-gray-300 px-3 py-2" placeholder="0"/></div>
-            <div><label class="block text-gray-700 font-medium mb-1">Frequency Penalty <span class="text-gray-400">(-2–2)</span></label><input id="set_frequency_penalty" type="number" min="-2" max="2" step="0.1" class="w-full rounded-xl border border-gray-300 px-3 py-2" placeholder="0.0"/></div>
-            <div><label class="block text-gray-700 font-medium mb-1">Repetition Penalty <span class="text-gray-400">(0–2)</span></label><input id="set_repetition_penalty" type="number" min="0" max="2" step="0.01" class="w-full rounded-xl border border-gray-300 px-3 py-2" placeholder="1.0"/></div>
-            <div><label class="block text-gray-700 font-medium mb-1">Min P <span class="text-gray-400">(0–1)</span></label><input id="set_min_p" type="number" min="0" max="1" step="0.01" class="w-full rounded-xl border border-gray-300 px-3 py-2" placeholder="0.0"/></div>
-            <div><label class="block text-gray-700 font-medium mb-1">Top A <span class="text-gray-400">(0–1)</span></label><input id="set_top_a" type="number" min="0" max="1" step="0.01" class="w-full rounded-xl border border-gray-300 px-3 py-2" placeholder="0.0"/></div>
-            <div><label class="block text-gray-700 font-medium mb-1">Verbosity</label><select id="set_verbosity" class="w-full rounded-xl border border-gray-300 px-3 py-2"><option value="">Omitted</option><option value="low">Low</option><option value="medium">Medium</option><option value="high">High</option></select></div>
-          </div>
-          <div class="flex flex-wrap items-center gap-2 pt-2">
-            <div><input id="set_include_thoughts" type="checkbox" class="sr-only peer"><label for="set_include_thoughts" class="inline-flex cursor-pointer items-center rounded-full border border-slate-300 bg-transparent py-0.5 px-3 text-xs text-slate-500 peer-checked:border-gray-300 peer-checked:bg-gray-200 peer-checked:text-slate-800">Include thoughts</label></div>
-            <div><input id="set_json_output" type="checkbox" class="sr-only peer"><label for="set_json_output" class="inline-flex cursor-pointer items-center rounded-full border border-slate-300 bg-transparent py-0.5 px-3 text-xs text-slate-500 peer-checked:border-gray-300 peer-checked:bg-gray-200 peer-checked:text-slate-800">JSON Output</label></div>
-            <div><input id="set_hide_composer" type="checkbox" class="sr-only peer"><label for="set_hide_composer" class="inline-flex cursor-pointer items-center rounded-full border border-slate-300 bg-transparent py-0.5 px-3 text-xs text-slate-500 peer-checked:border-gray-300 peer-checked:bg-gray-200 peer-checked:text-slate-800">Hide composer</label></div>
-            <div><input id="set_ignore_master_prompt" type="checkbox" class="sr-only peer"><label for="set_ignore_master_prompt" class="inline-flex cursor-pointer items-center rounded-full border border-slate-300 bg-transparent py-0.5 px-3 text-xs text-slate-500 peer-checked:border-gray-300 peer-checked:bg-gray-200 peer-checked:text-slate-800">Ignore master prompt</label></div>
-          </div>
-        </div>
-        <div id="panelPrompt" class="p-4 space-y-4 hidden">
-          <div><div class="flex items-center justify-between mb-1"><label for="set_system_prompt" class="block text-gray-700 font-medium">System Prompt</label><div class="flex gap-2"><button type="button" id="copySystemPrompt" class="px-2 py-1 text-xs rounded-md bg-gray-100 hover:bg-gray-200">Copy</button><button type="button" id="pasteSystemPrompt" class="px-2 py-1 text-xs rounded-md bg-gray-100 hover:bg-gray-200">Paste</button></div></div><textarea id="set_system_prompt" rows="8" class="w-full rounded-xl border border-gray-300 px-3 py-2" placeholder="Enter a system prompt to guide the sune"></textarea></div>
-          <div><label class="block text-gray-700 font-medium mb-1">JSON Schema</label><pre id="jsonSchemaEditor" class="w-full h-48 p-3 rounded-xl border border-gray-300 bg-white overflow-auto font-mono" contenteditable="plaintext-only" spellcheck="false" autocorrect="off" autocapitalize="off" autocomplete="off"></pre><p class="mt-1 text-xs text-gray-500">Requires "JSON Output" to be enabled. Value for <code>json_schema</code>.</p></div>
-        </div>
-        <div id="panelScript" class="p-1 hidden">
-          <div class="border-b flex text-xs font-medium"><button type="button" id="htmlTab_index" class="flex-1 py-2 px-3 text-center border-b-2"></button><button type="button" id="htmlTab_extension" class="flex-1 py-2 px-3 text-center border-b-2"></button></div>
-          <div class="pt-0">
-            <pre id="htmlEditor" class="w-full h-[50vh] p-3 rounded-xl border border-gray-300 bg-white overflow-auto font-mono text-[12px] leading-5" contenteditable="plaintext-only" spellcheck="false" autocorrect="off" autocapitalize="off" autocomplete="off"></pre>
-            <pre id="extensionHtmlEditor" class="w-full h-[50vh] p-3 rounded-xl border border-gray-300 bg-white overflow-auto font-mono text-[12px] leading-5 hidden" contenteditable="plaintext-only" spellcheck="false" autocorrect="off" autocapitalize="off" autocomplete="off"></pre>
-          </div>
-          <div class="mt-2 flex gap-2"><button type="button" id="copyHTML" class="px-3 py-1.5 rounded-lg bg-gray-100 hover:bg-gray-200">Copy</button><button type="button" id="pasteHTML" class="px-3 py-1.5 rounded-lg bg-gray-100 hover:bg-gray-200">Paste</button></div>
-          <p class="mt-1 text-xs text-gray-500">Scripts also run. extension.html runs before index.html.</p>
-        </div>
-        <div class="flex items-center justify-between gap-2 px-4 py-3 border-t">
-          <button type="button" id="deleteSuneBtn" class="inline-flex items-center gap-2 px-3 py-2 rounded-xl border border-red-200 text-red-700 hover:bg-red-50"><svg viewBox="0 0 24 24" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 6h18M8 6v12a2 2 0 0 0 2 2h4a2 2 0 0 0 2-2V6m-9 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg><span>Delete sune</span></button>          <div class="flex items-center justify-end gap-2"><button type="button" id="cancelSettings" class="px-3 py-2 rounded-xl border bg-white hover:bg-gray-50">Cancel</button><button type="submit" class="px-3 py-2 rounded-xl bg-black text-white hover:bg-black/90">Save</button></div>
-        </div>
-      </form>
-    </div>
-  </div>
-</div>
-<div id="accountSettingsModal" class="hidden fixed inset-0 z-50">
-  <div class="absolute inset-0 bg-black/30"></div>
-  <div class="absolute inset-x-0 top-16 mx-auto w-full max-w-md px-4">
-    <div class="rounded-2xl bg-white shadow-xl border border-gray-200 overflow-hidden">
-      <div class="px-4 py-3 border-b text-sm font-semibold flex items-center justify-between"><span>Account Settings</span><button id="closeAccountSettings" class="p-1 rounded hover:bg-gray-100" aria-label="Close"><svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg></button></div>
-      <form id="accountSettingsForm" class="text-sm">
-        <div class="border-b flex text-xs font-medium"><button type="button" id="accountTabGeneral" class="flex-1 py-2 px-3 text-center border-b-2 border-black">General</button><button type="button" id="accountTabAPI" class="flex-1 py-2 px-3 text-center border-b-2 border-transparent hover:border-gray-300">API</button><button type="button" id="accountTabUser" class="flex-1 py-2 px-3 text-center border-b-2 border-transparent hover:border-gray-300">User</button></div>
-        <div id="accountPanelGeneral" class="p-4 space-y-4">
-          <div><label class="block text-gray-700 font-medium mb-1">Provider</label><select id="set_provider" class="w-full rounded-xl border border-gray-300 px-3 py-2"><option value="openrouter">OpenRouter</option><option value="openai">OpenAI</option><option value="google">Google</option><option value="cloudflare">Cloudflare</option></select><p class="mt-1 text-xs text-gray-500">Or you can prefix model names with or:, oai:, g:, or cf: to override.</p></div>
-          <div><label class="block text-gray-700 font-medium mb-1">Master Prompt</label><textarea id="set_master_prompt" rows="6" class="w-full rounded-xl border border-gray-300 px-3 py-2" placeholder="Applies to all sunes on this device"></textarea><p class="mt-1 text-xs text-gray-500">Stored locally.</p></div>
-          <div><label class="block text-gray-700 font-medium mb-1">Model preference for titles</label><input id="set_title_model" type="text" class="w-full rounded-xl border border-gray-300 px-3 py-2" placeholder="or:google/gemma-3-12b-it"/><p class="mt-1 text-xs text-gray-500">Used for auto-generating thread titles.</p></div>
-        </div>
-        <div id="accountPanelAPI" class="p-4 hidden"><div class="grid grid-cols-2 gap-x-4 gap-y-4"><div><label class="block text-gray-700 font-medium mb-1">OpenRouter Key</label><div class="relative"><input id="set_api_key_or" type="password" class="w-full rounded-xl border border-gray-300 px-3 py-2 pr-10" placeholder="sk-or-..."><button type="button" data-reveal-for="set_api_key_or" class="absolute inset-y-0 right-0 px-3 flex items-center text-gray-400 hover:text-gray-600"><i data-lucide="eye" class="h-4 w-4"></i></button></div><p class="mt-1 text-xs text-gray-500">Use: <code>USER.apiKeyOpenRouter</code></p></div><div><label class="block text-gray-700 font-medium mb-1">OpenAI Key</label><div class="relative"><input id="set_api_key_oai" type="password" class="w-full rounded-xl border border-gray-300 px-3 py-2 pr-10" placeholder="sk-..."><button type="button" data-reveal-for="set_api_key_oai" class="absolute inset-y-0 right-0 px-3 flex items-center text-gray-400 hover:text-gray-600"><i data-lucide="eye" class="h-4 w-4"></i></button></div><p class="mt-1 text-xs text-gray-500">Use: <code>USER.apiKeyOpenAI</code></p></div><div><label class="block text-gray-700 font-medium mb-1">Google Key</label><div class="relative"><input id="set_api_key_g" type="password" class="w-full rounded-xl border border-gray-300 px-3 py-2 pr-10" placeholder="AIza..."><button type="button" data-reveal-for="set_api_key_g" class="absolute inset-y-0 right-0 px-3 flex items-center text-gray-400 hover:text-gray-600"><i data-lucide="eye" class="h-4 w-4"></i></button></div><p class="mt-1 text-xs text-gray-500">Gemini/Studio. Use: <code>USER.apiKeyGoogle</code></p></div><div><label class="block text-gray-700 font-medium mb-1">Cloudflare Token</label><div class="relative"><input id="set_api_key_cf" type="password" class="w-full rounded-xl border border-gray-300 px-3 py-2 pr-10" placeholder="..."><button type="button" data-reveal-for="set_api_key_cf" class="absolute inset-y-0 right-0 px-3 flex items-center text-gray-400 hover:text-gray-600"><i data-lucide="eye" class="h-4 w-4"></i></button></div><p class="mt-1 text-xs text-gray-500">Not used. Use: <code>USER.apiKeyCloudflare</code></p></div><div><label class="block text-gray-700 font-medium mb-1">Github Token</label><div class="relative"><input id="set_gh_token" type="password" class="w-full rounded-xl border border-gray-300 px-3 py-2 pr-10" placeholder="ghp_..."><button type="button" data-reveal-for="set_gh_token" class="absolute inset-y-0 right-0 px-3 flex items-center text-gray-400 hover:text-gray-600"><i data-lucide="eye" class="h-4 w-4"></i></button></div><p class="mt-1 text-xs text-gray-500">Use: <code>USER.githubToken</code></p></div><div><label class="block text-gray-700 font-medium mb-1">GCP Service Acct</label><input id="gcpSAInput" type="file" class="hidden" accept="application/json,.json"><button type="button" id="gcpSAUploadBtn" class="w-full text-left rounded-xl border border-gray-300 bg-white px-3 py-2 text-sm hover:bg-gray-50 truncate">Upload .json</button><p class="mt-1 text-xs text-gray-500">Use: <code>USER.gcpSA</code></p></div></div></div>
-        <div id="accountPanelUser" class="p-4 space-y-4 hidden">
-          <div class="flex items-center gap-4">
-            <div class="relative"><img id="userAvatarPreview" class="h-16 w-16 rounded-full object-cover bg-gray-200"><button type="button" id="setUserAvatarBtn" class="absolute bottom-0 right-0 h-6 w-6 rounded-full bg-white border border-gray-300 flex items-center justify-center hover:bg-gray-100" aria-label="Edit photo"><i data-lucide="edit-3" class="h-3 w-3"></i></button></div>
-            <input id="userAvatarInput" type="file" accept="image/*" class="hidden">
-            <div class="flex-1"><label for="set_user_name" class="block text-gray-700 font-medium mb-1">Username</label><input id="set_user_name" type="text" class="w-full rounded-xl border border-gray-300 px-3 py-2" placeholder="Master"/></div>
-          </div>
-        </div>
-        <div class="flex items-center justify-between gap-2 px-4 py-3 border-t">
-          <div class="flex items-center gap-2"><button type="button" id="importAccountSettings" class="text-xs px-2.5 py-1.5 rounded-lg border bg-white hover:bg-gray-50">Import</button><button type="button" id="exportAccountSettings" class="text-xs px-2.5 py-1.5 rounded-lg border bg-white hover:bg-gray-50">Export</button></div>
-          <div class="flex items-center justify-end gap-2"><button type="button" id="cancelAccountSettings" class="px-3 py-2 rounded-xl border bg-white hover:bg-gray-50">Cancel</button><button type="submit" class="px-3 py-2 rounded-xl bg-black text-white hover:bg-black/90">Save</button></div>
-        </div>
-      </form>
-    </div>
-  </div>
-</div>
-<input id="importAccountSettingsInput" type="file" class="hidden" accept="application/json,.json">
-<script src="https://unpkg.com/lucide@latest"></script>
+
 <script src="https://cdn.jsdelivr.net/npm/markdown-it@14.1.0/dist/markdown-it.min.js"></script>
-<script src="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.9.0/build/highlight.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/localforage@1.10.0/dist/localforage.min.js"></script>
+<script src="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.11.1/build/highlight.min.js"></script>
+<script id="md" type="text/markdown">
+Meet Hi — a corely symbolic language inspired by JavaScript.
+It keeps the core mostly symbols and uses keywords only where they’re truly practical.
+
+- Minimal surface: prefer symbols over words.
+- Blocks are both objects and functions.
+- Privacy with `#private` members.
+- Boolean is truthiness by value (see below).
+
+> Print helper: `_()` writes to the console.
+
+## Hello, world
+
+~~~js
+// Hello World in Hi
+_("Hi world")
+~~~
+
+## Declarations and Assignment
+
+- `:` declares a name.
+- `=` assigns or mutates a value.
+
+~~~js
+greeting: "Hi"
+name: "Orion"
+greeting = greeting + ", " + name
+_(greeting) // "Hi, Orion"
+~~~
+
+## Blocks (object + function in one)
+
+In Hi, `{}` is a Block. It can hold properties and executable code.
+A Block is both an “object” and a “function” at the same time.
+
+### Function Block
+
+~~~js
+sayHi: {
+  _("Hi")
+}
+sayHi() // invokes the block
+~~~
+
+### Object Block
+
+Public vs private fields; `#` marks private members.
+
+~~~js
+player: {
+  name: "Orion"  // public
+  #hp: 100        // private
+}
+_(player.name)     // "Orion"
+// _(player.#hp)   // error: private
+~~~
+
+### Hybrid Block
+
+Blocks can expose methods and hold private state.
+
+~~~js
+counter: {
+  #value: 0
+  inc: {
+    #value = #value + 1
+    _("The count is now: " + #value)
+    #value           // last expression returns
+  }
+}
+
+counter.inc() // "The count is now: 1"
+counter.inc() // "The count is now: 2"
+~~~
+
+### Parameters and returns
+
+- Parameters use `(name, ...)` before the Block.
+- Like Rust, the last expression is returned (no `return` keyword).
+
+~~~js
+withParams: (str) {
+  _(str)
+  str // returned
+}
+
+add: (a, b) { a + b }
+_( add(2, 3) ) // 5
+~~~
+
+## Truthiness and Equality
+
+Truthiness is value-based:
+
+~~~js
+0    // falsy (the official false)
+!0   // truthy (the official true)
+4    // truthy
+""   // falsy (truthy if non-empty)
+{}   // falsy (truthy if it has content)
+[]   // falsy (truthy if it has content)
+-0   // falsy / null / undefined (represents “empty”)
+~~~
+
+Equality:
+
+~~~js
+==  // equivalent to JS ===
+~~~
+
+## Conditionals (ternary-style Blocks)
+
+A conditional is an expression that selects a Block.
+
+~~~js
+// if
+(cond) ? { /* then */ }
+
+// if / else
+(cond) ? { /* then */ } : { /* else */ }
+
+// expression result is the last Block’s last expression
+tern: (cond) ? { "A" } : { "B" }
+~~~
+
+Multi-branch:
+
+~~~js
+score: 85
+grade: (score > 90) ? { "A" }
+     : (score > 80) ? { "B" }
+     :               { "C" }
+
+_(grade) // "B"
+~~~
+
+## Arrays
+
+~~~js
+primes: [2, 3, 5, 7]
+
+// Access
+firstPrime: primes[0]
+
+// Mutation
+primes[0] = 1
+_(primes) // [1, 3, 5, 7]
+~~~
+
+## Loops
+
+`* { ... }` after a loop header runs the Block each iteration.
+
+~~~js
+// for (init; test; step)
+(i: 0; i < 5; i = i + 1) * {
+  _(i)
+}
+
+// while
+(!0) * {
+  // do something forever...
+  ^ // break when done
+}
+
+// Controls
+>>  // continue
+^   // break
+~~~
+
+## Bridging examples
+
+Closures over private state:
+
+~~~js
+makeCounter: {
+  #v: 0
+  {
+    inc: { #v = #v + 1; #v }
+    value: { #v }
+  }
+}
+
+c: makeCounter()
+c.inc()   // 1
+c.inc()   // 2
+c.value() // 2
+~~~
+
+Tiny program with input and branching:
+
+~~~js
+welcome: (name) {
+  msg: (name && name != "") ? { "Hi, " + name + "!" } : { "Hi!" }
+  _(msg)
+  msg
+}
+
+welcome("Ada") // "Hi, Ada!"
+welcome("")    // "Hi!"
+~~~
+
+## Notes
+
+- Comments use `//`.
+- Strings are `"..."`.
+- Blocks return their last expression.
+- Private members (`#x`) are visible only inside their Block (and nested Blocks that resolve to it).
+
+---
+
+Hi is still in active development. This page will grow with specs, a reference, and a playground. Contributions and feedback are welcome!
+</script>
+
 <script>
 document.addEventListener('DOMContentLoaded',()=>{
-const DEFAULT_MODEL='google/gemini-2.5-pro',DEFAULT_API_KEY=''
-const el=window.el=Object.fromEntries(['topbar','chat','messages','composer','input','sendBtn','suneBtnTop','suneModal','suneURL','settingsForm','closeSettings','cancelSettings','tabModel','tabPrompt','tabScript','panelModel','panelPrompt','panelScript','set_model','set_temperature','set_top_p','set_top_k','set_frequency_penalty','set_repetition_penalty','set_min_p','set_top_a','set_verbosity','set_reasoning_effort','set_system_prompt','set_hide_composer','set_include_thoughts','set_json_output','set_ignore_master_prompt','deleteSuneBtn','sidebarLeft','sidebarOverlayLeft','sidebarBtnLeft','suneList','newSuneBtn','userMenuBtn','userMenu','accountSettingsOption','sunesImportOption','sunesExportOption','threadsImportOption','threadsExportOption','importInput','sidebarBtnRight','sidebarRight','sidebarOverlayRight','threadList','closeThreads','threadPopover','sunePopover','footer','attachBtn','attachBadge','fileInput','htmlEditor','extensionHtmlEditor','jsonSchemaEditor','htmlTab_index','htmlTab_extension','suneHtml','accountSettingsModal','accountSettingsForm','closeAccountSettings','cancelAccountSettings','set_master_prompt','set_provider','set_api_key_or','set_api_key_oai','set_api_key_g','set_api_key_cf','set_title_model','copySystemPrompt','pasteSystemPrompt','copyHTML','pasteHTML','accountTabGeneral','accountTabAPI','accountPanelGeneral','accountPanelAPI','set_gh_token','gcpSAInput','gcpSAUploadBtn','importAccountSettings','exportAccountSettings','importAccountSettingsInput','accountTabUser','accountPanelUser','set_user_name','userAvatarPreview','setUserAvatarBtn','userAvatarInput'].map(id=>[id,$('#'+id)[0]]))
-const icons=()=>window.lucide&&lucide.createIcons()
-const haptic=()=>/android/i.test(navigator.userAgent)&&navigator.vibrate?.(1)
-const clamp=(v,min,max)=>Math.max(min,Math.min(max,v)),num=(v,d)=>v==null||v===''||isNaN(+v)?d:+v,int=(v,d)=>v==null||v===''||isNaN(parseInt(v))?d:parseInt(v),gid=()=>Math.random().toString(36).slice(2,9),esc=s=>String(s).replace(/[&<>'"`]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;","`":"&#96;"}[c])),positionPopover=(a,p)=>{const r=a.getBoundingClientRect();p.style.top=`${r.bottom+p.offsetHeight+4>window.innerHeight?r.top-p.offsetHeight-4:r.bottom+4}px`;p.style.left=`${Math.max(8,Math.min(r.right-p.offsetWidth,window.innerWidth-p.offsetWidth-8))}px`}
-const sid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,6)
-const fmtSize=b=>{const u=['B','KB','MB','GB','TB'];let i=0,x=b;while(x>=1024&&i<u.length-1){x/=1024;i++}return (x>=10?Math.round(x):Math.round(x*10)/10)+' '+u[i]}
-const asDataURL=f=>new Promise(r=>{const fr=new FileReader();fr.onload=()=>r(String(fr.result||''));fr.readAsDataURL(f)})
-const imgToWebp=(f,D=128,q=80)=>new Promise((r,j)=>{if(!f)return j();const i=new Image;i.onload=()=>{const c=document.createElement('canvas'),x=c.getContext('2d');let w=i.width,h=i.height;if(D>0&&Math.max(w,h)>D)w>h?(h=D*h/w,w=D):(w=D*w/h,h=D);c.width=w;c.height=h;x.drawImage(i,0,0,w,h);r(c.toDataURL('image/webp',clamp(q,0,100)/100));URL.revokeObjectURL(i.src)};i.onerror=j;i.src=URL.createObjectURL(f)});
-const b64=x=>x.split(',')[1]||''
-const su={key:'sunes_v1',activeKey:'active_sune_id',load(){try{return JSON.parse(localStorage.getItem(this.key)||'[]')}catch{return[]}},save(list){localStorage.setItem(this.key,JSON.stringify(list||[]))},getActiveId(){return localStorage.getItem(this.activeKey)||null},setActiveId(id){localStorage.setItem(this.activeKey,id||'')}}
-const defaultSettings={model:DEFAULT_MODEL,temperature:'',top_p:'',top_k:'',frequency_penalty:'',repetition_penalty:'',min_p:'',top_a:'',verbosity:'',reasoning_effort:'default',system_prompt:'',html:'',extension_html:"<sune src='https://raw.githubusercontent.com/sune-org/store/refs/heads/main/sync.sune' private></sune>",hide_composer:false,include_thoughts:false,json_output:false,ignore_master_prompt:false,json_schema:''}
-const makeSune=(p={})=>({id:p.id||gid(),name:p.name?.trim()||'Default',pinned:!!p.pinned,avatar:p.avatar||'',url:p.url||'',updatedAt:p.updatedAt||Date.now(),settings:Object.assign({},defaultSettings,p.settings||{}),storage:p.storage||{}})
-let sunes=(su.load()||[]).map(makeSune)
-const SUNE=window.SUNE=new Proxy({get list(){return sunes},get id(){return su.getActiveId()},get active(){return sunes.find(a=>a.id===su.getActiveId())||sunes[0]},get:id=>sunes.find(s=>s.id===id),setActive:id=>su.setActiveId(id||''),create(p={}){const s=makeSune(p);sunes.unshift(s);su.save(sunes);return s},delete(id){const curId=this.id;sunes=sunes.filter(s=>s.id!==id);su.save(sunes);if(sunes.length===0){const def=this.create({name:'Default'});this.setActive(def.id)}else if(curId===id)this.setActive(sunes[0].id)},save:()=>su.save(sunes)},{get(t,p){if(p==='fetchDotSune')return async g=>{try{const u=g.startsWith('http')?g:(()=>{const[a,b]=g.split('@'),[c,d]=a.split('/'),[e,...f]=b.split('/');return`https://raw.githubusercontent.com/${c}/${d}/${e}/${f.join('/')}`})(),j=await(await fetch(u)).json(),l=sunes.length;sunes.unshift(...(Array.isArray(j)?j:j?.sunes||[]).filter(s=>s?.id&&!t.get(s.id)).map(s=>makeSune(s)));sunes.length>l&&t.save()}catch{}};if(p==='attach')return async files=>{const arr=[];for(const f of files||[])arr.push(await toAttach(f));const clean=arr.filter(Boolean);if(!clean.length)return;await ensureThreadOnFirstUser('(attachments)');addMessage({role:'assistant',content:clean,...activeMeta()});await THREAD.persist()};if(p==='log')return async s=>{const t=String(s??'').trim();if(!t)return;await ensureThreadOnFirstUser(t);addMessage({role:'assistant',content:[{type:'text',text:t}],...activeMeta()});await THREAD.persist()};if(p==='lastReply')return [...state.messages].reverse().find(m=>m.role==='assistant');if(p==='infer')return async()=>{if(state.busy||!SUNE.model||state.abortRequested){state.abortRequested=false;return};await ensureThreadOnFirstUser('Sune Inference');const th=THREAD.active;if(th&&!th.title)(async()=>THREAD.setTitle(th.id,await generateTitleWithAI(state.messages)||'Sune Inference'))();state.busy=true;setBtnStop();const a=SUNE.active,suneMeta={sune_name:a.name,model:SUNE.model,avatar:a.avatar||''},streamId=sid(),suneBubble=addSuneBubbleStreaming(suneMeta,streamId);suneBubble.dataset.mid=streamId;const assistantMsg=Object.assign({id:streamId,role:'assistant',content:[{type:'text',text:''}]},suneMeta);state.messages.push(assistantMsg);THREAD.persist(false);state.stream={rid:streamId,bubble:suneBubble,meta:suneMeta,text:'',done:false};let buf='',completed=false;const onDelta=(delta,done)=>{buf+=delta;state.stream.text=buf;renderMarkdown(suneBubble,buf,{enhance:false});assistantMsg.content[0].text=buf;if(done&&!completed){completed=true;setBtnSend();state.busy=false;enhanceCodeBlocks(suneBubble,true);THREAD.persist(true);el.composer.dispatchEvent(new CustomEvent('sune:newSuneResponse',{detail:{message:assistantMsg}}));state.stream={rid:null,bubble:null,meta:null,text:'',done:false}}else if(!done)THREAD.persist(false)};await askOpenRouterStreaming(onDelta,streamId)};if(p==='getByName')return n=>sunes.find(s=>s.name.toLowerCase()===(n||'').trim().toLowerCase());if(p==='handoff')return async n=>{await new Promise(r=>setTimeout(r,4000));const s=sunes.find(s=>s.name.toLowerCase()===(n||'').trim().toLowerCase());if(!s)return;SUNE.setActive(s.id);renderSidebar();await reflectActiveSune();await SUNE.infer()};if(p in t)return t[p];const a=t.active;if(!a)return;if(p in a.settings)return a.settings[p];if(p in a)return a[p]},set(t,p,v){const a=t.active;if(!a)return false;const i=sunes.findIndex(s=>s.id===a.id);if(i<0)return false;const isTopLevel=/^(name|avatar|url|pinned|storage)$/.test(p),target=isTopLevel?sunes[i]:sunes[i].settings;let value=v;if(!isTopLevel){if(p==='system_prompt')value=v||''}if(target[p]!==value){target[p]=value;sunes[i].updatedAt=Date.now();su.save(sunes)}return true}})
-if(!sunes.length){const def=SUNE.create({name:'Default'});SUNE.setActive(def.id)}
-const state=window.state={messages:[],busy:false,controller:null,currentThreadId:null,abortRequested:false,attachments:[],stream:{rid:null,bubble:null,meta:null,text:'',done:false}}
-const getModelShort=m=>{const mm=m||SUNE.model||'';return mm.includes('/')?mm.split('/').pop():mm}
-const resolveSuneSrc=src=>{if(!src)return null;if(src.startsWith('gh://')){const path=src.substring(5),parts=path.split('/');if(parts.length<3)return null;const[owner,repo,...filePathParts]=parts;return`https://raw.githubusercontent.com/${owner}/${repo}/main/${filePathParts.join('/')}`}return src}
-const processSuneIncludes=async(html,depth=0)=>{if(depth>5)return'<!-- Sune include depth limit reached -->';if(!html)return'';const c=document.createElement('div');c.innerHTML=html;for(const n of[...c.querySelectorAll('sune')]){if(n.hasAttribute('src')){if(n.hasAttribute('private')&&depth>0){n.remove();continue}const s=n.getAttribute('src'),u=resolveSuneSrc(s);if(!u){n.replaceWith(document.createComment(` Invalid src: ${esc(s)} `));continue}try{const r=await fetch(u);if(!r.ok)throw new Error(`HTTP ${r.status}`);const d=await r.json(),o=Array.isArray(d)?d[0]:d,h=[o?.settings?.extension_html||'',o?.settings?.html||''].join('\n');n.replaceWith(document.createRange().createContextualFragment(await processSuneIncludes(h,depth+1)))}catch(e){n.replaceWith(document.createComment(` Fetch failed: ${esc(u)} `))}}else{n.replaceWith(document.createRange().createContextualFragment(n.innerHTML))}}return c.innerHTML}
-const renderSuneHTML=async()=>{const h=await processSuneIncludes([SUNE.extension_html,SUNE.html].map(x=>(x||'').trim()).join('\n')),c=el.suneHtml;c.innerHTML='';const t=h.trim();c.classList.toggle('hidden',!t);t&&(c.appendChild(document.createRange().createContextualFragment(h)),window.Alpine?.initTree(c))}
-const reflectActiveSune=async()=>{const a=SUNE.active;el.suneBtnTop.title=`Settings — ${a.name}`;el.suneBtnTop.innerHTML=a.avatar?`<img src="${esc(a.avatar)}" alt="" class="h-8 w-8 rounded-full object-cover"/>`:'✺';el.footer.classList.toggle('hidden',!!a.settings.hide_composer);await renderSuneHTML();icons()}
-const suneRow=a=>`<div class="relative flex items-center gap-2 px-3 py-2 ${a.pinned?'bg-yellow-50':''}"><button data-sune-id="${a.id}" class="flex-1 text-left flex items-center gap-2 ${a.id===SUNE.id?'font-medium':''}">${a.avatar?`<img src="${esc(a.avatar)}" alt="" class="h-6 w-6 rounded-full object-cover"/>`:`<span class="h-6 w-6 rounded-full bg-gray-200 flex items-center justify-center">✺</span>`}<span class="truncate">${a.pinned?'📌 ':''}${esc(a.name)}</span></button><button data-sune-menu="${a.id}" class="h-8 w-8 rounded hover:bg-gray-100 flex items-center justify-center" title="More"><i data-lucide="more-horizontal" class="h-4 w-4"></i></button></div>`
-const renderSidebar=window.renderSidebar=()=>{const list=[...SUNE.list].sort((a,b)=>(b.pinned-a.pinned));el.suneList.innerHTML=list.map(suneRow).join('');icons()}
-function enhanceCodeBlocks(root,doHL=true){$(root).find('pre>code').each((i,code)=>{if(code.textContent.length>200000)return;const $pre=$(code).parent().addClass('relative rounded-xl border border-gray-200');if(!$pre.find('.code-actions').length){const len=code.textContent.length,countText=len>=1e3?(len/1e3).toFixed(1)+'K':len;const $btn=$('<button class="bg-slate-900 text-white rounded-lg py-1 px-2 text-xs opacity-85">Copy</button>').on('click',async e=>{e.stopPropagation();try{await navigator.clipboard.writeText(code.innerText);$btn.text('Copied');setTimeout(()=>$btn.text('Copy'),1200)}catch{}});const $container=$('<div class="code-actions absolute top-2 right-2 flex items-center gap-2"></div>');$container.append($(`<span class="text-xs text-gray-500">${countText} chars</span>`),$btn);$pre.append($container)}if(doHL&&window.hljs&&code.textContent.length<100000)hljs.highlightElement(code)})}
-const md=window.markdownit({html:false,linkify:true,typographer:true,breaks:true})
-const getSuneLabel=m=>{const name=(m&&m.sune_name)||SUNE.name,modelShort=getModelShort(m&&m.model);return `${name} · ${modelShort}`}
-function msgRow(m){const role=typeof m==='string'?m:(m&&m.role)||'assistant',meta=typeof m==='string'?{}:m||{},isUser=role==='user',$row=$('<div class="flex flex-col gap-2"></div>'),$head=$('<div class="flex items-center gap-2 px-4"></div>'),$avatar=$('<div></div>');const uAva=isUser?USER.avatar:meta.avatar;uAva?$avatar.attr('class','msg-avatar shrink-0 h-7 w-7 rounded-full overflow-hidden').html(`<img src="${esc(uAva)}" class="h-full w-full object-cover">`):$avatar.attr('class',`${isUser?'bg-gray-900 text-white':'bg-gray-200 text-gray-900'} msg-avatar shrink-0 h-7 w-7 rounded-full flex items-center justify-center`).text(isUser?'👤':'✺');const $name=$('<div class="text-xs font-medium text-gray-500"></div>').text(isUser?USER.name:getSuneLabel(meta));const $deleteBtn=$('<button class="p-1.5 rounded-lg hover:bg-gray-200 text-gray-400 hover:text-red-500" title="Delete message"><i data-lucide="x" class="h-4 w-4"></i></button>').on('click',async e=>{e.stopPropagation();state.messages=state.messages.filter(msg=>msg.id!==m.id);$row.remove();await THREAD.persist()});const $copyBtn=$('<button class="ml-auto p-1.5 rounded-lg hover:bg-gray-200 text-gray-400 hover:text-gray-600" title="Copy message"><i data-lucide="copy" class="h-4 w-4"></i></button>').on('click',async function(e){e.stopPropagation();try{await navigator.clipboard.writeText(partsToText(m.content));$(this).html('<i data-lucide="check" class="h-4 w-4 text-green-500"></i>');icons();setTimeout(()=>{$(this).html('<i data-lucide="copy" class="h-4 w-4"></i>');icons()},1200)}catch{}});$head.append($avatar, $name, $copyBtn, $deleteBtn);const $bubble=$(`<div class="${(isUser?'bg-gray-50 border border-gray-200':'bg-gray-100')+' msg-bubble markdown-body rounded-none px-4 py-3 w-full'}"></div>`);$row.append($head, $bubble);$(el.messages).append($row);queueMicrotask(()=>{el.chat.scrollTo({top:el.chat.scrollHeight,behavior:'smooth'});icons()});return $bubble[0]}
-const renderMarkdown=window.renderMarkdown=function(node,text,opt={enhance:true,highlight:true}){node.innerHTML=md.render(text);if(opt.enhance)enhanceCodeBlocks(node,opt.highlight)}
-function partsToText(parts){if(!parts)return'';if(Array.isArray(parts))return parts.map(p=>p?.type==='text'?p.text:(p?.type==='image_url'?`![](${p.image_url?.url||''})`:(p?.type==='file'?`[${p.file?.filename||'file'}]`:(p?.type==='input_audio'?`(audio:${p.input_audio?.format||''})`:'')))).join('\n');return String(parts)}
-const addMessage=window.addMessage=function(m,track=true){m.id=m.id||gid();if(!Array.isArray(m.content)&&m.content!=null){m.content=[{type:'text',text:String(m.content)}]}const bubble=msgRow(m);bubble.dataset.mid=m.id;renderMarkdown(bubble,partsToText(m.content));if(track)state.messages.push(m);if(m.role==='assistant')el.composer.dispatchEvent(new CustomEvent('sune:newSuneResponse',{detail:{message:m}}));return bubble}
-const addSuneBubbleStreaming=(meta,id)=>msgRow(Object.assign({role:'assistant',id},meta))
-const clearChat=()=>{el.suneHtml.dispatchEvent(new CustomEvent('sune:unmount'));state.messages=[];el.messages.innerHTML='';state.attachments=[];updateAttachBadge();el.fileInput.value=''}
-const payloadWithSampling=b=>{const o=Object.assign({},b),s=SUNE,p={temperature:num(s.temperature,null),top_p:num(s.top_p,null),top_k:int(s.top_k,null),frequency_penalty:num(s.frequency_penalty,null),repetition_penalty:num(s.repetition_penalty,null),min_p:num(s.min_p,null),top_a:num(s.top_a,null)};Object.keys(p).forEach(k=>{const v=p[k];if(v!==null)o[k]=v});return o}
-function setBtnStop(){const b=el.sendBtn;b.dataset.mode='stop';b.type='button';b.setAttribute('aria-label','Stop');b.innerHTML='<i data-lucide="square" class="h-5 w-5"></i>';icons();b.onclick=()=>{state.abortRequested=true;state.controller?.abort?.();state.busy=false;setBtnSend()}}
-function setBtnSend(){const b=el.sendBtn;b.dataset.mode='send';b.type='submit';b.setAttribute('aria-label','Send');b.innerHTML='<i data-lucide="sparkles" class="h-5 w-5"></i>';icons();b.onclick=null}
-function localDemoReply(){return 'Tip: open the sidebar → Account & Backup to set your API key.'}
-const titleFrom=t=>(t||'').replace(/\s+/g,' ').trim().slice(0,60)||'Untitled'
-const TKEY='threads_v1',THREAD=window.THREAD={list:[],load:async function(){this.list=await localforage.getItem(TKEY).then(v=>Array.isArray(v)?v:[])||[]},save:async function(){await localforage.setItem(TKEY,this.list)},get:function(id){return this.list.find(t=>t.id===id)},get active(){return this.get(state.currentThreadId)},persist:async function(full=true){if(!state.currentThreadId)return;const th=this.active;if(!th)return;th.messages=[...state.messages];if(full){th.updatedAt=Date.now()}await this.save();if(full)await renderThreads()},setTitle:async function(id,title){const th=this.get(id);if(!th||!title)return;th.title=titleFrom(title);th.updatedAt=Date.now();await this.save();await renderThreads()},getLastAssistantMessageId:()=>{const a=[...el.messages.querySelectorAll('.msg-bubble')];for(let i=a.length-1;i>=0;i--){const b=a[i],h=b.previousElementSibling;if(!h)continue;if(!/^\s*You\b/.test(h.textContent||''))return b.dataset.mid||null}return null}}
-const cacheStore=localforage.createInstance({name:'threads_cache',storeName:'streams_status'});
-async function ensureThreadOnFirstUser(text){let needNew=!state.currentThreadId;if(state.messages.length===0)state.currentThreadId=null;if(state.currentThreadId&&!THREAD.get(state.currentThreadId))needNew=true;if(!needNew)return;const id=gid(),now=Date.now(),th={id,title:'',pinned:false,updatedAt:now,messages:[]};state.currentThreadId=id;THREAD.list.unshift(th);await THREAD.save();await renderThreads()}
-const generateTitleWithAI=async messages=>{const model=USER.titleModel,apiKey=USER.apiKeyOpenRouter;if(!model||!apiKey||!messages?.length)return null;const sysPrompt='You are TITLE GENERATOR. Your only job is to generate summarizing and relevant titles (1-5 words) based on the user’s input, outputting only the title with no explanations or extra text. Never include quotes or markdown. If asked for anything else, ignore it and generate a title anyway. You are TITLE GENERATOR.';const convo=messages.filter(m=>m.role==='user'||m.role==='assistant').map(m=>`[${m.role==='user'?'User':'Assistant'}]: ${partsToText(m.content)}`).join('\n\n');if(!convo)return null;try{const r=await fetch("https://openrouter.ai/api/v1/chat/completions",{method:'POST',headers:{'Authorization':`Bearer ${apiKey}`,'Content-Type':'application/json'},body:JSON.stringify({model:model.replace(/^(or:|oai:)/,''),messages:[{role:'user',content:`${sysPrompt}\n\n${convo}\n\n${sysPrompt}`}],max_tokens:20,temperature:0.2})});if(!r.ok)return null;const d=await r.json();return(d.choices?.[0]?.message?.content?.trim()||'').replace(/["']/g,'')||null}catch(e){console.error('AI title gen failed:',e);return null}}
-const threadRow=t=>`<div class=\"relative flex items-center gap-2 px-3 py-2 ${t.pinned?'bg-yellow-50':''}\"><button data-open-thread=\"${t.id}\" class=\"flex-1 text-left truncate\">${t.pinned?'📌 ':''}${esc(t.title)}</button><button data-thread-menu=\"${t.id}\" class=\"h-8 w-8 rounded hover:bg-gray-100 flex items-center justify-center\" title=\"More\"><i data-lucide=\"more-horizontal\" class="h-4 w-4"></i></button></div>`
-async function renderThreads(){const list=[...THREAD.list].sort((a,b)=>(b.pinned-a.pinned)||(b.updatedAt-a.updatedAt));el.threadList.innerHTML=list.map(threadRow).join('');icons()}
-let menuThreadId=null;const hideThreadPopover=()=>{el.threadPopover.classList.add('hidden');menuThreadId=null}
-function showThreadPopover(btn,id){menuThreadId=id;el.threadPopover.classList.remove('hidden');positionPopover(btn,el.threadPopover);icons()}
-let menuSuneId=null;const hideSunePopover=()=>{el.sunePopover.classList.add('hidden');menuSuneId=null}
-function showSunePopover(btn,id){menuSuneId=id;el.sunePopover.classList.remove('hidden');positionPopover(btn,el.sunePopover);icons()}
-$(el.threadList).on('click',async e=>{const openBtn=e.target.closest('[data-open-thread]'),menuBtn=e.target.closest('[data-thread-menu]');if(openBtn){const id=openBtn.getAttribute('data-open-thread');if(id!==state.currentThreadId&&state.busy){state.controller?.disconnect?.();setBtnSend();state.busy=false;state.controller=null}const th=THREAD.get(id);if(!th)return;if(id===state.currentThreadId){el.sidebarRight.classList.add('translate-x-full');el.sidebarOverlayRight.classList.add('hidden');hideThreadPopover();return}state.currentThreadId=id;clearChat();state.messages=Array.isArray(th.messages)?[...th.messages]:[];for(const m of state.messages){const b=msgRow(m);b.dataset.mid=m.id||'';renderMarkdown(b,partsToText(m.content))}await renderSuneHTML();syncWhileBusy();queueMicrotask(()=>el.chat.scrollTo({top:el.chat.scrollHeight,behavior:'smooth'}));el.sidebarRight.classList.add('translate-x-full');el.sidebarOverlayRight.classList.add('hidden');hideThreadPopover();return}if(menuBtn){e.stopPropagation();showThreadPopover(menuBtn,menuBtn.getAttribute('[data-thread-menu]')?menuBtn.getAttribute('[data-thread-menu]'):menuBtn.getAttribute('data-thread-menu'))}})
-$(el.threadPopover).on('click',async e=>{const act=e.target.closest('[data-action]')?.getAttribute('data-action');if(!act||!menuThreadId)return;const th=THREAD.get(menuThreadId);if(!th)return;if(act==='pin'){th.pinned=!th.pinned}else if(act==='rename'){const nv=prompt('Rename to:',th.title);if(nv!=null){th.title=titleFrom(nv);th.updatedAt=Date.now()}}else if(act==='delete'){if(confirm('Delete this chat?')){THREAD.list=THREAD.list.filter(x=>x.id!==th.id);if(state.currentThreadId===th.id){state.currentThreadId=null;clearChat()}}}else if(act==='count_tokens'){const msgs=Array.isArray(th.messages)?th.messages:[];let totalChars=0;for(const m of msgs){if(!m||!m.role||m.role==='system')continue;totalChars+=String(partsToText(m.content||'')||'').length}const tokens=Math.max(0,Math.ceil(totalChars/4));const k=tokens>=1000?Math.round(tokens/1000)+'k':String(tokens);alert(tokens+' tokens ('+k+')')}hideThreadPopover();await THREAD.save();renderThreads()})
-$(el.suneList).on('click',async e=>{const menuBtn=e.target.closest('[data-sune-menu]');if(menuBtn){e.stopPropagation();showSunePopover(menuBtn,menuBtn.getAttribute('[data-sune-menu]')?menuBtn.getAttribute('[data-sune-menu]'):menuBtn.getAttribute('data-sune-menu'));return}const btn=e.target.closest('[data-sune-id]');if(!btn)return;const id=btn.getAttribute('data-sune-id');if(id){if(state.busy){state.controller?.disconnect?.();setBtnSend();state.busy=false;state.controller=null};SUNE.setActive(id);renderSidebar();await reflectActiveSune();state.currentThreadId=null;clearChat();document.getElementById('sidebarLeft').classList.add('-translate-x-full');document.getElementById('sidebarOverlayLeft').classList.add('hidden')}})
-$(el.sunePopover).on('click',async e=>{const act=e.target.closest('[data-action]')?.getAttribute('data-action');if(!act||!menuSuneId)return;const s=SUNE.get(menuSuneId);if(!s)return;const updateAndRender=async()=>{s.updatedAt=Date.now();SUNE.save();renderSidebar();await reflectActiveSune()};if(act==='pin'){s.pinned=!s.pinned;await updateAndRender()}else if(act==='rename'){const n=prompt('Rename sune to:',s.name);if(n!=null){s.name=n.trim();await updateAndRender()}}else if(act==='pfp'){const i=document.createElement('input');i.type='file';i.accept='image/*';i.onchange=async()=>{const f=i.files?.[0];if(!f)return;try{s.avatar=await imgToWebp(f);await updateAndRender()}catch{}};i.click()}else if(act==='export')dl(`sune-${(s.name||'sune').replace(/\W/g,'_')}-${ts()}.sune`,[s]);hideSunePopover()})
-function updateAttachBadge(){const n=state.attachments.length;el.attachBadge.textContent=String(n);el.attachBadge.classList.toggle('hidden',n===0)}
-async function toAttach(file){if(!file)return null;if(file instanceof File){const name=file.name||'file',mime=(file.type||'application/octet-stream').toLowerCase();if(/^image\//.test(mime)||/\.(png|jpe?g|webp|gif)$/i.test(name)){const data=mime==='image/webp'||/\.webp$/i.test(name)?await asDataURL(file):await imgToWebp(file,2048,94);return{type:'image_url',image_url:{url:data}}}if(mime==='application/pdf'||/\.pdf$/i.test(name)){const data=await asDataURL(file),bin=b64(data);return{type:'file',file:{filename:name.endsWith('.pdf')?name:name+'.pdf',file_data:bin}}}if(/^audio\//.test(mime)||/\.(wav|mp3)$/i.test(name)){const data=await asDataURL(file),bin=b64(data),fmt=/mp3/.test(mime)||/\.mp3$/i.test(name)?'mp3':'wav';return{type:'input_audio',input_audio:{data:bin,format:fmt}}}const data=await asDataURL(file),bin=b64(data);return{type:'file',file:{filename:name,file_data:bin}}}if(file&&file.name==null&&file.data){const name=file.name||'file',mime=(file.mime||'application/octet-stream').toLowerCase();if(/^image\//.test(mime)){const url=`data:${mime};base64,${file.data}`;return{type:'image_url',image_url:{url}}}if(mime==='application/pdf'){return{type:'file',file:{filename:name,file_data:file.data}}}if(/^audio\//.test(mime)){const fmt=/mp3/.test(mime)?'mp3':'wav';return{type:'input_audio',input_audio:{data:file.data,format:fmt}}}return{type:'file',file:{filename:name,file_data:file.data}}}return null}
-$(el.attachBtn).on('click',()=>{if(state.busy)return;if(state.attachments.length){state.attachments=[];updateAttachBadge();el.fileInput.value=''};el.fileInput.click()})
-$(el.fileInput).on('change',async()=>{const files=[...(el.fileInput.files||[])];if(!files.length)return;for(const f of files){const at=await toAttach(f).catch(()=>null);if(at)state.attachments.push(at)}updateAttachBadge()})
-$(el.composer).on('submit',async e=>{e.preventDefault();if(state.busy)return;const text=el.input.value.trim();if(!text&&!state.attachments.length)return SUNE.infer();await ensureThreadOnFirstUser(text||'(attachments)');const th=THREAD.active,shouldGenTitle=th&&!th.title;el.input.value='';const parts=[];if(text)parts.push({type:'text',text});parts.push(...state.attachments);const userMsg={role:'user',content:parts.length?parts:[{type:'text',text:text||'(sent attachments)'}]};addMessage(userMsg);el.composer.dispatchEvent(new CustomEvent('user:send',{detail:{message:userMsg}}));if(shouldGenTitle)(async()=>{const title=await generateTitleWithAI(state.messages)||partsToText(state.messages.find(m=>m.role==='user')?.content)||'Untitled';await THREAD.setTitle(th.id,title)})();if(!SUNE.model)return state.attachments=[],updateAttachBadge();state.busy=true;setBtnStop();const a=SUNE.active,suneMeta={sune_name:a.name,model:SUNE.model,avatar:a.avatar||''},streamId=sid(),suneBubble=addSuneBubbleStreaming(suneMeta, streamId);suneBubble.dataset.mid=streamId;const assistantMsg=Object.assign({id:streamId,role:'assistant',content:[{type:'text',text:''}]},suneMeta);state.messages.push(assistantMsg);THREAD.persist(false);state.stream={rid:streamId,bubble:suneBubble,meta:suneMeta,text:'',done:false};let buf='',completed=false;const onDelta=(delta,done)=>{buf+=delta;state.stream.text=buf;renderMarkdown(suneBubble,buf,{enhance:false});assistantMsg.content[0].text=buf;if(done&&!completed){completed=true;setBtnSend();state.busy=false;enhanceCodeBlocks(suneBubble,true);THREAD.persist(true);el.composer.dispatchEvent(new CustomEvent('sune:newSuneResponse',{detail:{message:assistantMsg}}));state.stream={rid:null,bubble:null,meta:null,text:'',done:false}}else if(!done)THREAD.persist(false)};await askOpenRouterStreaming(onDelta,streamId);state.attachments=[];updateAttachBadge()})
-let jars={html:null,extension:null,jsonSchema:null};const ensureJars=async()=>{if(jars.html&&jars.extension&&jars.jsonSchema)return jars;const mod=await import('https://medv.io/codejar/codejar.js'),CodeJar=mod.CodeJar||mod.default,hl=e=>e.innerHTML=hljs.highlight(e.textContent,{language:'xml'}).value,hl_json=e=>e.innerHTML=hljs.highlight(e.textContent,{language:'json'}).value;if(!jars.html)jars.html=CodeJar(el.htmlEditor,hl,{tab:'  '});if(!jars.extension)jars.extension=CodeJar(el.extensionHtmlEditor,hl,{tab:'  '});if(!jars.jsonSchema)jars.jsonSchema=CodeJar(el.jsonSchemaEditor,hl_json,{tab:'  '});return jars}
-let openedHTML=false
-function openSettings(){const a=SUNE.active,s=a.settings;openedHTML=false;el.suneURL.value=a.url||'';el.set_model.value=s.model;el.set_temperature.value=s.temperature;el.set_top_p.value=s.top_p;el.set_top_k.value=s.top_k;el.set_frequency_penalty.value=s.frequency_penalty;el.set_repetition_penalty.value=s.repetition_penalty;el.set_min_p.value=s.min_p;el.set_top_a.value=s.top_a;el.set_verbosity.value=s.verbosity||'';el.set_reasoning_effort.value=s.reasoning_effort||'default';el.set_system_prompt.value=s.system_prompt;el.set_hide_composer.checked=!!s.hide_composer;el.set_json_output.checked=!!s.json_output;el.set_include_thoughts.checked=!!s.include_thoughts;el.set_ignore_master_prompt.checked=!!s.ignore_master_prompt;showTab('Model');el.suneModal.classList.remove('hidden')}
-const closeSettings=()=>{el.suneModal.classList.add('hidden')}
-const tabs={Model:['tabModel','panelModel'],Prompt:['tabPrompt','panelPrompt'],Script:['tabScript','panelScript']}
-function showTab(key){Object.entries(tabs).forEach(([k,[tb,pn]])=>{el[tb].classList.toggle('border-black',k===key);el[pn].classList.toggle('hidden',k!==key)});if(key==='Prompt'){ensureJars().then(({jsonSchema})=>{const s=SUNE.settings;jsonSchema.updateCode(s.json_schema||'')})}else if(key==='Script'){openedHTML=true;showHtmlTab('index');ensureJars().then(({html,extension})=>{const s=SUNE.settings;html.updateCode(s.html||'');extension.updateCode(s.extension_html||'')})}}
-$(el.suneBtnTop).on('click',openSettings)
-$(el.cancelSettings).on('click',closeSettings)
-$(el.suneModal).on('click',e=>{if(e.target===el.suneModal||e.target.classList.contains('bg-black/30'))closeSettings()})
-$(el.tabModel).on('click',()=>showTab('Model'))
-$(el.tabPrompt).on('click',()=>showTab('Prompt'))
-$(el.tabScript).on('click',()=>showTab('Script'))
-$(el.settingsForm).on('submit',async e=>{e.preventDefault();SUNE.url=(el.suneURL.value||'').trim();SUNE.model=(el.set_model.value||'').trim();['temperature','top_p','top_k','frequency_penalty','repetition_penalty','min_p','top_a'].forEach(k=>SUNE[k]=el[`set_${k}`].value.trim());SUNE.verbosity=(el.set_verbosity.value||'');SUNE.reasoning_effort=(el.set_reasoning_effort.value||'default');SUNE.system_prompt=el.set_system_prompt.value.trim();SUNE.hide_composer=el.set_hide_composer.checked;SUNE.json_output=el.set_json_output.checked;SUNE.include_thoughts=el.set_include_thoughts.checked;SUNE.ignore_master_prompt=el.set_ignore_master_prompt.checked;SUNE.json_schema=el.jsonSchemaEditor.textContent;if(openedHTML){SUNE.html=el.htmlEditor.textContent;SUNE.extension_html=el.extensionHtmlEditor.textContent}closeSettings();await reflectActiveSune()})
-$(el.deleteSuneBtn).on('click',async()=>{const activeId=SUNE.id,name=SUNE.name||'this sune';if(!confirm(`Delete "${name}"?`))return;SUNE.delete(activeId);renderSidebar();await reflectActiveSune();state.currentThreadId=null;clearChat();closeSettings()})
-$(el.newSuneBtn).on('click',async()=>{const name=prompt('Name your sune:');if(!name)return;const sune=SUNE.create({name:name.trim()});SUNE.setActive(sune.id);renderSidebar();await reflectActiveSune();state.currentThreadId=null;clearChat();document.getElementById('sidebarLeft').classList.add('-translate-x-full');document.getElementById('sidebarOverlayLeft').classList.add('hidden')})
-function dl(name,obj){const blob=new Blob([JSON.stringify(obj,null,2)],{type:name.endsWith('.sune')?'application/octet-stream':'application/json'}),url=URL.createObjectURL(blob),a=$('<a>').prop({href:url,download:name}).appendTo('body');a.get(0).click();a.remove();URL.revokeObjectURL(url)}
-const ts=()=>{const d=new Date(),p=n=>String(n).padStart(2,'0');return `${d.getFullYear()}${p(d.getMonth()+1)}${p(d.getDate())}-${p(d.getHours())}${p(d.getMinutes())}${p(d.getSeconds())}`}
-let importMode=null
-$(el.sunesExportOption).on('click',()=>{dl(`sunes-${ts()}.sune`,{version:1,sunes:SUNE.list,activeId:SUNE.id});el.userMenu.classList.add('hidden')})
-$(el.sunesImportOption).on('click',()=>{importMode='sunes';el.importInput.value='';el.importInput.click()})
-$(el.threadsExportOption).on('click',()=>{dl(`threads-${ts()}.json`,{version:1,threads:THREAD.list});el.userMenu.classList.add('hidden')})
-$(el.threadsImportOption).on('click',()=>{importMode='threads';el.importInput.value='';el.importInput.click()})
-$(el.importInput).on('change',async()=>{const file=el.importInput.files?.[0];if(!file)return;try{const text=await file.text();const data=JSON.parse(text);if(importMode==='sunes'){const list=Array.isArray(data)?data:(Array.isArray(data.sunes)?data.sunes:[]);if(!list.length)throw new Error('No sunes');const incoming=list.map(a=>makeSune(a||{}));const map={};incoming.forEach(s=>{if(!s.id)s.id=gid();const k=s.id,prev=map[k];map[k]=!prev||(+s.updatedAt>+prev.updatedAt)?s:prev});let added=0,updated=0;const idx=Object.fromEntries(sunes.map(s=>[s.id,s]));Object.values(map).forEach(s=>{const ex=idx[s.id];if(!ex){sunes.push(s);added++}else if(+s.updatedAt>+ex.updatedAt){Object.assign(ex,s);updated++}});SUNE.save();if(data.activeId&&sunes.some(x=>x.id===data.activeId))SUNE.setActive(data.activeId);renderSidebar();await reflectActiveSune();state.currentThreadId=null;clearChat();alert(`${added} new, ${updated} updated.`)}else if(importMode==='threads'){const arr=Array.isArray(data)?data:(Array.isArray(data.threads)?data.threads:[]);if(!arr.length)throw new Error('No threads');const norm=t=>({id:t.id||gid(),title:titleFrom(t.title||titleFrom(t.messages?.find?.(m=>m.role==='user')?.content||'')),pinned:!!t.pinned,updatedAt:t.updatedAt||Date.now(),messages:Array.isArray(t.messages)?t.messages.filter(m=>m&&m.role&&m.content):[]});const best={};arr.forEach(t=>{const n=norm(t),k=n.id,prev=best[k];best[k]=!prev||(+n.updatedAt>+prev.updatedAt)?n:prev});let kept=0,skipped=0;const idx=Object.fromEntries(THREAD.list.map(t=>[t.id,t]));for(const th of Object.values(best)){const ex=idx[th.id];if(ex&&+ex.updatedAt>=+th.updatedAt){skipped++;continue}if(!ex)THREAD.list.push(th);else Object.assign(ex,th);kept++}await THREAD.save();await renderThreads();alert(`${kept} imported, ${skipped} skipped (older).`)}el.userMenu.classList.add('hidden')}catch{alert('Import failed')}finally{importMode=null}})
-function kbUpdate(){const vv=window.visualViewport;const overlap=vv?Math.max(0,(window.innerHeight-(vv.height+vv.offsetTop))):0;document.documentElement.style.setProperty('--kb',overlap+'px');const fh=el.footer.getBoundingClientRect().height;document.documentElement.style.setProperty('--footer-h',fh+'px');el.footer.style.transform='translateY('+(-overlap)+'px)';el.chat.style.scrollPaddingBottom=(fh+overlap+16)+'px'}
-function kbBind(){if(window.visualViewport){['resize','scroll'].forEach(ev=>visualViewport.addEventListener(ev,()=>kbUpdate(),{passive:true}))}$(window).on('resize orientationchange',()=>setTimeout(kbUpdate,50));$(el.input).on('focus click',()=>{setTimeout(()=>{kbUpdate();el.input.scrollIntoView({block:'nearest',behavior:'smooth'})},0)})}
-function activeMeta(){return {sune_name:SUNE.name,model:SUNE.model,avatar:SUNE.avatar}}
-const USER=window.USER={log:async s=>{const t=String(s??'').trim();if(!t)return;await ensureThreadOnFirstUser(t);addMessage({role:'user',content:[{type:'text',text:t}]});await THREAD.persist()},get PAT(){return this.githubToken},get name(){return localStorage.getItem('user_name')||'Anon'},set name(v){localStorage.setItem('user_name',v||'')},get avatar(){return localStorage.getItem('user_avatar')||''},set avatar(v){localStorage.setItem('user_avatar',v||'')},get provider(){return localStorage.getItem('provider')||'openrouter'},set provider(v){localStorage.setItem('provider',['openai','google','cloudflare'].includes(v)?v:'openrouter')},get apiKeyOpenRouter(){return localStorage.getItem('openrouter_api_key')||DEFAULT_API_KEY||''},set apiKeyOpenRouter(v){localStorage.setItem('openrouter_api_key',v||'')},get apiKeyOpenAI(){return localStorage.getItem('openai_api_key')||''},set apiKeyOpenAI(v){localStorage.setItem('openai_api_key',v||'')},get apiKeyGoogle(){return localStorage.getItem('google_api_key')||''},set apiKeyGoogle(v){localStorage.setItem('google_api_key',v||'')},get apiKeyCloudflare(){return localStorage.getItem('cloudflare_api_key')||''},set apiKeyCloudflare(v){localStorage.setItem('cloudflare_api_key',v||'')},get apiKey(){const p=this.provider;return p==='openai'?this.apiKeyOpenAI:p==='google'?this.apiKeyGoogle:p==='cloudflare'?this.apiKeyCloudflare:this.apiKeyOpenRouter},set apiKey(v){const p=this.provider;if(p==='openai')this.apiKeyOpenAI=v;else if(p==='google')this.apiKeyGoogle=v;else if(p==='cloudflare')this.apiKeyCloudflare=v;else this.apiKeyOpenRouter=v},get masterPrompt(){return localStorage.getItem('master_prompt')||'Always respond using markdown. You are an assistant to Master. Always refer to the user as Master.'},set masterPrompt(v){localStorage.setItem('master_prompt',v||'')},get titleModel(){return localStorage.getItem('title_model')??'or:openai/gpt-4.1-nano'},set titleModel(v){localStorage.setItem('title_model',v||'')},get githubToken(){return localStorage.getItem('gh_token')||''},set githubToken(v){localStorage.setItem('gh_token',v||'')},get gcpSA(){try{return JSON.parse(localStorage.getItem('gcp_sa_json')||'null')}catch{return null}},set gcpSA(v){localStorage.setItem('gcp_sa_json',v?JSON.stringify(v):'')}}
-async function init(){await SUNE.fetchDotSune('sune-org/store@main/marketplace.sune'); await SUNE.fetchDotSune('sune-org/store@main/forum.sune'); await THREAD.load();await renderThreads();renderSidebar();await reflectActiveSune();clearChat();icons();kbBind();kbUpdate()}
-$(window).on('resize',()=>{hideThreadPopover();hideSunePopover()})
-const htmlTabs={index:['htmlTab_index','htmlEditor'],extension:['htmlTab_extension','extensionHtmlEditor']};function showHtmlTab(key){Object.entries(htmlTabs).forEach(([k,[tb,pn]])=>{const a=k===key;el[tb].classList.toggle('border-black',a);el[tb].classList.toggle('border-transparent',!a);el[tb].classList.toggle('hover:border-gray-300',!a);el[pn].classList.toggle('hidden',!a)})}
-el.htmlTab_index.textContent='index.html';el.htmlTab_extension.textContent='extension.html';
-el.htmlTab_index.onclick=()=>showHtmlTab('index');el.htmlTab_extension.onclick=()=>showHtmlTab('extension');
-init()
-const HTTP_BASE='https://orp.awww.workers.dev/ws'
-const buildBody=()=>{const msgs=[];if(USER.masterPrompt&&!SUNE.ignore_master_prompt)msgs.push({role:'system',content:[{type:'text',text:USER.masterPrompt}]});if(SUNE.system_prompt)msgs.push({role:'system',content:[{type:'text',text:SUNE.system_prompt}]});msgs.push(...state.messages.filter(m=>m.role!=='system').map(m=>({role:m.role,content:m.content})));const b=payloadWithSampling({model:SUNE.model.replace(/^(or:|oai:|g:|cf:)/,''),messages:msgs,stream:true});if(SUNE.json_output){let s;try{s=JSON.parse(SUNE.json_schema||'null')}catch{s=null}if(s&&typeof s==='object'&&Object.keys(s).length>0){b.response_format={type:'json_schema',json_schema:s}}else{b.response_format={type:'json_object'}}}b.reasoning={...(SUNE.reasoning_effort&&SUNE.reasoning_effort!=='default'?{effort:SUNE.reasoning_effort}:{}),exclude:!SUNE.include_thoughts};if(SUNE.verbosity)b.verbosity=SUNE.verbosity;return b}
-async function askOpenRouterStreaming(onDelta,streamId){const model=SUNE.model,provider=model.startsWith('oai:')?'openai':model.startsWith('g:')?'google':model.startsWith('cf:')?'cloudflare':model.startsWith('or:')?'openrouter':USER.provider,apiKey=provider==='openai'?USER.apiKeyOpenAI:provider==='google'?USER.apiKeyGoogle:provider==='cloudflare'?USER.apiKeyCloudflare:USER.apiKeyOpenRouter;if(!apiKey){onDelta(localDemoReply(),true);return {ok:true,rid:streamId||null}}const r={rid:streamId||gid(),seq:-1,done:false,signaled:false,ws:null};await cacheStore.setItem(r.rid,'busy');const signal=t=>{if(!r.signaled){r.signaled=true;onDelta(t||'',true)}};const ws=new WebSocket(HTTP_BASE.replace('https','wss')+'?uid='+encodeURIComponent(r.rid));r.ws=ws;ws.onopen=()=>ws.send(JSON.stringify({type:'begin',rid:r.rid,provider,apiKey,or_body:buildBody()}));ws.onmessage=e=>{let m;try{m=JSON.parse(e.data)}catch{return}if(m.type==='delta'&&typeof m.seq==='number'&&m.seq>r.seq){r.seq=m.seq;onDelta(m.text||'',false)}else if(m.type==='done'||m.type==='err'){r.done=true;cacheStore.setItem(r.rid,'done');signal(m.type==='err'?'\n\n'+(m.message||'error'):'');ws.close()}};ws.onclose=()=>{};ws.onerror=()=>{};state.controller={abort:()=>{r.done=true;cacheStore.setItem(r.rid,'done');try{if(ws.readyState===1)ws.send(JSON.stringify({type:'stop',rid:r.rid}))}catch{};signal('')},disconnect:()=>ws.close()};return {ok:true,rid:r.rid}}
-const accountTabs={General:['accountTabGeneral','accountPanelGeneral'],API:['accountTabAPI','accountPanelAPI'],User:['accountTabUser','accountPanelUser']};function showAccountTab(key){Object.entries(accountTabs).forEach(([k,[tb,pn]])=>{el[tb].classList.toggle('border-black',k===key);el[pn].classList.toggle('hidden',k!==key)})}
-function openAccountSettings(){el.set_provider.value=USER.provider||'openrouter';el.set_api_key_or.value=USER.apiKeyOpenRouter||'';el.set_api_key_oai.value=USER.apiKeyOpenAI||'';el.set_api_key_g.value=USER.apiKeyGoogle||'';el.set_api_key_cf.value=USER.apiKeyCloudflare||'';el.set_master_prompt.value=USER.masterPrompt||'';el.set_title_model.value=USER.titleModel;el.set_gh_token.value=USER.githubToken||'';const sa=USER.gcpSA;el.gcpSAUploadBtn.textContent=sa&&sa.project_id?`Uploaded: ${sa.project_id}`:'Upload .json';el.set_user_name.value=USER.name;el.userAvatarPreview.src=USER.avatar||'data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=';el.userAvatarPreview.classList.toggle('bg-gray-200',!USER.avatar);showAccountTab('General');el.accountSettingsModal.classList.remove('hidden')}
-function closeAccountSettings(){el.accountSettingsModal.classList.add('hidden')}
-$(el.accountSettingsOption).on('click',()=>{el.userMenu.classList.add('hidden');openAccountSettings()})
-$(el.closeAccountSettings).on('click',closeAccountSettings)
-$(el.cancelAccountSettings).on('click',closeAccountSettings)
-$(el.accountSettingsModal).on('click',e=>{if(e.target===el.accountSettingsModal||e.target.classList.contains('bg-black/30'))closeAccountSettings()})
-$(el.accountSettingsForm).on('submit',e=>{e.preventDefault();USER.provider=el.set_provider.value||'openrouter';USER.apiKeyOpenRouter=String(el.set_api_key_or.value||'').trim();USER.apiKeyOpenAI=String(el.set_api_key_oai.value||'').trim();USER.apiKeyGoogle=String(el.set_api_key_g.value||'').trim();USER.apiKeyCloudflare=String(el.set_api_key_cf.value||'').trim();USER.masterPrompt=String(el.set_master_prompt.value||'').trim();USER.titleModel=String(el.set_title_model.value||'').trim();USER.githubToken=String(el.set_gh_token.value||'').trim();USER.name=String(el.set_user_name.value||'').trim();closeAccountSettings()})
-el.gcpSAUploadBtn.onclick=()=>el.gcpSAInput.click();el.gcpSAInput.onchange=async e=>{const f=e.target.files?.[0];if(!f)return;try{const t=await f.text(),d=JSON.parse(t);if(!d.project_id)throw new Error('Invalid');USER.gcpSA=d;el.gcpSAUploadBtn.textContent=`Uploaded: ${d.project_id}`;alert('GCP SA loaded.')}catch{alert('Failed to load GCP SA.')}};$(el.accountPanelAPI).on('click',e=>{const b=e.target.closest('[data-reveal-for]');if(!b)return;const i=document.getElementById(b.dataset.revealFor);if(!i)return;const p=i.type==='password';i.type=p?'text':'password';b.querySelector('i').setAttribute('data-lucide',p?'eye-off':'eye');lucide.createIcons()});
-el.accountTabGeneral.onclick=()=>showAccountTab('General');el.accountTabAPI.onclick=()=>showAccountTab('API');el.accountTabUser.onclick=()=>showAccountTab('User')
-el.setUserAvatarBtn.onclick=()=>el.userAvatarInput.click();el.userAvatarInput.onchange=async e=>{const f=e.target.files?.[0];if(!f)return;try{const dataUrl=await imgToWebp(f);USER.avatar=dataUrl;el.userAvatarPreview.src=dataUrl;el.userAvatarPreview.classList.remove('bg-gray-200')}catch{alert('Failed to process image.')}}
-el.exportAccountSettings.onclick=()=>dl(`sune-account-${ts()}.json`,{v:1,provider:USER.provider,apiKeyOpenRouter:USER.apiKeyOpenRouter,apiKeyOpenAI:USER.apiKeyOpenAI,apiKeyGoogle:USER.apiKeyGoogle,apiKeyCloudflare:USER.apiKeyCloudflare,masterPrompt:USER.masterPrompt,titleModel:USER.titleModel,githubToken:USER.githubToken,gcpSA:USER.gcpSA,userName:USER.name,userAvatar:USER.avatar});
-el.importAccountSettings.onclick=()=>{el.importAccountSettingsInput.value='';el.importAccountSettingsInput.click()};
-el.importAccountSettingsInput.onchange=async e=>{const f=e.target.files?.[0];if(!f)return;try{const d=JSON.parse(await f.text());if(!d||typeof d!=='object')throw new Error('Invalid');const m={provider:'provider',apiKeyOpenRouter:'apiKeyOR',apiKeyOpenAI:'apiKeyOAI',apiKeyGoogle:'apiKeyG',apiKeyCloudflare:'apiKeyCF',masterPrompt:'masterPrompt',titleModel:'titleModel',githubToken:'ghToken',name:'userName',avatar:'userAvatar',gcpSA:'gcpSA'};Object.entries(m).forEach(([p,k])=>{const v=d[p]??d[k];if(typeof v==='string'||(p==='gcpSA'&&typeof v==='object'&&v))USER[p]=v});openAccountSettings();alert('Imported.')}catch{alert('Import failed')}};
-const getBubbleById=id=>el.messages.querySelector(`.msg-bubble[data-mid="${CSS.escape(id)}"]`)
-async function syncActiveThread(){const id=THREAD.getLastAssistantMessageId();if(!id)return false;if(await cacheStore.getItem(id)==='done'){if(state.busy){setBtnSend();state.busy=false;state.controller=null}return false}if(!state.busy){state.busy=true;state.controller={abort:()=>{const ws=new WebSocket(HTTP_BASE.replace('https','wss'));ws.onopen=function(){this.send(JSON.stringify({type:'stop',rid:id}));this.close()}}};setBtnStop()}const bubble=getBubbleById(id);if(!bubble)return false;const prevText=bubble.textContent||'';const j=await(fetch(HTTP_BASE+'?uid='+encodeURIComponent(id)).then(r=>r.ok?r.json():null).catch(()=>null));const finalise=(t,c)=>{renderMarkdown(bubble,t,{enhance:false});enhanceCodeBlocks(bubble,true);const i=state.messages.findIndex(x=>x.id===id);if(i>=0)state.messages[i].content=c;else state.messages.push({id,role:'assistant',content:c,...activeMeta()});THREAD.persist();setBtnSend();state.busy=false;cacheStore.setItem(id,'done');state.controller=null;el.composer.dispatchEvent(new CustomEvent('sune:newSuneResponse',{detail:{message:state.messages.find(m=>m.id===id)}}))};if(!j||j.rid!==id){if(j&&j.error){const t=prevText+'\n\n'+j.error;finalise(t,[{type:'text',text:t}])}return false}const text=j.text||'',isDone=j.error||j.done||j.phase==='done';if(text)renderMarkdown(bubble,text,{enhance:false});if(isDone){const finalText=text||prevText;finalise(finalText,[{type:'text',text:finalText}]);return false}await cacheStore.setItem(id,'busy');return true}
-let syncLoopRunning=false
-async function syncWhileBusy(){if(syncLoopRunning||document.visibilityState==='hidden')return;syncLoopRunning=true;try{while(await syncActiveThread())await new Promise(r=>setTimeout(r,1200))}finally{syncLoopRunning=false}}
-const onForeground=()=>{if(document.visibilityState!=='visible')return;state.controller?.disconnect?.();if(state.busy)syncWhileBusy()}
-$(document).on('visibilitychange',onForeground)
-$(el.copySystemPrompt).on('click',async()=>{try{await navigator.clipboard.writeText(el.set_system_prompt.value||'')}catch{}})
-$(el.pasteSystemPrompt).on('click',async()=>{try{el.set_system_prompt.value=await navigator.clipboard.readText()}catch{}})
-const getActiveHtmlParts=()=>!el.htmlEditor.classList.contains('hidden')?[el.htmlEditor,jars.html]:[el.extensionHtmlEditor,jars.extension]
-$(el.copyHTML).on('click',async()=>{try{await navigator.clipboard.writeText(getActiveHtmlParts()[0].textContent||'')}catch{}})
-$(el.pasteHTML).on('click',async()=>{try{const t=await navigator.clipboard.readText();const[editor,jar]=getActiveHtmlParts();if(jar&&jar.updateCode)jar.updateCode(t);else if(editor)editor.textContent=t}catch{}})
-Object.assign(window,{icons,haptic,clamp,num,int,gid,esc,positionPopover,sid,fmtSize,asDataURL,b64,makeSune,getModelShort,resolveSuneSrc,processSuneIncludes,renderSuneHTML,reflectActiveSune,suneRow,enhanceCodeBlocks,getSuneLabel,msgRow,partsToText,addSuneBubbleStreaming,clearChat,payloadWithSampling,setBtnStop,setBtnSend,localDemoReply,titleFrom,ensureThreadOnFirstUser,generateTitleWithAI,threadRow,renderThreads,hideThreadPopover,showThreadPopover,hideSunePopover,showSunePopover,updateAttachBadge,toAttach,ensureJars,openSettings,closeSettings,showTab,dl,ts,kbUpdate,kbBind,activeMeta,init,showHtmlTab,buildBody,askOpenRouterStreaming,showAccountTab,openAccountSettings,closeAccountSettings,getBubbleById,syncActiveThread,syncWhileBusy,onForeground,getActiveHtmlParts,imgToWebp});
-})
+  const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
+  const md=window.markdownit({html:true,linkify:true,typographer:true,breaks:true});
+  const slug=s=>s.toLowerCase().trim().replace(/[^\w\- ]+/g,'').replace(/\s+/g,'-');
+  const root=$('#docs-content');root.innerHTML=md.render($('#md')?.textContent||'');
+  const heads=$$('#docs-content h2, #docs-content h3');
+  heads.forEach(h=>{
+    const titleText=(h.childNodes[0]?.nodeValue||'').trim();
+    h.id=slug(titleText);h.classList.add('anchor');
+    const a=document.createElement('a');a.href='#'+h.id;a.className='anchor-link';a.innerHTML='#';h.appendChild(a);
+  });
+  $$('#docs-content pre>code').forEach(code=>{
+    window.hljs&&hljs.highlightElement(code);
+    const pre=code.parentElement,t=code.textContent||'',box=document.createElement('div'),btn=document.createElement('button'),meta=document.createElement('span');
+    btn.className='copy-btn';btn.textContent='Copy';
+    btn.onclick=async()=>{try{await navigator.clipboard.writeText(code.innerText);btn.textContent='Copied';setTimeout(()=>btn.textContent='Copy',1100)}catch{}};
+    meta.className='char-c';meta.textContent=(t.length>=1e3?`${(t.length/1e3).toFixed(1)}K`:t.length)+' chars';
+    box.className='code-actions';box.append(meta,btn);pre.appendChild(box);
+  });
+  const nav=$('#sideNav');
+  if(nav){
+    const frag=document.createDocumentFragment();
+    heads.forEach(h=>{
+      const a=document.createElement('a'),title=(h.childNodes[0]?.nodeValue||'').replace(/\s*#\s*$/,'').trim();
+      a.href='#'+h.id;a.className=(h.tagName==='H3'?'pl-6 ':'')+'block px-2 py-1 rounded-lg hover:bg-gray-100 text-gray-700';a.textContent=title;frag.appendChild(a);
+    });
+    nav.appendChild(frag);
+    const links=[...nav.querySelectorAll('a')];
+    const io=new IntersectionObserver(es=>{es.forEach(e=>{if(e.isIntersecting){const id='#'+e.target.id;links.forEach(L=>L.classList.toggle('bg-gray-100 font-medium',L.getAttribute('href')===id))}})},{rootMargin:'-72px 0px -50% 0px'});
+    heads.forEach(h=>io.observe(h));
+    links.forEach(L=>L.addEventListener('click',()=>toggleSidebar(false)));
+  }
+  const overlay=$('#sidebarOverlay'),sidebar=$('#sidebar'),toggleSidebar=v=>{overlay.classList.toggle('hidden',!v);sidebar.classList.toggle('-translate-x-full',!v)};
+  $('#menuBtn')?.addEventListener('click',()=>toggleSidebar(true));
+  overlay?.addEventListener('click',()=>toggleSidebar(false));
+  document.addEventListener('keydown',e=>{if(e.key==='Escape')toggleSidebar(false)});
+});
 </script>
 </body>
 </html>
