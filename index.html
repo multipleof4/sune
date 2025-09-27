@@ -27,7 +27,7 @@
   </div>
 </header>
 <main id="chat" class="flex-1 overflow-y-auto no-scrollbar"><section id="suneHtml" class="px-0 border-b border-gray-200 hidden"></section><div id="messages" class="mx-auto w-full max-w-none px-0 py-4 sm:py-6 space-y-4" @click="if($event.target.closest('.msg-avatar')){document.getElementById('sidebarLeft').classList.remove('-translate-x-full');document.getElementById('sidebarOverlayLeft').classList.remove('hidden')}"></div><div class="h-24"></div></main>
-<footer id="footer" class="sticky bottom-0 z-10 bg-gradient-to-t from-white via-white/95 to-white/40 pt-2 pb-[calc(12px+var(--safe-bottom))] border-t border-gray-200">
+<footer id="footer" class="sticky bottom-0 z-10 bg-gradient-to-t from-white via-white/95 to-white/40 pt-2 pb-[calc(12px+var(--safe-bottom))] border-t border-gray-200 hidden">
   <div class="mx-auto w-full max-w-none px-0">
     <form id="composer" class="group relative flex items-start gap-2 px-3">
       <textarea id="input" rows="1" placeholder="Send a message" spellcheck="false" autocapitalize="none" autocomplete="off" autocorrect="off" inputmode="text" enterkeyhint="enter" class="flex-1 resize-none rounded-2xl border-none bg-white px-3 py-2 text-[14px] leading-6 placeholder:text-gray-400 focus:outline-none focus:ring-0 max-h-52 overflow-y-auto min-h-[96px]"></textarea>
