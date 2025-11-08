@@ -1,11 +1,17 @@
 <!doctype html>
 <html lang="en">
 <head>
+<meta charset="utf-8"/>
+<title>Sune</title>
+<link rel="icon" type="image/avif" href="https://sune.planetrenox.com/✺.avif"/>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
 <script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/tiny-ripple@0.2.0"></script>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/github-markdown-css@5.8.1/github-markdown-light.min.css"/>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.11.1/build/styles/github.min.css"/>
 <style>
+:root{--safe-bottom:env(safe-area-inset-bottom)}::-webkit-scrollbar{height:8px;width:8px}::-webkit-scrollbar-thumb{background:#e5e7eb;border-radius:999px}.no-scrollbar::-webkit-scrollbar{display:none}.no-scrollbar{-ms-overflow-style:none;scrollbar-width:none}
+html,body{overscroll-behavior-y:contain}
 .markdown-body{font-size:14px;line-height:1.6}.markdown-body pre{overflow:auto}
 .markdown-body ul,.markdown-body ol{list-style:revert;padding-left:2em}
 .msg-bubble{overflow-x:auto}
@@ -17,13 +23,7 @@
 </style>
 <script defer src="https://cdn.jsdelivr.net/npm/cash-dom/dist/cash.min.js"></script>
 <script defer src="//unpkg.com/alpinejs"></script>
-  <meta charset="utf-8">
-  <title>Sune</title>
-  <link rel="icon" type="image/avif" href="https://sune.planetrenox.com/✺.avif">
-  <script src="https://cdn.jsdelivr.net/npm/tiny-ripple@0.2.0"></script>
-  <style>:root{--safe-bottom:env(safe-area-inset-bottom)}::-webkit-scrollbar{height:8px;width:8px}::-webkit-scrollbar-thumb{background:#e5e7eb;border-radius:999px}.no-scrollbar::-webkit-scrollbar{display:none}.no-scrollbar{-ms-overflow-style:none;scrollbar-width:none}</style>
-  <style>html,body{overscroll-behavior-y:contain}</style>
-  <script>(()=>{let k,v=visualViewport;const f=()=>{removeEventListener('popstate',f),document.activeElement?.blur()};v.onresize=()=>{let o=v.height<innerHeight;o!=k&&((k=o)?(history.pushState({k:1},''),addEventListener('popstate',f)):(removeEventListener('popstate',f),history.state?.k&&history.back()))}})()</script>
+<script>(()=>{let k,v=visualViewport;const f=()=>{removeEventListener('popstate',f),document.activeElement?.blur()};v.onresize=()=>{let o=v.height<innerHeight;o!=k&&((k=o)?(history.pushState({k:1},''),addEventListener('popstate',f)):(removeEventListener('popstate',f),history.state?.k&&history.back()))}})()</script>
 <link rel="manifest" href="/manifest.webmanifest"><script id="vite-plugin-pwa:register-sw" src="/registerSW.js"></script></head>
 <body class="bg-white text-gray-900 selection:bg-black/10" x-data @click.window="if($event.target.closest('button')) haptic(); if(!document.getElementById('threadPopover').contains($event.target)&&!$event.target.closest('[data-thread-menu]')) hideThreadPopover(); if(!document.getElementById('sunePopover').contains($event.target)&&!$event.target.closest('[data-sune-menu]')) hideSunePopover(); if(!document.getElementById('userMenu').contains($event.target)&&!document.getElementById('userMenuBtn').contains($event.target)) document.getElementById('userMenu').classList.add('hidden')">
 <div class="flex flex-col h-dvh max-h-dvh overflow-hidden">
