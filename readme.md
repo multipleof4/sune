@@ -1,4 +1,3 @@
-> It's mostly a single index.html
 
 ![Main](./public/appstore_content/screenshot1.jpg)
 
