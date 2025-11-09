@@ -7,15 +7,15 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://cdn.jsdelivr.net/npm/tiny-ripple@0.2.0"></script>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/github-markdown-css@5.8.1/github-markdown-light.min.css"/>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.11.1/build/styles/github.min.css"/>
 <script defer src="https://cdn.jsdelivr.net/npm/cash-dom/dist/cash.min.js"></script>
 <script defer src="//unpkg.com/alpinejs"></script>
-  <script type="module" crossorigin src="/assets/index-C14C8zOj.js"></script>
-  <link rel="stylesheet" crossorigin href="/assets/index-DHNSFA9i.css">
+  <script type="module" crossorigin src="/assets/index-_QTPhrhq.js"></script>
+  <link rel="stylesheet" crossorigin href="/assets/index-aer9aH6o.css">
 <link rel="manifest" href="/manifest.webmanifest"><script id="vite-plugin-pwa:register-sw" src="/registerSW.js"></script></head>
 <body class="bg-white text-gray-900 selection:bg-black/10" x-data @click.window="if($event.target.closest('button')) haptic(); if(!document.getElementById('threadPopover').contains($event.target)&&!$event.target.closest('[data-thread-menu]')) hideThreadPopover(); if(!document.getElementById('sunePopover').contains($event.target)&&!$event.target.closest('[data-sune-menu]')) hideSunePopover(); if(!document.getElementById('userMenu').contains($event.target)&&!document.getElementById('userMenuBtn').contains($event.target)) document.getElementById('userMenu').classList.add('hidden')">
 <div class="flex flex-col h-dvh max-h-dvh overflow-hidden">
@@ -114,7 +114,10 @@
             <div>
               <label class="block text-gray-700 font-medium mb-1">Reasoning Effort</label>
               <select id="set_reasoning_effort" class="w-full rounded-xl border border-gray-300 px-3 py-2">
-                <option value="default">Omitted</option><option value="low">Low</option><option value="medium">Medium</option><option value="high">High</option>
+                <option value="default">Omitted</option>
+                <option value="low">Low</option>
+                <option value="medium">Medium</option>
+                <option value="high">High</option>
               </select>
             </div>
           </div>
@@ -129,7 +132,10 @@
             <div>
               <label class="block text-gray-700 font-medium mb-1">Verbosity</label>
               <select id="set_verbosity" class="w-full rounded-xl border border-gray-300 px-3 py-2">
-                <option value="">Omitted</option><option value="low">Low</option><option value="medium">Medium</option><option value="high">High</option>
+                <option value="">Omitted</option>
+                <option value="low">Low</option>
+                <option value="medium">Medium</option>
+                <option value="high">High</option>
               </select>
             </div>
           </div>
@@ -206,7 +212,11 @@
           <div>
             <label class="block text-gray-700 font-medium mb-1">Provider</label>
             <select id="set_provider" class="w-full rounded-xl border border-gray-300 px-3 py-2">
-              <option value="openrouter">OpenRouter</option><option value="openai">OpenAI</option><option value="google">Google</option><option value="claude">Claude</option><option value="cloudflare">Cloudflare</option>
+              <option value="openrouter">OpenRouter</option>
+              <option value="openai">OpenAI</option>
+              <option value="google">Google</option>
+              <option value="claude">Claude</option>
+              <option value="cloudflare">Cloudflare</option>
             </select>
             <p class="mt-1 text-xs text-gray-500">Or you can prefix model names with or:, oai:, g:, cla:, or cf: to override.</p>
           </div>
