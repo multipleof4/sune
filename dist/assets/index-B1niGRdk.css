@@ -9,7 +9,7 @@ html,body{overscroll-behavior-y:contain}
 #htmlEditor,#extensionHtmlEditor,#jsonSchemaEditor{outline:none;white-space:pre!important;font-size:11px;line-height:1.5;}
 :not(pre)>code{font-size:85%;padding:.2em .4em;margin:0;border-radius:6px;background-color:rgba(175,184,193,0.2)}
 
-/* UI + sidebars use Coral Pixels (chat markdown keeps default) */
+/* UI + sidebars use Mozilla Text (chat markdown keeps default) */
 body,
 #topbar,
 #footer,
@@ -27,5 +27,5 @@ button,
 input,
 select,
 textarea {
-  font-family:'Coral Pixels',system-ui,-apple-system,BlinkMacSystemFont,'SF Pro Text','Segoe UI',sans-serif;
+  font-family:'Mozilla Text',system-ui,-apple-system,BlinkMacSystemFont,'SF Pro Text','Segoe UI',sans-serif;
 }
