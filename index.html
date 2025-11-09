@@ -5,6 +5,9 @@
 <title>Sune</title>
 <link rel="icon" type="image/avif" href="https://sune.planetrenox.com/✺.avif"/>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://cdn.jsdelivr.net/npm/tiny-ripple@0.2.0"></script>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/github-markdown-css@5.8.1/github-markdown-light.min.css"/>
@@ -37,7 +40,7 @@
 </footer>
 </div>
 <div id="sidebarOverlayLeft" class="fixed inset-0 z-40 bg-black/20 hidden" @click="document.getElementById('sidebarLeft').classList.add('-translate-x-full');$el.classList.add('hidden');document.getElementById('sidebarRight').classList.add('translate-x-full');document.getElementById('sidebarOverlayRight').classList.add('hidden');hideThreadPopover();hideSunePopover()"></div>
-<aside id="sidebarLeft" class="fixed inset-y-0 left-0 z-50 w-72 max-w-[85vw] bg-white border-r border-gray-200 shadow-xl transform -translate-x-full transition-transform duration-200 ease-out flex flex-col">
+<aside id="sidebarLeft" class="fixed inset-y-0 left-0 z-50 w-72 max-w-[85vw] bg-white border-r border-gray-200 shadow-xl transform -translate-x-full transition-transform duration-200 ease-out flex flex-col font-['Space_Grotesk',system-ui,sans-serif]">
   <div class="p-3 border-b flex items-center gap-2"><button id="newSuneBtn" class="px-3 py-2 rounded-xl bg-black text-white text-sm hover:bg-black/90">New sune</button><span class="text-xs text-gray-500">Click name to equip</span></div>
   <div id="suneList" class="flex-1 overflow-y-auto divide-y"></div>
   <div class="p-3 border-t relative">
