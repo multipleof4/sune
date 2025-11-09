@@ -9,3 +9,23 @@ html,body{overscroll-behavior-y:contain}
 #htmlEditor,#extensionHtmlEditor,#jsonSchemaEditor{outline:none;white-space:pre!important;font-size:11px;line-height:1.5;}
 :not(pre)>code{font-size:85%;padding:.2em .4em;margin:0;border-radius:6px;background-color:rgba(175,184,193,0.2)}
 
+/* UI + sidebars use Poppins (chat markdown keeps default) */
+body,
+#topbar,
+#footer,
+#sidebarLeft,
+#sidebarRight,
+#suneModal,
+#accountSettingsModal,
+.menu-card,
+.menu-item,
+#composer textarea,
+#suneList,
+#threadList,
+#userMenu,
+button,
+input,
+select,
+textarea {
+  font-family:'Poppins',system-ui,-apple-system,BlinkMacSystemFont,'SF Pro Text','Segoe UI',sans-serif;
+}
