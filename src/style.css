@@ -14,7 +14,7 @@ html,body{overscroll-behavior-y:contain}
 #htmlEditor,#extensionHtmlEditor,#jsonSchemaEditor{outline:none;white-space:pre!important;font-size:11px;line-height:1.5}
 :not(pre)>code{font-size:85%;padding:.2em .4em;margin:0;border-radius:6px;background-color:rgba(175,184,193,0.2)}
 
-/* UI + sidebars use Open Sans (chat markdown keeps default GitHub Markdown font) */
+/* UI + sidebars use Inter (chat markdown keeps GitHub markdown font) */
 body,
 #topbar,
 #footer,
@@ -32,5 +32,5 @@ button,
 input,
 select,
 textarea{
-  font-family:'Open Sans',system-ui,-apple-system,BlinkMacSystemFont,'SF Pro Text','Segoe UI',sans-serif;
+  font-family:'Inter',system-ui,-apple-system,BlinkMacSystemFont,'SF Pro Text','Segoe UI',sans-serif;
 }
