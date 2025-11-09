@@ -1,36 +1,12 @@
-:root{--safe-bottom:env(safe-area-inset-bottom)}
-::-webkit-scrollbar{height:8px;width:8px}
-::-webkit-scrollbar-thumb{background:#e5e7eb;border-radius:999px}
-.no-scrollbar::-webkit-scrollbar{display:none}
-.no-scrollbar{-ms-overflow-style:none;scrollbar-width:none}
+:root{--safe-bottom:env(safe-area-inset-bottom)}::-webkit-scrollbar{height:8px;width:8px}::-webkit-scrollbar-thumb{background:#e5e7eb;border-radius:999px}.no-scrollbar::-webkit-scrollbar{display:none}.no-scrollbar{-ms-overflow-style:none;scrollbar-width:none}
 html,body{overscroll-behavior-y:contain}
-.markdown-body{font-size:14px;line-height:1.6}
-.markdown-body pre{overflow:auto}
+.markdown-body{font-size:14px;line-height:1.6}.markdown-body pre{overflow:auto}
 .markdown-body ul,.markdown-body ol{list-style:revert;padding-left:2em}
 .msg-bubble{overflow-x:auto}
 .msg-avatar{font-size:16px}
 .menu-card{position:fixed;z-index:60;min-width:12rem;border-radius:0.75rem;border:1px solid #e5e7eb;background:#fff;box-shadow:0 10px 20px rgba(0,0,0,.08)}
 .menu-item{width:100%;text-align:left;padding:.5rem .75rem;font-size:0.875rem;display:flex;align-items:center;gap:.5rem}
-#htmlEditor,#extensionHtmlEditor,#jsonSchemaEditor{outline:none;white-space:pre!important;font-size:11px;line-height:1.5}
+#htmlEditor,#extensionHtmlEditor,#jsonSchemaEditor{outline:none;white-space:pre!important;font-size:11px;line-height:1.5;}
 :not(pre)>code{font-size:85%;padding:.2em .4em;margin:0;border-radius:6px;background-color:rgba(175,184,193,0.2)}
 
-/* UI + sidebars use Inter (chat markdown keeps GitHub markdown font) */
-body,
-#topbar,
-#footer,
-#sidebarLeft,
-#sidebarRight,
-#suneModal,
-#accountSettingsModal,
-.menu-card,
-.menu-item,
-#composer textarea,
-#suneList,
-#threadList,
-#userMenu,
-button,
-input,
-select,
-textarea{
-  font-family:'Inter',system-ui,-apple-system,BlinkMacSystemFont,'SF Pro Text','Segoe UI',sans-serif;
-}
+
