@@ -1,7 +1,5 @@
 :root{--safe-bottom:env(safe-area-inset-bottom)}::-webkit-scrollbar{height:8px;width:8px}::-webkit-scrollbar-thumb{background:#e5e7eb;border-radius:999px}.no-scrollbar::-webkit-scrollbar{display:none}.no-scrollbar{-ms-overflow-style:none;scrollbar-width:none}
 html,body{overscroll-behavior-y:contain}
-body{font-family:-apple-system,BlinkMacSystemFont,system-ui,sans-serif}
-.lato-ui{font-family:"Lato",system-ui,-apple-system,BlinkMacSystemFont,sans-serif}
 .markdown-body{font-size:14px;line-height:1.6}.markdown-body pre{overflow:auto}
 .markdown-body ul,.markdown-body ol{list-style:revert;padding-left:2em}
 .msg-bubble{overflow-x:auto}
@@ -10,3 +8,6 @@ body{font-family:-apple-system,BlinkMacSystemFont,system-ui,sans-serif}
 .menu-item{width:100%;text-align:left;padding:.5rem .75rem;font-size:0.875rem;display:flex;align-items:center;gap:.5rem}
 #htmlEditor,#extensionHtmlEditor,#jsonSchemaEditor{outline:none;white-space:pre!important;font-size:11px;line-height:1.5;}
 :not(pre)>code{font-size:85%;padding:.2em .4em;margin:0;border-radius:6px;background-color:rgba(175,184,193,0.2)}
+
+
+
