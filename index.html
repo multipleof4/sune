@@ -5,6 +5,9 @@
 <title>Sune</title>
 <link rel="icon" type="image/avif" href="https://sune.planetrenox.com/✺.avif"/>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://cdn.jsdelivr.net/npm/tiny-ripple@0.2.0"></script>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/github-markdown-css@5.8.1/github-markdown-light.min.css"/>
@@ -37,12 +40,12 @@
 </footer>
 </div>
 <div id="sidebarOverlayLeft" class="fixed inset-0 z-40 bg-black/20 hidden" @click="document.getElementById('sidebarLeft').classList.add('-translate-x-full');$el.classList.add('hidden');document.getElementById('sidebarRight').classList.add('translate-x-full');document.getElementById('sidebarOverlayRight').classList.add('hidden');hideThreadPopover();hideSunePopover()"></div>
-<aside id="sidebarLeft" class="fixed inset-y-0 left-0 z-50 w-72 max-w-[85vw] bg-white border-r border-gray-200 shadow-xl transform -translate-x-full transition-transform duration-200 ease-out flex flex-col">
+<aside id="sidebarLeft" class="fixed inset-y-0 left-0 z-50 w-72 max-w-[85vw] bg-white border-r border-gray-200 shadow-xl transform -translate-x-full transition-transform duration-200 ease-out flex flex-col lato-ui">
   <div class="p-3 border-b flex items-center gap-2"><button id="newSuneBtn" class="px-3 py-2 rounded-xl bg-black text-white text-sm hover:bg-black/90">New sune</button><span class="text-xs text-gray-500">Click name to equip</span></div>
   <div id="suneList" class="flex-1 overflow-y-auto divide-y"></div>
   <div class="p-3 border-t relative">
     <button id="userMenuBtn" class="w-full flex items-center justify-between px-3 py-2 rounded-xl bg-gray-100 hover:bg-gray-200 active:scale-[.99] transition" @click.stop="document.getElementById('userMenu').classList.toggle('hidden')"><span class="flex items-center gap-2"><span class="h-6 w-6 rounded-full bg-gray-900 text-white flex items-center justify-center">👤</span><span class="text-sm">Account & Backup</span></span><i data-lucide="chevron-down" class="h-4 w-4"></i></button>
-    <div id="userMenu" class="absolute left-3 right-3 bottom-16 translate-y-2 rounded-xl border border-gray-200 bg-white shadow-lg hidden overflow-hidden">
+    <div id="userMenu" class="absolute left-3 right-3 bottom-16 translate-y-2 rounded-xl border border-gray-200 bg-white shadow-lg hidden overflow-hidden lato-ui">
       <button id="accountSettingsOption" class="menu-item"><i data-lucide="settings" class="h-4 w-4"></i><span>Settings</span></button>
       <button id="sunesImportOption" class="menu-item">Import sunes (.sune)</button>
       <button id="sunesExportOption" class="menu-item">Export sunes (.sune)</button>
@@ -53,23 +56,23 @@
   </div>
 </aside>
 <div id="sidebarOverlayRight" class="fixed inset-0 z-40 bg-black/20 hidden" @click="$el.classList.add('hidden');document.getElementById('sidebarRight').classList.add('translate-x-full')"></div>
-<aside id="sidebarRight" class="fixed inset-y-0 right-0 z-50 w-80 max-w-[90vw] bg-white border-l border-gray-200 shadow-xl transform translate-x-full transition-transform duration-200 ease-out flex flex-col">
+<aside id="sidebarRight" class="fixed inset-y-0 right-0 z-50 w-80 max-w-[90vw] bg-white border-l border-gray-200 shadow-xl transform translate-x-full transition-transform duration-200 ease-out flex flex-col lato-ui">
   <div class="p-3 border-b text-sm font-medium flex items-center justify-between"><span>Threads</span><button id="closeThreads" class="p-1 rounded hover:bg-gray-100" aria-label="Close" @click="document.getElementById('sidebarOverlayRight').classList.add('hidden');document.getElementById('sidebarRight').classList.add('translate-x-full')"><svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg></button></div>
   <div id="threadList" class="flex-1 overflow-y-auto divide-y"></div>
 </aside>
-<div id="threadPopover" class="menu-card hidden">
+<div id="threadPopover" class="menu-card hidden lato-ui">
   <button data-action="pin" class="menu-item"><i data-lucide="pin" class="h-4 w-4"></i><span>Pin to top</span></button>
   <button data-action="rename" class="menu-item"><i data-lucide="edit-3" class="h-4 w-4"></i><span>Rename</span></button>
   <button data-action="delete" class="menu-item text-red-600"><i data-lucide="trash-2" class="h-4 w-4"></i><span>Delete</span></button>
   <button data-action="count_tokens" class="menu-item"><i data-lucide="hash" class="h-4 w-4"></i><span>Count tokens (approx.)</span></button>
 </div>
-<div id="sunePopover" class="menu-card hidden">
+<div id="sunePopover" class="menu-card hidden lato-ui">
   <button data-action="pin" class="menu-item"><i data-lucide="pin" class="h-4 w-4"></i><span>Pin to top</span></button>
   <button data-action="rename" class="menu-item"><i data-lucide="edit-3" class="h-4 w-4"></i><span>Rename</span></button>
   <button data-action="pfp" class="menu-item"><i data-lucide="image" class="h-4 w-4"></i><span>Change pfp</span></button>
   <button data-action="export" class="menu-item"><i data-lucide="download" class="h-4 w-4"></i><span>Export sune (.sune)</span></button>
 </div>
-<div id="suneModal" class="hidden fixed inset-0 z-50">
+<div id="suneModal" class="hidden fixed inset-0 z-50 lato-ui">
   <div class="absolute inset-0 bg-black/30"></div>
   <div class="absolute inset-x-0 top-12 mx-auto w-full max-w-md px-4">
     <div class="rounded-2xl bg-white shadow-xl border border-gray-200 overflow-hidden">
@@ -115,7 +118,7 @@
     </div>
   </div>
 </div>
-<div id="accountSettingsModal" class="hidden fixed inset-0 z-50">
+<div id="accountSettingsModal" class="hidden fixed inset-0 z-50 lato-ui">
   <div class="absolute inset-0 bg-black/30"></div>
   <div class="absolute inset-x-0 top-16 mx-auto w-full max-w-md px-4">
     <div class="rounded-2xl bg-white shadow-xl border border-gray-200 overflow-hidden">
@@ -151,6 +154,3 @@
 <script type="module" src="/src/main.js"></script>
 </body>
 </html>
-
-
-
