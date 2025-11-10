@@ -1,157 +1,18 @@
 <!doctype html>
 <html lang="en">
 <head>
-<meta charset="utf-8"/>
-<title>Sune</title>
-<link rel="icon" type="image/avif" href="https://sune.planetrenox.com/✺.avif"/>
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
-<script src="https://cdn.tailwindcss.com"></script>
-<script src="https://cdn.jsdelivr.net/npm/tiny-ripple@0.2.0"></script>
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/github-markdown-css@5.8.1/github-markdown-light.min.css"/>
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.11.1/build/styles/github.min.css"/>
-<link rel="stylesheet" href="/src/style.css"/>
-<script defer src="https://cdn.jsdelivr.net/npm/cash-dom/dist/cash.min.js"></script>
-<script defer src="//unpkg.com/alpinejs"></script>
+<%- include('./src/partials/head.html') %>
 </head>
 <body class="bg-white text-gray-900 selection:bg-black/10" x-data @click.window="if($event.target.closest('button')) haptic(); if(!document.getElementById('threadPopover').contains($event.target)&&!$event.target.closest('[data-thread-menu]')) hideThreadPopover(); if(!document.getElementById('sunePopover').contains($event.target)&&!$event.target.closest('[data-sune-menu]')) hideSunePopover(); if(!document.getElementById('userMenu').contains($event.target)&&!document.getElementById('userMenuBtn').contains($event.target)) document.getElementById('userMenu').classList.add('hidden')">
 <div class="flex flex-col h-dvh max-h-dvh overflow-hidden">
-<header id="topbar" class="sticky top-0 z-20 bg-white/80 backdrop-blur border-b border-gray-200">
-  <div class="mx-auto w-full max-w-none px-4 py-3 grid grid-cols-3 items-center">
-    <button id="sidebarBtnLeft" class="h-8 w-8 rounded-xl bg-gray-100 hover:bg-gray-200 active:scale-[.99] transition flex items-center justify-center" title="Sunes" @click="document.getElementById('sidebarLeft').classList.remove('-translate-x-full');document.getElementById('sidebarOverlayLeft').classList.remove('hidden')"><i data-lucide="panel-left" class="h-5 w-5"></i></button>
-    <button id="suneBtnTop" class="justify-self-center h-8 w-8 rounded-full bg-gray-200 text-gray-900 flex items-center justify-center hover:bg-gray-300 active:scale-[.99] transition" title="Sune settings">✺</button>
-    <div class="justify-self-end"><button id="sidebarBtnRight" class="h-8 w-8 rounded-xl bg-gray-100 hover:bg-gray-200 active:scale-[.99] transition flex items-center justify-center" title="Threads" @click="renderThreads();document.getElementById('sidebarRight').classList.remove('translate-x-full');document.getElementById('sidebarOverlayRight').classList.remove('hidden')"><i data-lucide="panel-right" class="h-5 w-5"></i></button></div>
-  </div>
-</header>
-<main id="chat" class="flex-1 overflow-y-auto no-scrollbar"><section id="suneHtml" class="px-0 border-b border-gray-200 hidden"></section><div id="messages" class="mx-auto w-full max-w-none px-0 py-4 sm:py-6 space-y-4" @click="if($event.target.closest('.msg-avatar')){document.getElementById('sidebarLeft').classList.remove('-translate-x-full');document.getElementById('sidebarOverlayLeft').classList.remove('hidden')}"></div><div class="h-24"></div></main>
-<footer id="footer" class="sticky bottom-0 z-10 bg-gradient-to-t from-white via-white/95 to-white/40 pt-2 pb-[calc(12px+var(--safe-bottom))] border-t border-gray-200">
-  <div class="mx-auto w-full max-w-none px-0">
-    <form id="composer" class="group relative flex items-start gap-2 px-3">
-      <textarea id="input" rows="1" placeholder="Send a message" spellcheck="false" autocapitalize="none" autocomplete="off" autocorrect="off" inputmode="text" enterkeyhint="enter" class="flex-1 resize-none rounded-2xl border-none bg-white px-3 py-2 text-[14px] leading-6 placeholder:text-gray-400 focus:outline-none focus:ring-0 max-h-52 overflow-y-auto min-h-[96px]"></textarea>
-      <div class="flex flex-col gap-2 self-stretch justify-center">
-        <button id="sendBtn" type="submit" aria-label="Send" class="shrink-0 rounded-2xl bg-black text-white h-10 w-10 inline-flex items-center justify-center shadow-sm hover:bg-black/90 active:scale-[.98] transition"><i data-lucide="sparkles" class="h-5 w-5"></i></button>
-        <button id="attachBtn" type="button" aria-label="Attach" class="relative shrink-0 rounded-2xl bg-gray-100 text-gray-900 h-10 w-10 inline-flex items-center justify-center shadow-sm hover:bg-gray-200 active:scale-[.98] transition"><i data-lucide="paperclip" class="h-5 w-5"></i><span id="attachBadge" class="hidden absolute -top-1 -right-1 h-4 min-w-4 px-1 rounded-full bg-black text-white text-[10px] leading-4 text-center"></span></button>
-      </div>
-      <input id="fileInput" type="file" class="hidden" multiple accept="image/png,image/jpeg,image/webp,image/gif,application/pdf,audio/wav,audio/x-wav,audio/mpeg,audio/mp3"/>
-    </form>
-  </div>
-</footer>
+<%- include('./src/partials/header.html') %>
+<%- include('./src/partials/main.html') %>
+<%- include('./src/partials/footer.html') %>
 </div>
-<div id="sidebarOverlayLeft" class="fixed inset-0 z-40 bg-black/20 hidden" @click="document.getElementById('sidebarLeft').classList.add('-translate-x-full');$el.classList.add('hidden');document.getElementById('sidebarRight').classList.add('translate-x-full');document.getElementById('sidebarOverlayRight').classList.add('hidden');hideThreadPopover();hideSunePopover()"></div>
-<aside id="sidebarLeft" class="fixed inset-y-0 left-0 z-50 w-72 max-w-[85vw] bg-white border-r border-gray-200 shadow-xl transform -translate-x-full transition-transform duration-200 ease-out flex flex-col">
-  <div class="p-3 border-b flex items-center gap-2"><button id="newSuneBtn" class="px-3 py-2 rounded-xl bg-black text-white text-sm hover:bg-black/90">New sune</button><span class="text-xs text-gray-500">Click name to equip</span></div>
-  <div id="suneList" class="flex-1 overflow-y-auto divide-y"></div>
-  <div class="p-3 border-t relative">
-    <button id="userMenuBtn" class="w-full flex items-center justify-between px-3 py-2 rounded-xl bg-gray-100 hover:bg-gray-200 active:scale-[.99] transition" @click.stop="document.getElementById('userMenu').classList.toggle('hidden')"><span class="flex items-center gap-2"><span class="h-6 w-6 rounded-full bg-gray-900 text-white flex items-center justify-center">👤</span><span class="text-sm">Account & Backup</span></span><i data-lucide="chevron-down" class="h-4 w-4"></i></button>
-    <div id="userMenu" class="absolute left-3 right-3 bottom-16 translate-y-2 rounded-xl border border-gray-200 bg-white shadow-lg hidden overflow-hidden">
-      <button id="accountSettingsOption" class="menu-item"><i data-lucide="settings" class="h-4 w-4"></i><span>Settings</span></button>
-      <button id="sunesImportOption" class="menu-item">Import sunes (.sune)</button>
-      <button id="sunesExportOption" class="menu-item">Export sunes (.sune)</button>
-      <button id="threadsImportOption" class="menu-item">Import threads (.json)</button>
-      <button id="threadsExportOption" class="menu-item">Export threads (.json)</button>
-    </div>
-    <input id="importInput" type="file" accept="application/json,.json,.sune" class="hidden"/>
-  </div>
-</aside>
-<div id="sidebarOverlayRight" class="fixed inset-0 z-40 bg-black/20 hidden" @click="$el.classList.add('hidden');document.getElementById('sidebarRight').classList.add('translate-x-full')"></div>
-<aside id="sidebarRight" class="fixed inset-y-0 right-0 z-50 w-80 max-w-[90vw] bg-white border-l border-gray-200 shadow-xl transform translate-x-full transition-transform duration-200 ease-out flex flex-col">
-  <div class="p-3 border-b text-sm font-medium flex items-center justify-between"><span>Threads</span><button id="closeThreads" class="p-1 rounded hover:bg-gray-100" aria-label="Close" @click="document.getElementById('sidebarOverlayRight').classList.add('hidden');document.getElementById('sidebarRight').classList.add('translate-x-full')"><svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg></button></div>
-  <div id="threadList" class="flex-1 overflow-y-auto divide-y"></div>
-</aside>
-<div id="threadPopover" class="menu-card hidden">
-  <button data-action="pin" class="menu-item"><i data-lucide="pin" class="h-4 w-4"></i><span>Pin to top</span></button>
-  <button data-action="rename" class="menu-item"><i data-lucide="edit-3" class="h-4 w-4"></i><span>Rename</span></button>
-  <button data-action="delete" class="menu-item text-red-600"><i data-lucide="trash-2" class="h-4 w-4"></i><span>Delete</span></button>
-  <button data-action="count_tokens" class="menu-item"><i data-lucide="hash" class="h-4 w-4"></i><span>Count tokens (approx.)</span></button>
-</div>
-<div id="sunePopover" class="menu-card hidden">
-  <button data-action="pin" class="menu-item"><i data-lucide="pin" class="h-4 w-4"></i><span>Pin to top</span></button>
-  <button data-action="rename" class="menu-item"><i data-lucide="edit-3" class="h-4 w-4"></i><span>Rename</span></button>
-  <button data-action="pfp" class="menu-item"><i data-lucide="image" class="h-4 w-4"></i><span>Change pfp</span></button>
-  <button data-action="export" class="menu-item"><i data-lucide="download" class="h-4 w-4"></i><span>Export sune (.sune)</span></button>
-</div>
-<div id="suneModal" class="hidden fixed inset-0 z-50">
-  <div class="absolute inset-0 bg-black/30"></div>
-  <div class="absolute inset-x-0 top-12 mx-auto w-full max-w-md px-4">
-    <div class="rounded-2xl bg-white shadow-xl border border-gray-200 overflow-hidden">
-      <div class="px-4 py-3 border-b text-sm font-semibold flex items-center gap-2"><input id="suneURL" type="text" placeholder="" class="flex-1 min-w-0 h-10 rounded-xl border-0 bg-gray-50 px-3 text-gray-400 placeholder:text-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-200 focus:bg-white text-xs font-mono focus:text-black"/><button id="syncSune" class="p-1.5 rounded hover:bg-gray-100" aria-label="Refresh"><i data-lucide="refresh-cw" class="h-5 w-5"></i></button></div>
-      <form id="settingsForm" class="text-sm">
-        <div class="border-b flex text-xs font-medium"><button type="button" id="tabModel" class="flex-1 py-2 px-3 text-center border-b-2 border-black">Model & Sampling</button><button type="button" id="tabPrompt" class="flex-1 py-2 px-3 text-center border-b-2 border-transparent hover:border-gray-300">System Prompt</button><button type="button" id="tabScript" class="flex-1 py-2 px-3 text-center border-b-2 border-transparent hover:border-gray-300">HTML</button></div>
-        <div id="panelModel" class="p-4 space-y-4">
-          <div class="grid grid-cols-2 gap-3"><div><label class="block text-gray-700 font-medium mb-1">Model name</label><input id="set_model" type="text" class="w-full rounded-xl border border-gray-300 px-3 py-2" placeholder="google/gemini-2.5-pro"/></div><div><label class="block text-gray-700 font-medium mb-1">Reasoning Effort</label><select id="set_reasoning_effort" class="w-full rounded-xl border border-gray-300 px-3 py-2"><option value="default">Omitted</option><option value="low">Low</option><option value="medium">Medium</option><option value="high">High</option></select></div></div>
-          <div class="grid grid-cols-2 gap-3">
-            <div><label class="block text-gray-700 font-medium mb-1">Temperature <span class="text-gray-400">(0–2)</span></label><input id="set_temperature" type="number" min="0" max="2" step="0.1" class="w-full rounded-xl border border-gray-300 px-3 py-2" placeholder="1.0"/></div>
-            <div><label class="block text-gray-700 font-medium mb-1">Top P <span class="text-gray-400">(0–1)</span></label><input id="set_top_p" type="number" min="0" max="1" step="0.01" class="w-full rounded-xl border border-gray-300 px-3 py-2" placeholder="1.0"/></div>
-            <div><label class="block text-gray-700 font-medium mb-1">Top K</label><input id="set_top_k" type="number" min="0" step="1" class="w-full rounded-xl border border-gray-300 px-3 py-2" placeholder="0"/></div>
-            <div><label class="block text-gray-700 font-medium mb-1">Frequency Penalty <span class="text-gray-400">(-2–2)</span></label><input id="set_frequency_penalty" type="number" min="-2" max="2" step="0.1" class="w-full rounded-xl border border-gray-300 px-3 py-2" placeholder="0.0"/></div>
-            <div><label class="block text-gray-700 font-medium mb-1">Repetition Penalty <span class="text-gray-400">(0–2)</span></label><input id="set_repetition_penalty" type="number" min="0" max="2" step="0.01" class="w-full rounded-xl border border-gray-300 px-3 py-2" placeholder="1.0"/></div>
-            <div><label class="block text-gray-700 font-medium mb-1">Min P <span class="text-gray-400">(0–1)</span></label><input id="set_min_p" type="number" min="0" max="1" step="0.01" class="w-full rounded-xl border border-gray-300 px-3 py-2" placeholder="0.0"/></div>
-            <div><label class="block text-gray-700 font-medium mb-1">Top A <span class="text-gray-400">(0–1)</span></label><input id="set_top_a" type="number" min="0" max="1" step="0.01" class="w-full rounded-xl border border-gray-300 px-3 py-2" placeholder="0.0"/></div>
-            <div><label class="block text-gray-700 font-medium mb-1">Verbosity</label><select id="set_verbosity" class="w-full rounded-xl border border-gray-300 px-3 py-2"><option value="">Omitted</option><option value="low">Low</option><option value="medium">Medium</option><option value="high">High</option></select></div>
-          </div>
-          <div class="flex flex-wrap items-center gap-2 pt-2">
-            <div><input id="set_include_thoughts" type="checkbox" class="sr-only peer"><label for="set_include_thoughts" class="inline-flex cursor-pointer items-center rounded-full border border-slate-300 bg-transparent py-0.5 px-3 text-xs text-slate-500 peer-checked:border-gray-300 peer-checked:bg-gray-200 peer-checked:text-slate-800">Include thoughts</label></div>
-            <div><input id="set_json_output" type="checkbox" class="sr-only peer"><label for="set_json_output" class="inline-flex cursor-pointer items-center rounded-full border border-slate-300 bg-transparent py-0.5 px-3 text-xs text-slate-500 peer-checked:border-gray-300 peer-checked:bg-gray-200 peer-checked:text-slate-800">JSON Output</label></div>
-            <div><input id="set_hide_composer" type="checkbox" class="sr-only peer"><label for="set_hide_composer" class="inline-flex cursor-pointer items-center rounded-full border border-slate-300 bg-transparent py-0.5 px-3 text-xs text-slate-500 peer-checked:border-gray-300 peer-checked:bg-gray-200 peer-checked:text-slate-800">Hide composer</label></div>
-            <div><input id="set_ignore_master_prompt" type="checkbox" class="sr-only peer"><label for="set_ignore_master_prompt" class="inline-flex cursor-pointer items-center rounded-full border border-slate-300 bg-transparent py-0.5 px-3 text-xs text-slate-500 peer-checked:border-gray-300 peer-checked:bg-gray-200 peer-checked:text-slate-800">Ignore master prompt</label></div>
-          </div>
-        </div>
-        <div id="panelPrompt" class="p-4 space-y-4 hidden">
-          <div><div class="flex items-center justify-between mb-1"><label for="set_system_prompt" class="block text-gray-700 font-medium">System Prompt</label><div class="flex gap-2"><button type="button" id="copySystemPrompt" class="px-2 py-1 text-xs rounded-md bg-gray-100 hover:bg-gray-200">Copy</button><button type="button" id="pasteSystemPrompt" class="px-2 py-1 text-xs rounded-md bg-gray-100 hover:bg-gray-200">Paste</button></div></div><textarea id="set_system_prompt" rows="8" class="w-full rounded-xl border border-gray-300 px-3 py-2" placeholder="Enter a system prompt to guide the sune"></textarea></div>
-          <div><label class="block text-gray-700 font-medium mb-1">JSON Schema</label><pre id="jsonSchemaEditor" class="w-full h-48 p-3 rounded-xl border border-gray-300 bg-white overflow-auto font-mono" contenteditable="plaintext-only" spellcheck="false" autocorrect="off" autocapitalize="off" autocomplete="off"></pre><p class="mt-1 text-xs text-gray-500">Requires "JSON Output" to be enabled. Value for <code>json_schema</code>.</p></div>
-        </div>
-        <div id="panelScript" class="p-1 hidden">
-          <div class="border-b flex text-xs font-medium"><button type="button" id="htmlTab_index" class="flex-1 py-2 px-3 text-center border-b-2"></button><button type="button" id="htmlTab_extension" class="flex-1 py-2 px-3 text-center border-b-2"></button></div>
-          <div class="pt-0">
-            <pre id="htmlEditor" class="w-full h-[50vh] p-3 rounded-xl border border-gray-300 bg-white overflow-auto font-mono text-[12px] leading-5" contenteditable="plaintext-only" spellcheck="false" autocorrect="off" autocapitalize="off" autocomplete="off"></pre>
-            <pre id="extensionHtmlEditor" class="w-full h-[50vh] p-3 rounded-xl border border-gray-300 bg-white overflow-auto font-mono text-[12px] leading-5 hidden" contenteditable="plaintext-only" spellcheck="false" autocorrect="off" autocapitalize="off" autocomplete="off"></pre>
-          </div>
-          <div class="mt-2 flex gap-2"><button type="button" id="copyHTML" class="px-3 py-1.5 rounded-lg bg-gray-100 hover:bg-gray-200">Copy</button><button type="button" id="pasteHTML" class="px-3 py-1.5 rounded-lg bg-gray-100 hover:bg-gray-200">Paste</button></div>
-          <p class="mt-1 text-xs text-gray-500">Scripts also run. extension.html runs before index.html.</p>
-        </div>
-        <div class="flex items-center justify-between gap-2 px-4 py-3 border-t">
-          <button type="button" id="deleteSuneBtn" class="inline-flex items-center gap-2 px-3 py-2 rounded-xl border border-red-200 text-red-700 hover:bg-red-50"><svg viewBox="0 0 24 24" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 6h18M8 6v12a2 2 0 0 0 2 2h4a2 2 0 0 0 2-2V6m-9 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg><span>Delete sune</span></button>          <div class="flex items-center justify-end gap-2"><button type="button" id="cancelSettings" class="px-3 py-2 rounded-xl border bg-white hover:bg-gray-50">Cancel</button><button type="submit" class="px-3 py-2 rounded-xl bg-black text-white hover:bg-black/90">Save</button></div>
-        </div>
-      </form>
-    </div>
-  </div>
-</div>
-<div id="accountSettingsModal" class="hidden fixed inset-0 z-50">
-  <div class="absolute inset-0 bg-black/30"></div>
-  <div class="absolute inset-x-0 top-16 mx-auto w-full max-w-md px-4">
-    <div class="rounded-2xl bg-white shadow-xl border border-gray-200 overflow-hidden">
-      <div class="px-4 py-3 border-b text-sm font-semibold flex items-center justify-between"><span>Account Settings</span><button id="closeAccountSettings" class="p-1 rounded hover:bg-gray-100" aria-label="Close"><svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg></button></div>
-      <form id="accountSettingsForm" class="text-sm">
-        <div class="border-b flex text-xs font-medium"><button type="button" id="accountTabGeneral" class="flex-1 py-2 px-3 text-center border-b-2 border-black">General</button><button type="button" id="accountTabAPI" class="flex-1 py-2 px-3 text-center border-b-2 border-transparent hover:border-gray-300">API</button><button type="button" id="accountTabUser" class="flex-1 py-2 px-3 text-center border-b-2 border-transparent hover:border-gray-300">User</button></div>
-        <div id="accountPanelGeneral" class="p-4 space-y-4">
-          <div><label class="block text-gray-700 font-medium mb-1">Provider</label><select id="set_provider" class="w-full rounded-xl border border-gray-300 px-3 py-2"><option value="openrouter">OpenRouter</option><option value="openai">OpenAI</option><option value="google">Google</option><option value="claude">Claude</option><option value="cloudflare">Cloudflare</option></select><p class="mt-1 text-xs text-gray-500">Or you can prefix model names with or:, oai:, g:, cla:, or cf: to override.</p></div>
-          <div><label class="block text-gray-700 font-medium mb-1">Master Prompt</label><textarea id="set_master_prompt" rows="6" class="w-full rounded-xl border border-gray-300 px-3 py-2" placeholder="Applies to all sunes on this device"></textarea><p class="mt-1 text-xs text-gray-500">Stored locally.</p></div>
-          <div><label class="block text-gray-700 font-medium mb-1">Model preference for titles</label><input id="set_title_model" type="text" class="w-full rounded-xl border border-gray-300 px-3 py-2" placeholder="or:google/gemma-3-12b-it"/><p class="mt-1 text-xs text-gray-500">Used for auto-generating thread titles.</p></div>
-        </div>
-        <div id="accountPanelAPI" class="p-4 hidden"><div class="grid grid-cols-2 gap-x-4 gap-y-4"><div><label class="block text-gray-700 font-medium mb-1">OpenRouter Key</label><div class="relative"><input id="set_api_key_or" type="password" class="w-full rounded-xl border border-gray-300 px-3 py-2 pr-10" placeholder="sk-or-..."><button type="button" data-reveal-for="set_api_key_or" class="absolute inset-y-0 right-0 px-3 flex items-center text-gray-400 hover:text-gray-600"><i data-lucide="eye" class="h-4 w-4"></i></button></div><p class="mt-1 text-xs text-gray-500">Use: <code>USER.apiKeyOpenRouter</code></p></div><div><label class="block text-gray-700 font-medium mb-1">OpenAI Key</label><div class="relative"><input id="set_api_key_oai" type="password" class="w-full rounded-xl border border-gray-300 px-3 py-2 pr-10" placeholder="sk-..."><button type="button" data-reveal-for="set_api_key_oai" class="absolute inset-y-0 right-0 px-3 flex items-center text-gray-400 hover:text-gray-600"><i data-lucide="eye" class="h-4 w-4"></i></button></div><p class="mt-1 text-xs text-gray-500">Use: <code>USER.apiKeyOpenAI</code></p></div><div><label class="block text-gray-700 font-medium mb-1">Google Key</label><div class="relative"><input id="set_api_key_g" type="password" class="w-full rounded-xl border border-gray-300 px-3 py-2 pr-10" placeholder="AIza..."><button type="button" data-reveal-for="set_api_key_g" class="absolute inset-y-0 right-0 px-3 flex items-center text-gray-400 hover:text-gray-600"><i data-lucide="eye" class="h-4 w-4"></i></button></div><p class="mt-1 text-xs text-gray-500">Gemini/Studio. Use: <code>USER.apiKeyGoogle</code></p></div><div><label class="block text-gray-700 font-medium mb-1">Claude Key</label><div class="relative"><input id="set_api_key_claude" type="password" class="w-full rounded-xl border border-gray-300 px-3 py-2 pr-10" placeholder="sk-ant-..."><button type="button" data-reveal-for="set_api_key_claude" class="absolute inset-y-0 right-0 px-3 flex items-center text-gray-400 hover:text-gray-600"><i data-lucide="eye" class="h-4 w-4"></i></button></div><p class="mt-1 text-xs text-gray-500">Use: <code>USER.apiKeyClaude</code></p></div><div><label class="block text-gray-700 font-medium mb-1">Cloudflare Token</label><div class="relative"><input id="set_api_key_cf" type="password" class="w-full rounded-xl border border-gray-300 px-3 py-2 pr-10" placeholder="..."><button type="button" data-reveal-for="set_api_key_cf" class="absolute inset-y-0 right-0 px-3 flex items-center text-gray-400 hover:text-gray-600"><i data-lucide="eye" class="h-4 w-4"></i></button></div><p class="mt-1 text-xs text-gray-500">Not used. Use: <code>USER.apiKeyCloudflare</code></p></div><div><label class="block text-gray-700 font-medium mb-1">Github Token</label><div class="relative"><input id="set_gh_token" type="password" class="w-full rounded-xl border border-gray-300 px-3 py-2 pr-10" placeholder="ghp_..."><button type="button" data-reveal-for="set_gh_token" class="absolute inset-y-0 right-0 px-3 flex items-center text-gray-400 hover:text-gray-600"><i data-lucide="eye" class="h-4 w-4"></i></button></div><p class="mt-1 text-xs text-gray-500">Use: <code>USER.githubToken</code></p></div><div><label class="block text-gray-700 font-medium mb-1">GCP Service Acct</label><input id="gcpSAInput" type="file" class="hidden" accept="application/json,.json"><button type="button" id="gcpSAUploadBtn" class="w-full text-left rounded-xl border border-gray-300 bg-white px-3 py-2 text-sm hover:bg-gray-50 truncate">Upload .json</button><p class="mt-1 text-xs text-gray-500">Use: <code>USER.gcpSA</code></p></div></div></div>
-        <div id="accountPanelUser" class="p-4 space-y-4 hidden">
-          <div class="flex items-center gap-4">
-            <div class="relative"><img id="userAvatarPreview" class="h-16 w-16 rounded-full object-cover bg-gray-200"><button type="button" id="setUserAvatarBtn" class="absolute bottom-0 right-0 h-6 w-6 rounded-full bg-white border border-gray-300 flex items-center justify-center hover:bg-gray-100" aria-label="Edit photo"><i data-lucide="edit-3" class="h-3 w-3"></i></button></div>
-            <input id="userAvatarInput" type="file" accept="image/*" class="hidden">
-            <div class="flex-1"><label for="set_user_name" class="block text-gray-700 font-medium mb-1">Username</label><input id="set_user_name" type="text" class="w-full rounded-xl border border-gray-300 px-3 py-2" placeholder="Master"/></div>
-          </div>
-        </div>
-        <div class="flex items-center justify-between gap-2 px-4 py-3 border-t">
-          <div class="flex items-center gap-2"><button type="button" id="importAccountSettings" class="text-xs px-2.5 py-1.5 rounded-lg border bg-white hover:bg-gray-50">Import</button><button type="button" id="exportAccountSettings" class="text-xs px-2.5 py-1.5 rounded-lg border bg-white hover:bg-gray-50">Export</button></div>
-          <div class="flex items-center justify-end gap-2"><button type="button" id="cancelAccountSettings" class="px-3 py-2 rounded-xl border bg-white hover:bg-gray-50">Cancel</button><button type="submit" class="px-3 py-2 rounded-xl bg-black text-white hover:bg-black/90">Save</button></div>
-        </div>
-      </form>
-    </div>
-  </div>
-</div>
-<input id="importAccountSettingsInput" type="file" class="hidden" accept="application/json,.json">
-<script src="https://unpkg.com/lucide@latest"></script>
-<script src="https://cdn.jsdelivr.net/npm/markdown-it@14.1.0/dist/markdown-it.min.js"></script>
-<script src="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.9.0/build/highlight.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/localforage@1.10.0/dist/localforage.min.js"></script>
+<%- include('./src/partials/sidebars.html') %>
+<%- include('./src/partials/popovers.html') %>
+<%- include('./src/partials/modals.html') %>
+<%- include('./src/partials/scripts.html') %>
 <script type="module" src="/src/main.js"></script>
 </body>
 </html>
-
-
-
-
