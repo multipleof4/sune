@@ -1,18 +1,20 @@
 <!doctype html>
 <html lang="en">
 <head>
-<%- include('src/partials/head.html') %>
+  <!-- html-plugin-include: "./src/partials/head.html" -->
 </head>
 <body class="bg-white text-gray-900 selection:bg-black/10" x-data @click.window="if($event.target.closest('button')) haptic(); if(!document.getElementById('threadPopover').contains($event.target)&&!$event.target.closest('[data-thread-menu]')) hideThreadPopover(); if(!document.getElementById('sunePopover').contains($event.target)&&!$event.target.closest('[data-sune-menu]')) hideSunePopover(); if(!document.getElementById('userMenu').contains($event.target)&&!document.getElementById('userMenuBtn').contains($event.target)) document.getElementById('userMenu').classList.add('hidden')">
-<div class="flex flex-col h-dvh max-h-dvh overflow-hidden">
-<%- include('src/partials/header.html') %>
-<%- include('src/partials/main.html') %>
-<%- include('src/partials/footer.html') %>
-</div>
-<%- include('src/partials/sidebars.html') %>
-<%- include('src/partials/popovers.html') %>
-<%- include('src/partials/modals.html') %>
-<%- include('src/partials/scripts.html') %>
-<script type="module" src="/src/main.js"></script>
+  <div class="flex flex-col h-dvh max-h-dvh overflow-hidden">
+    <!-- html-plugin-include: "./src/partials/header.html" -->
+    <!-- html-plugin-include: "./src/partials/main.html" -->
+    <!-- html-plugin-include: "./src/partials/footer.html" -->
+  </div>
+
+  <!-- html-plugin-include: "./src/partials/sidebars.html" -->
+  <!-- html-plugin-include: "./src/partials/popovers.html" -->
+  <!-- html-plugin-include: "./src/partials/modals.html" -->
+  <!-- html-plugin-include: "./src/partials/scripts.html" -->
+
+  <script type="module" src="/src/main.js"></script>
 </body>
 </html>
