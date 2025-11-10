@@ -1,16 +1,9 @@
 import { defineConfig } from 'vite'
 import { VitePWA } from 'vite-plugin-pwa'
-import { createHtmlPlugin } from 'vite-plugin-html'
 
 export default defineConfig({
   build:{ minify:false },
   plugins:[
-    createHtmlPlugin({
-      minify:false,
-      // Use vite-plugin-html's built-in fragment include support
-      // via <!-- html-plugin-include: --> comments.
-      // No extra EJS runtime needed.
-    }),
     VitePWA({
       registerType:'autoUpdate',
       manifest:{
@@ -24,26 +17,10 @@ export default defineConfig({
         theme_color:'#FFFFFF',
         background_color:'#000000',
         categories:['productivity','utilities'],
-        icons:[
-          {
-            src:'https://sune.planetrenox.com/appstore_content/✺.png',
-            sizes:'1024x1024',
-            type:'image/png'
-          }
-        ],
-        screenshots:[
-          {
-            src:'https://sune.planetrenox.com/appstore_content/screenshot1.jpg',
-            sizes:'1344x2693',
-            type:'image/jpeg'
-          },
-          {
-            src:'https://sune.planetrenox.com/appstore_content/screenshot2.jpg',
-            sizes:'1344x2699',
-            type:'image/jpeg'
-          }
-        ]
+        icons:[{ src:'https://sune.planetrenox.com/appstore_content/✺.png', sizes:'1024x1024', type:'image/png' }],
+        screenshots:[{ src:'https://sune.planetrenox.com/appstore_content/screenshot1.jpg', sizes:'1344x2693', type:'image/jpeg' },{ src:'https://sune.planetrenox.com/appstore_content/screenshot2.jpg', sizes:'1344x2699', type:'image/jpeg' }]
       }
     })
   ]
 })
+
