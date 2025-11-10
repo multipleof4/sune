@@ -1,7 +1,15 @@
 <header id="topbar" class="sticky top-0 z-20 bg-white/80 backdrop-blur border-b border-gray-200">
   <div class="mx-auto w-full max-w-none px-4 py-3 grid grid-cols-3 items-center">
-    <button id="sidebarBtnLeft" class="h-8 w-8 rounded-xl bg-gray-100 hover:bg-gray-200 active:scale-[.99] transition flex items-center justify-center" title="Sunes" @click="document.getElementById('sidebarLeft').classList.remove('-translate-x-full');document.getElementById('sidebarOverlayLeft').classList.remove('hidden')"><i data-lucide="panel-left" class="h-5 w-5"></i></button>
-    <button id="suneBtnTop" class="justify-self-center h-8 w-8 rounded-full bg-gray-200 text-gray-900 flex items-center justify-center hover:bg-gray-300 active:scale-[.99] transition" title="Sune settings">✺</button>
-    <div class="justify-self-end"><button id="sidebarBtnRight" class="h-8 w-8 rounded-xl bg-gray-100 hover:bg-gray-200 active:scale-[.99] transition flex items-center justify-center" title="Threads" @click="renderThreads();document.getElementById('sidebarRight').classList.remove('translate-x-full');document.getElementById('sidebarOverlayRight').classList.remove('hidden')"><i data-lucide="panel-right" class="h-5 w-5"></i></button></div>
+    <button id="sidebarBtnLeft" class="h-8 w-8 rounded-xl bg-gray-100 hover:bg-gray-200 active:scale-[.99] transition flex items-center justify-center" title="Sunes" @click="document.getElementById('sidebarLeft').classList.remove('-translate-x-full');document.getElementById('sidebarOverlayLeft').classList.remove('hidden')">
+      <i data-lucide="panel-left" class="h-5 w-5"></i>
+    </button>
+    <button id="suneBtnTop" class="justify-self-center h-8 w-8 rounded-full bg-gray-200 text-gray-900 flex items-center justify-center hover:bg-gray-300 active:scale-[.99] transition" title="Sune settings">
+      ✺
+    </button>
+    <div class="justify-self-end">
+      <button id="sidebarBtnRight" class="h-8 w-8 rounded-xl bg-gray-100 hover:bg-gray-200 active:scale-[.99] transition flex items-center justify-center" title="Threads" @click="renderThreads();document.getElementById('sidebarRight').classList.remove('translate-x-full');document.getElementById('sidebarOverlayRight').classList.remove('hidden')">
+        <i data-lucide="panel-right" class="h-5 w-5"></i>
+      </button>
+    </div>
   </div>
 </header>
