@@ -1,9 +1,11 @@
 import { defineConfig } from 'vite'
 import { VitePWA } from 'vite-plugin-pwa'
+import { createHtmlPlugin } from 'vite-plugin-html'
 
 export default defineConfig({
   build:{ minify:false },
   plugins:[
+    createHtmlPlugin(),
     VitePWA({
       registerType:'autoUpdate',
       manifest:{
