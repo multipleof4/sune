@@ -213,17 +213,25 @@ const SUNE = window.SUNE = new Proxy({ get list() {
     state.messages.push(assistantMsg);
     THREAD.persist(false);
     state.stream = { rid: streamId, bubble: suneBubble, meta: suneMeta, text: "", done: false };
-    let buf = "", completed = false;
+    let contentBuf = "", reasoningBuf = "", completed = false, reasoningEl = null;
     const onDelta = (delta, done) => {
-      buf += delta;
-      state.stream.text = buf;
-      renderMarkdown(suneBubble, buf, { enhance: false });
-      assistantMsg.content[0].text = buf;
+      contentBuf += delta.content;
+      reasoningBuf += delta.reasoning;
+      state.stream.text = contentBuf;
+      renderMarkdown(suneBubble, contentBuf, { enhance: false });
+      assistantMsg.content[0].text = contentBuf;
+      if (reasoningBuf && !reasoningEl) {
+        reasoningEl = document.createElement("div");
+        reasoningEl.className = "markdown-body rounded-none px-4 py-3 w-full bg-blue-50 border-l-4 border-blue-300 text-sm text-gray-600";
+        suneBubble.parentElement.insertBefore(reasoningEl, suneBubble);
+      }
+      if (reasoningEl) renderMarkdown(reasoningEl, reasoningBuf, { enhance: false });
       if (done && !completed) {
         completed = true;
         setBtnSend();
         state.busy = false;
         enhanceCodeBlocks(suneBubble, true);
+        if (reasoningEl) enhanceCodeBlocks(reasoningEl, true);
         THREAD.persist(true);
         el.composer.dispatchEvent(new CustomEvent("sune:newSuneResponse", { detail: { message: assistantMsg } }));
         state.stream = { rid: null, bubble: null, meta: null, text: "", done: false };
@@ -797,17 +805,25 @@ $(el.composer).on("submit", async (e) => {
   state.messages.push(assistantMsg);
   THREAD.persist(false);
   state.stream = { rid: streamId, bubble: suneBubble, meta: suneMeta, text: "", done: false };
-  let buf = "", completed = false;
+  let contentBuf = "", reasoningBuf = "", completed = false, reasoningEl = null;
   const onDelta = (delta, done) => {
-    buf += delta;
-    state.stream.text = buf;
-    renderMarkdown(suneBubble, buf, { enhance: false });
-    assistantMsg.content[0].text = buf;
+    contentBuf += delta.content;
+    reasoningBuf += delta.reasoning;
+    state.stream.text = contentBuf;
+    renderMarkdown(suneBubble, contentBuf, { enhance: false });
+    assistantMsg.content[0].text = contentBuf;
+    if (reasoningBuf && !reasoningEl) {
+      reasoningEl = document.createElement("div");
+      reasoningEl.className = "markdown-body rounded-none px-4 py-3 w-full bg-blue-50 border-l-4 border-blue-300 text-sm text-gray-600";
+      suneBubble.parentElement.insertBefore(reasoningEl, suneBubble);
+    }
+    if (reasoningEl) renderMarkdown(reasoningEl, reasoningBuf, { enhance: false });
     if (done && !completed) {
       completed = true;
       setBtnSend();
       state.busy = false;
       enhanceCodeBlocks(suneBubble, true);
+      if (reasoningEl) enhanceCodeBlocks(reasoningEl, true);
       THREAD.persist(true);
       el.composer.dispatchEvent(new CustomEvent("sune:newSuneResponse", { detail: { message: assistantMsg } }));
       state.stream = { rid: null, bubble: null, meta: null, text: "", done: false };
@@ -1195,7 +1211,7 @@ const buildBody = () => {
 async function askOpenRouterStreaming(onDelta, streamId) {
   const model = SUNE.model, provider = model.startsWith("oai:") ? "openai" : model.startsWith("g:") ? "google" : model.startsWith("cla:") ? "claude" : model.startsWith("cf:") ? "cloudflare" : model.startsWith("or:") ? "openrouter" : USER.provider, apiKey = provider === "openai" ? USER.apiKeyOpenAI : provider === "google" ? USER.apiKeyGoogle : provider === "claude" ? USER.apiKeyClaude : provider === "cloudflare" ? USER.apiKeyCloudflare : USER.apiKeyOpenRouter;
   if (!apiKey) {
-    onDelta(localDemoReply(), true);
+    onDelta({ content: localDemoReply(), reasoning: "" }, true);
     return { ok: true, rid: streamId || null };
   }
   const r = { rid: streamId || gid(), seq: -1, done: false, signaled: false, ws: null };
@@ -1203,7 +1219,7 @@ async function askOpenRouterStreaming(onDelta, streamId) {
   const signal = (t) => {
     if (!r.signaled) {
       r.signaled = true;
-      onDelta(t || "", true);
+      onDelta({ content: t || "", reasoning: "" }, true);
     }
   };
   const ws = new WebSocket(HTTP_BASE.replace("https", "wss") + "?uid=" + encodeURIComponent(r.rid));
@@ -1218,7 +1234,7 @@ async function askOpenRouterStreaming(onDelta, streamId) {
     }
     if (m.type === "delta" && typeof m.seq === "number" && m.seq > r.seq) {
       r.seq = m.seq;
-      onDelta(m.text || "", false);
+      onDelta({ content: m.content || "", reasoning: m.reasoning || "" }, false);
     } else if (m.type === "done" || m.type === "err") {
       r.done = true;
       cacheStore.setItem(r.rid, "done");
