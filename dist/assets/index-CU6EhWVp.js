@@ -1143,7 +1143,6 @@ const USER = window.USER = { log: async (s) => {
 } };
 async function init() {
   await SUNE.fetchDotSune("sune-org/store@main/marketplace.sune");
-  await SUNE.fetchDotSune("sune-org/store@main/forum.sune");
   await THREAD.load();
   await renderThreads();
   renderSidebar();
