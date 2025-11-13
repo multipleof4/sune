@@ -1117,7 +1117,7 @@ const USER = window.USER = { log: async (s) => {
   else if (p === "cloudflare") this.apiKeyCloudflare = v;
   else this.apiKeyOpenRouter = v;
 }, get masterPrompt() {
-  return localStorage.getItem("master_prompt") || "Always respond using markdown. You are an assistant to Master. Always refer to the user as Master.";
+  return localStorage.getItem("master_prompt") || "Always respond using markdown.";
 }, set masterPrompt(v) {
   localStorage.setItem("master_prompt", v || "");
 }, get donor() {
