@@ -93,7 +93,7 @@ const __vitePreload = function preload(baseModule, deps, importerUrl) {
   };
 })();
 const DEFAULT_MODEL = "google/gemini-2.5-pro", DEFAULT_API_KEY = "";
-const el = window.el = Object.fromEntries(["topbar", "chat", "messages", "composer", "input", "sendBtn", "suneBtnTop", "suneModal", "suneURL", "settingsForm", "closeSettings", "cancelSettings", "tabModel", "tabPrompt", "tabScript", "panelModel", "panelPrompt", "panelScript", "set_model", "set_temperature", "set_top_p", "set_top_k", "set_frequency_penalty", "set_repetition_penalty", "set_min_p", "set_top_a", "set_verbosity", "set_reasoning_effort", "set_system_prompt", "set_hide_composer", "set_include_thoughts", "set_json_output", "set_image_output", "set_ignore_master_prompt", "deleteSuneBtn", "sidebarLeft", "sidebarOverlayLeft", "sidebarBtnLeft", "suneList", "newSuneBtn", "userMenuBtn", "userMenu", "accountSettingsOption", "sunesImportOption", "sunesExportOption", "threadsImportOption", "threadsExportOption", "importInput", "sidebarBtnRight", "sidebarRight", "sidebarOverlayRight", "threadList", "closeThreads", "threadPopover", "sunePopover", "footer", "attachBtn", "attachBadge", "fileInput", "htmlEditor", "extensionHtmlEditor", "jsonSchemaEditor", "htmlTab_index", "htmlTab_extension", "suneHtml", "accountSettingsModal", "accountSettingsForm", "closeAccountSettings", "cancelAccountSettings", "set_master_prompt", "set_provider", "set_api_key_or", "set_api_key_oai", "set_api_key_g", "set_api_key_claude", "set_api_key_cf", "set_title_model", "copySystemPrompt", "pasteSystemPrompt", "copyHTML", "pasteHTML", "accountTabGeneral", "accountTabAPI", "accountPanelGeneral", "accountPanelAPI", "set_gh_token", "gcpSAInput", "gcpSAUploadBtn", "importAccountSettings", "exportAccountSettings", "importAccountSettingsInput", "accountTabUser", "accountPanelUser", "set_user_name", "userAvatarPreview", "setUserAvatarBtn", "userAvatarInput", "set_donor"].map((id) => [id, $("#" + id)[0]]));
+const el = window.el = Object.fromEntries(["topbar", "chat", "messages", "composer", "input", "sendBtn", "suneBtnTop", "suneModal", "suneURL", "settingsForm", "closeSettings", "cancelSettings", "tabModel", "tabPrompt", "tabScript", "panelModel", "panelPrompt", "panelScript", "set_model", "set_temperature", "set_top_p", "set_top_k", "set_frequency_penalty", "set_repetition_penalty", "set_min_p", "set_top_a", "set_verbosity", "set_reasoning_effort", "set_system_prompt", "set_hide_composer", "set_include_thoughts", "set_json_output", "set_ignore_master_prompt", "deleteSuneBtn", "sidebarLeft", "sidebarOverlayLeft", "sidebarBtnLeft", "suneList", "newSuneBtn", "userMenuBtn", "userMenu", "accountSettingsOption", "sunesImportOption", "sunesExportOption", "threadsImportOption", "threadsExportOption", "importInput", "sidebarBtnRight", "sidebarRight", "sidebarOverlayRight", "threadList", "closeThreads", "threadPopover", "sunePopover", "footer", "attachBtn", "attachBadge", "fileInput", "htmlEditor", "extensionHtmlEditor", "jsonSchemaEditor", "htmlTab_index", "htmlTab_extension", "suneHtml", "accountSettingsModal", "accountSettingsForm", "closeAccountSettings", "cancelAccountSettings", "set_master_prompt", "set_provider", "set_api_key_or", "set_api_key_oai", "set_api_key_g", "set_api_key_claude", "set_api_key_cf", "set_title_model", "copySystemPrompt", "pasteSystemPrompt", "copyHTML", "pasteHTML", "accountTabGeneral", "accountTabAPI", "accountPanelGeneral", "accountPanelAPI", "set_gh_token", "gcpSAInput", "gcpSAUploadBtn", "importAccountSettings", "exportAccountSettings", "importAccountSettingsInput", "accountTabUser", "accountPanelUser", "set_user_name", "userAvatarPreview", "setUserAvatarBtn", "userAvatarInput", "set_donor"].map((id) => [id, $("#" + id)[0]]));
 const icons = () => window.lucide && lucide.createIcons();
 const haptic = () => /android/i.test(navigator.userAgent) && navigator.vibrate?.(1);
 const clamp = (v, min, max) => Math.max(min, Math.min(max, v)), num = (v, d) => v == null || v === "" || isNaN(+v) ? d : +v, int = (v, d) => v == null || v === "" || isNaN(parseInt(v)) ? d : parseInt(v), gid = () => Math.random().toString(36).slice(2, 9), esc = (s) => String(s).replace(/[&<>'"`]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;", "`": "&#96;" })[c]), positionPopover = (a, p) => {
@@ -146,7 +146,7 @@ const su = { key: "sunes_v1", activeKey: "active_sune_id", load() {
 }, setActiveId(id) {
   localStorage.setItem(this.activeKey, id || "");
 } };
-const defaultSettings = { model: DEFAULT_MODEL, temperature: "", top_p: "", top_k: "", frequency_penalty: "", repetition_penalty: "", min_p: "", top_a: "", verbosity: "", reasoning_effort: "default", system_prompt: "", html: "", extension_html: "<sune src='https://raw.githubusercontent.com/sune-org/store/refs/heads/main/sync.sune' private></sune>", hide_composer: false, include_thoughts: false, json_output: false, image_output: false, ignore_master_prompt: false, json_schema: "" };
+const defaultSettings = { model: DEFAULT_MODEL, temperature: "", top_p: "", top_k: "", frequency_penalty: "", repetition_penalty: "", min_p: "", top_a: "", verbosity: "", reasoning_effort: "default", system_prompt: "", html: "", extension_html: "<sune src='https://raw.githubusercontent.com/sune-org/store/refs/heads/main/sync.sune' private></sune>", hide_composer: false, include_thoughts: false, json_output: false, ignore_master_prompt: false, json_schema: "" };
 const makeSune = (p = {}) => ({ id: p.id || gid(), name: p.name?.trim() || "Default", pinned: !!p.pinned, avatar: p.avatar || "", url: p.url || "", updatedAt: p.updatedAt || Date.now(), settings: Object.assign({}, defaultSettings, p.settings || {}), storage: p.storage || {} });
 let sunes = (su.load() || []).map(makeSune);
 const SUNE = window.SUNE = new Proxy({ get list() {
@@ -209,20 +209,16 @@ const SUNE = window.SUNE = new Proxy({ get list() {
     setBtnStop();
     const a2 = SUNE.active, suneMeta = { sune_name: a2.name, model: SUNE.model, avatar: a2.avatar || "" }, streamId = sid(), suneBubble = addSuneBubbleStreaming(suneMeta, streamId);
     suneBubble.dataset.mid = streamId;
-    const assistantMsg = Object.assign({ id: streamId, role: "assistant", content: [] }, suneMeta);
+    const assistantMsg = Object.assign({ id: streamId, role: "assistant", content: [{ type: "text", text: "" }] }, suneMeta);
     state.messages.push(assistantMsg);
     THREAD.persist(false);
     state.stream = { rid: streamId, bubble: suneBubble, meta: suneMeta, text: "", done: false };
-    let completed = false;
+    let buf = "", completed = false;
     const onDelta = (delta, done) => {
-      const d = delta || {};
-      if (d.images && Array.isArray(d.images)) assistantMsg.content.push(...d.images);
-      if (d.text) {
-        const last = assistantMsg.content.length > 0 ? assistantMsg.content[assistantMsg.content.length - 1] : null;
-        if (last && last.type === "text") last.text += d.text;
-        else assistantMsg.content.push({ type: "text", text: d.text });
-      }
-      renderMarkdown(suneBubble, partsToText(assistantMsg.content), { enhance: false });
+      buf += delta;
+      state.stream.text = buf;
+      renderMarkdown(suneBubble, buf, { enhance: false });
+      assistantMsg.content[0].text = buf;
       if (done && !completed) {
         completed = true;
         setBtnSend();
@@ -797,20 +793,16 @@ $(el.composer).on("submit", async (e) => {
   setBtnStop();
   const a = SUNE.active, suneMeta = { sune_name: a.name, model: SUNE.model, avatar: a.avatar || "" }, streamId = sid(), suneBubble = addSuneBubbleStreaming(suneMeta, streamId);
   suneBubble.dataset.mid = streamId;
-  const assistantMsg = Object.assign({ id: streamId, role: "assistant", content: [] }, suneMeta);
+  const assistantMsg = Object.assign({ id: streamId, role: "assistant", content: [{ type: "text", text: "" }] }, suneMeta);
   state.messages.push(assistantMsg);
   THREAD.persist(false);
   state.stream = { rid: streamId, bubble: suneBubble, meta: suneMeta, text: "", done: false };
-  let completed = false;
+  let buf = "", completed = false;
   const onDelta = (delta, done) => {
-    const d = delta || {};
-    if (d.images && Array.isArray(d.images)) assistantMsg.content.push(...d.images);
-    if (d.text) {
-      const last = assistantMsg.content.length > 0 ? assistantMsg.content[assistantMsg.content.length - 1] : null;
-      if (last && last.type === "text") last.text += d.text;
-      else assistantMsg.content.push({ type: "text", text: d.text });
-    }
-    renderMarkdown(suneBubble, partsToText(assistantMsg.content), { enhance: false });
+    buf += delta;
+    state.stream.text = buf;
+    renderMarkdown(suneBubble, buf, { enhance: false });
+    assistantMsg.content[0].text = buf;
     if (done && !completed) {
       completed = true;
       setBtnSend();
@@ -852,7 +844,6 @@ function openSettings() {
   el.set_system_prompt.value = s.system_prompt;
   el.set_hide_composer.checked = !!s.hide_composer;
   el.set_json_output.checked = !!s.json_output;
-  el.set_image_output.checked = !!s.image_output;
   el.set_include_thoughts.checked = !!s.include_thoughts;
   el.set_ignore_master_prompt.checked = !!s.ignore_master_prompt;
   showTab("Model");
@@ -900,7 +891,6 @@ $(el.settingsForm).on("submit", async (e) => {
   SUNE.system_prompt = el.set_system_prompt.value.trim();
   SUNE.hide_composer = el.set_hide_composer.checked;
   SUNE.json_output = el.set_json_output.checked;
-  SUNE.image_output = el.set_image_output.checked;
   SUNE.include_thoughts = el.set_include_thoughts.checked;
   SUNE.ignore_master_prompt = el.set_ignore_master_prompt.checked;
   SUNE.json_schema = el.jsonSchemaEditor.textContent;
@@ -1188,7 +1178,6 @@ const buildBody = () => {
   if (SUNE.system_prompt) msgs.push({ role: "system", content: [{ type: "text", text: SUNE.system_prompt }] });
   msgs.push(...state.messages.filter((m) => m.role !== "system").map((m) => ({ role: m.role, content: m.content })));
   const b = payloadWithSampling({ model: SUNE.model.replace(/^(or:|oai:|g:|cla:|cf:)/, ""), messages: msgs, stream: true });
-  if (SUNE.image_output) b.modalities = ["image", "text"];
   if (SUNE.json_output) {
     let s;
     try {
@@ -1209,7 +1198,7 @@ const buildBody = () => {
 async function askOpenRouterStreaming(onDelta, streamId) {
   const model = SUNE.model, provider = model.startsWith("oai:") ? "openai" : model.startsWith("g:") ? "google" : model.startsWith("cla:") ? "claude" : model.startsWith("cf:") ? "cloudflare" : model.startsWith("or:") ? "openrouter" : USER.provider, apiKey = provider === "openai" ? USER.apiKeyOpenAI : provider === "google" ? USER.apiKeyGoogle : provider === "claude" ? USER.apiKeyClaude : provider === "cloudflare" ? USER.apiKeyCloudflare : USER.apiKeyOpenRouter;
   if (!apiKey) {
-    onDelta({ text: localDemoReply() }, true);
+    onDelta(localDemoReply(), true);
     return { ok: true, rid: streamId || null };
   }
   const r = { rid: streamId || gid(), seq: -1, done: false, signaled: false, ws: null };
@@ -1217,7 +1206,7 @@ async function askOpenRouterStreaming(onDelta, streamId) {
   const signal = (t) => {
     if (!r.signaled) {
       r.signaled = true;
-      onDelta({ text: t || "" }, true);
+      onDelta(t || "", true);
     }
   };
   const ws = new WebSocket(HTTP_BASE.replace("https", "wss") + "?uid=" + encodeURIComponent(r.rid));
@@ -1232,7 +1221,7 @@ async function askOpenRouterStreaming(onDelta, streamId) {
     }
     if (m.type === "delta" && typeof m.seq === "number" && m.seq > r.seq) {
       r.seq = m.seq;
-      onDelta({ text: m.text, images: m.images }, false);
+      onDelta(m.text || "", false);
     } else if (m.type === "done" || m.type === "err") {
       r.done = true;
       cacheStore.setItem(r.rid, "done");
