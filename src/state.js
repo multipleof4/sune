@@ -2,7 +2,7 @@ import {gid,titleFrom,asDataURL,imgToWebp,b64} from './utils.js'
 
 const DEFAULT_MODEL='google/gemini-2.5-pro',DEFAULT_API_KEY=''
 
-const defaultSettings={model:DEFAULT_MODEL,temperature:'',top_p:'',top_k:'',frequency_penalty:'',repetition_penalty:'',min_p:'',top_a:'',verbosity:'',reasoning_effort:'default',system_prompt:'',html:'',extension_html:"<sune src='https://raw.githubusercontent.com/sune-org/store/refs/heads/main/sync.sune' private></sune>",hide_composer:false,include_thoughts:false,json_output:false,ignore_master_prompt:false,json_schema:''}
+const defaultSettings={model:DEFAULT_MODEL,temperature:'',top_p:'',top_k:'',frequency_penalty:'',repetition_penalty:'',min_p:'',top_a:'',verbosity:'',reasoning_effort:'default',system_prompt:'',html:'',extension_html:"<sune src='https://raw.githubusercontent.com/sune-org/store/refs/heads/main/sync.sune' private></sune>",hide_composer:false,include_thoughts:false,json_output:false,img_output:false,ignore_master_prompt:false,json_schema:''}
 
 const makeSune=(p={})=>({id:p.id||gid(),name:p.name?.trim()||'Default',pinned:!!p.pinned,avatar:p.avatar||'',url:p.url||'',updatedAt:p.updatedAt||Date.now(),settings:Object.assign({},defaultSettings,p.settings||{}),storage:p.storage||{}})
 
