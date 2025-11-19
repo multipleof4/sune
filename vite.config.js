@@ -1,9 +1,11 @@
 import { defineConfig } from 'vite'
 import { VitePWA } from 'vite-plugin-pwa'
+import htmlInject from 'vite-plugin-html-inject'
 
 export default defineConfig({
   build:{ minify:false },
   plugins:[
+    htmlInject(),
     VitePWA({
       registerType:'autoUpdate',
       manifest:{
@@ -23,4 +25,3 @@ export default defineConfig({
     })
   ]
 })
-
