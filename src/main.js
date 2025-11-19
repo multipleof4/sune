@@ -3,8 +3,8 @@ import { state } from './state.js'
 import { SUNE, makeSune, sunes } from './sune.js'
 import { THREAD } from './thread.js'
 import { USER } from './user.js'
-import { gid, sid, esc, clamp, num, int, fmtSize, asDataURL, b64, dl, ts, positionPopover, titleFrom } from './utils.js'
-import { renderThreads, renderSidebar, reflectActiveSune, addMessage, msgRow, partsToText, addSuneBubbleStreaming, clearChat, updateAttachBadge, toAttach, ensureThreadOnFirstUser, showThreadPopover, hideThreadPopover, showSunePopover, hideSunePopover, openSettings, closeSettings, showTab, showHtmlTab, openAccountSettings, closeAccountSettings, showAccountTab, getBubbleById, setBtnStop, setBtnSend, localDemoReply, activeMeta, sortedThreads, isAddingThreads, menuThreadId, menuSuneId, openedHTML, processSuneIncludes, renderSuneHTML, _createMessageRow, resolveSuneSrc, getSuneLabel } from './ui.js'
+import { gid, sid, esc, clamp, num, int, fmtSize, asDataURL, b64, dl, ts, positionPopover, titleFrom, partsToText } from './utils.js'
+import { renderThreads, renderSidebar, reflectActiveSune, addMessage, msgRow, addSuneBubbleStreaming, clearChat, updateAttachBadge, toAttach, ensureThreadOnFirstUser, showThreadPopover, hideThreadPopover, showSunePopover, hideSunePopover, openSettings, closeSettings, showTab, showHtmlTab, openAccountSettings, closeAccountSettings, showAccountTab, getBubbleById, setBtnStop, setBtnSend, localDemoReply, activeMeta, sortedThreads, isAddingThreads, menuThreadId, menuSuneId, openedHTML, processSuneIncludes, renderSuneHTML, _createMessageRow, resolveSuneSrc, getSuneLabel } from './ui.js'
 import { askOpenRouterStreaming, generateTitleWithAI, syncActiveThread, syncWhileBusy, buildBody, payloadWithSampling } from './api.js'
 
 (()=>{let k,v=visualViewport;const f=()=>{removeEventListener('popstate',f),document.activeElement?.blur()};v.onresize=()=>{let o=v.height<innerHeight;o!=k&&((k=o)?(history.pushState({k:1},''),addEventListener('popstate',f)):(removeEventListener('popstate',f),history.state?.k&&history.back()))}})()
