@@ -13,3 +13,4 @@ export const dl=(name,obj)=>{const blob=new Blob([JSON.stringify(obj,null,2)],{t
 export const ts=()=>{const d=new Date(),p=n=>String(n).padStart(2,'0');return `${d.getFullYear()}${p(d.getMonth()+1)}${p(d.getDate())}-${p(d.getHours())}${p(d.getMinutes())}${p(d.getSeconds())}`}
 export const positionPopover=(a,p)=>{const r=a.getBoundingClientRect();p.style.top=`${r.bottom+p.offsetHeight+4>window.innerHeight?r.top-p.offsetHeight-4:r.bottom+4}px`;p.style.left=`${Math.max(8,Math.min(r.right-p.offsetWidth,window.innerWidth-p.offsetWidth-8))}px`}
 export const titleFrom=t=>(t||'').replace(/\s+/g,' ').trim().slice(0,60)||'Untitled'
+export const partsToText=parts=>{if(!parts)return'';if(Array.isArray(parts))return parts.map(p=>p?.type==='text'?p.text:(p?.type==='image_url'?`![](${p.image_url?.url||''})`:(p?.type==='file'?`[${p.file?.filename||'file'}]`:(p?.type==='input_audio'?`(audio:${p.input_audio?.format||''})`:'')))).join('\n');return String(parts)}
