@@ -82,6 +82,134 @@ const __vitePreload = function preload(baseModule, deps, importerUrl) {
     return baseModule().catch(handlePreloadError);
   });
 };
+const HTTP_BASE = "https://orp.aww.4ev.link/ws";
+const buildBody = () => {
+  const { USER: USER2, SUNE: SUNE2, state: state2, payloadWithSampling: payloadWithSampling2 } = window;
+  const msgs = [];
+  if (USER2.masterPrompt && !SUNE2.ignore_master_prompt) msgs.push({ role: "system", content: [{ type: "text", text: USER2.masterPrompt }] });
+  if (SUNE2.system_prompt) msgs.push({ role: "system", content: [{ type: "text", text: SUNE2.system_prompt }] });
+  msgs.push(...state2.messages.filter((m) => m.role !== "system").map((m) => ({ role: m.role, content: m.content })));
+  const b = payloadWithSampling2({ model: SUNE2.model.replace(/^(or:|oai:|g:|cla:|cf:)/, ""), messages: msgs, stream: true });
+  if (SUNE2.json_output) {
+    let s;
+    try {
+      s = JSON.parse(SUNE2.json_schema || "null");
+    } catch {
+      s = null;
+    }
+    if (s && typeof s === "object" && Object.keys(s).length > 0) {
+      b.response_format = { type: "json_schema", json_schema: s };
+    } else {
+      b.response_format = { type: "json_object" };
+    }
+  }
+  b.reasoning = { ...SUNE2.reasoning_effort && SUNE2.reasoning_effort !== "default" ? { effort: SUNE2.reasoning_effort } : {}, exclude: !SUNE2.include_thoughts };
+  if (SUNE2.verbosity) b.verbosity = SUNE2.verbosity;
+  return b;
+};
+async function streamLocal(body, onDelta, signal) {
+  const { USER: USER2, localDemoReply: localDemoReply2 } = window;
+  const apiKey = USER2.apiKeyOpenRouter;
+  if (!apiKey) {
+    onDelta(localDemoReply2(), true);
+    return;
+  }
+  try {
+    const r = await fetch("https://openrouter.ai/api/v1/chat/completions", { method: "POST", headers: { "Authorization": `Bearer ${apiKey}`, "Content-Type": "application/json", "HTTP-Referer": "https://sune.chat", "X-Title": "Sune" }, body: JSON.stringify(body), signal });
+    if (!r.ok) throw new Error(`HTTP ${r.status}`);
+    const reader = r.body.getReader(), dec = new TextDecoder();
+    let buf = "";
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buf += dec.decode(value, { stream: true });
+      const lines = buf.split("\n");
+      buf = lines.pop();
+      for (const line of lines) {
+        if (line.startsWith("data: ")) {
+          const d = line.slice(6);
+          if (d === "[DONE]") return;
+          try {
+            const j = JSON.parse(d);
+            const delta = j.choices?.[0]?.delta?.content || "";
+            const reasoning = j.choices?.[0]?.delta?.reasoning;
+            if (reasoning && body.reasoning?.exclude !== true) onDelta(reasoning, false);
+            if (delta) onDelta(delta, false);
+          } catch {
+          }
+        }
+      }
+    }
+    onDelta("", true);
+  } catch (e) {
+    if (e.name !== "AbortError") onDelta(`
+
+Error: ${e.message}`, true);
+  }
+}
+async function streamORP(body, onDelta, streamId) {
+  const { USER: USER2, SUNE: SUNE2, state: state2, gid: gid2, cacheStore: cacheStore2 } = window;
+  const model = SUNE2.model, provider = model.startsWith("oai:") ? "openai" : model.startsWith("g:") ? "google" : model.startsWith("cla:") ? "claude" : model.startsWith("cf:") ? "cloudflare" : model.startsWith("or:") ? "openrouter" : USER2.provider;
+  const apiKey = provider === "openai" ? USER2.apiKeyOpenAI : provider === "google" ? USER2.apiKeyGoogle : provider === "claude" ? USER2.apiKeyClaude : provider === "cloudflare" ? USER2.apiKeyCloudflare : USER2.apiKeyOpenRouter;
+  if (!apiKey) {
+    onDelta(window.localDemoReply(), true);
+    return { ok: true, rid: streamId || null };
+  }
+  const r = { rid: streamId || gid2(), seq: -1, done: false, signaled: false, ws: null };
+  await cacheStore2.setItem(r.rid, "busy");
+  const signal = (t) => {
+    if (!r.signaled) {
+      r.signaled = true;
+      onDelta(t || "", true);
+    }
+  };
+  const ws = new WebSocket(HTTP_BASE.replace("https", "wss") + "?uid=" + encodeURIComponent(r.rid));
+  r.ws = ws;
+  ws.onopen = () => ws.send(JSON.stringify({ type: "begin", rid: r.rid, provider, apiKey, or_body: body }));
+  ws.onmessage = (e) => {
+    let m;
+    try {
+      m = JSON.parse(e.data);
+    } catch {
+      return;
+    }
+    if (m.type === "delta" && typeof m.seq === "number" && m.seq > r.seq) {
+      r.seq = m.seq;
+      onDelta(m.text || "", false);
+    } else if (m.type === "done" || m.type === "err") {
+      r.done = true;
+      cacheStore2.setItem(r.rid, "done");
+      signal(m.type === "err" ? "\n\n" + (m.message || "error") : "");
+      ws.close();
+    }
+  };
+  ws.onclose = () => {
+  };
+  ws.onerror = () => {
+  };
+  state2.controller = { abort: () => {
+    r.done = true;
+    cacheStore2.setItem(r.rid, "done");
+    try {
+      if (ws.readyState === 1) ws.send(JSON.stringify({ type: "stop", rid: r.rid }));
+    } catch {
+    }
+    signal("");
+  }, disconnect: () => ws.close() };
+  return { ok: true, rid: r.rid };
+}
+async function streamChat(onDelta, streamId) {
+  const { USER: USER2, state: state2 } = window;
+  const body = buildBody();
+  if (!USER2.donor) {
+    const c = new AbortController();
+    state2.controller = c;
+    await streamLocal(body, onDelta, c.signal);
+    state2.controller = null;
+    return { ok: true, rid: null };
+  }
+  return await streamORP(body, onDelta, streamId);
+}
 (() => {
   let k, v = visualViewport;
   const f = () => {
@@ -229,7 +357,7 @@ const SUNE = window.SUNE = new Proxy({ get list() {
         state.stream = { rid: null, bubble: null, meta: null, text: "", done: false };
       } else if (!done) THREAD.persist(false);
     };
-    await askOpenRouterStreaming(onDelta, streamId);
+    await streamChat(onDelta, streamId);
   };
   if (p === "getByName") return (n) => sunes.find((s) => s.name.toLowerCase() === (n || "").trim().toLowerCase());
   if (p === "handoff") return async (n) => {
@@ -813,7 +941,7 @@ $(el.composer).on("submit", async (e) => {
       state.stream = { rid: null, bubble: null, meta: null, text: "", done: false };
     } else if (!done) THREAD.persist(false);
   };
-  await askOpenRouterStreaming(onDelta, streamId);
+  await streamChat(onDelta, streamId);
   state.attachments = [];
   updateAttachBadge();
 });
@@ -1171,79 +1299,6 @@ el.htmlTab_extension.textContent = "extension.html";
 el.htmlTab_index.onclick = () => showHtmlTab("index");
 el.htmlTab_extension.onclick = () => showHtmlTab("extension");
 init();
-const HTTP_BASE = "https://orp.aww.4ev.link/ws";
-const buildBody = () => {
-  const msgs = [];
-  if (USER.masterPrompt && !SUNE.ignore_master_prompt) msgs.push({ role: "system", content: [{ type: "text", text: USER.masterPrompt }] });
-  if (SUNE.system_prompt) msgs.push({ role: "system", content: [{ type: "text", text: SUNE.system_prompt }] });
-  msgs.push(...state.messages.filter((m) => m.role !== "system").map((m) => ({ role: m.role, content: m.content })));
-  const b = payloadWithSampling({ model: SUNE.model.replace(/^(or:|oai:|g:|cla:|cf:)/, ""), messages: msgs, stream: true });
-  if (SUNE.json_output) {
-    let s;
-    try {
-      s = JSON.parse(SUNE.json_schema || "null");
-    } catch {
-      s = null;
-    }
-    if (s && typeof s === "object" && Object.keys(s).length > 0) {
-      b.response_format = { type: "json_schema", json_schema: s };
-    } else {
-      b.response_format = { type: "json_object" };
-    }
-  }
-  b.reasoning = { ...SUNE.reasoning_effort && SUNE.reasoning_effort !== "default" ? { effort: SUNE.reasoning_effort } : {}, exclude: !SUNE.include_thoughts };
-  if (SUNE.verbosity) b.verbosity = SUNE.verbosity;
-  return b;
-};
-async function askOpenRouterStreaming(onDelta, streamId) {
-  const model = SUNE.model, provider = model.startsWith("oai:") ? "openai" : model.startsWith("g:") ? "google" : model.startsWith("cla:") ? "claude" : model.startsWith("cf:") ? "cloudflare" : model.startsWith("or:") ? "openrouter" : USER.provider, apiKey = provider === "openai" ? USER.apiKeyOpenAI : provider === "google" ? USER.apiKeyGoogle : provider === "claude" ? USER.apiKeyClaude : provider === "cloudflare" ? USER.apiKeyCloudflare : USER.apiKeyOpenRouter;
-  if (!apiKey) {
-    onDelta(localDemoReply(), true);
-    return { ok: true, rid: streamId || null };
-  }
-  const r = { rid: streamId || gid(), seq: -1, done: false, signaled: false, ws: null };
-  await cacheStore.setItem(r.rid, "busy");
-  const signal = (t) => {
-    if (!r.signaled) {
-      r.signaled = true;
-      onDelta(t || "", true);
-    }
-  };
-  const ws = new WebSocket(HTTP_BASE.replace("https", "wss") + "?uid=" + encodeURIComponent(r.rid));
-  r.ws = ws;
-  ws.onopen = () => ws.send(JSON.stringify({ type: "begin", rid: r.rid, provider, apiKey, or_body: buildBody() }));
-  ws.onmessage = (e) => {
-    let m;
-    try {
-      m = JSON.parse(e.data);
-    } catch {
-      return;
-    }
-    if (m.type === "delta" && typeof m.seq === "number" && m.seq > r.seq) {
-      r.seq = m.seq;
-      onDelta(m.text || "", false);
-    } else if (m.type === "done" || m.type === "err") {
-      r.done = true;
-      cacheStore.setItem(r.rid, "done");
-      signal(m.type === "err" ? "\n\n" + (m.message || "error") : "");
-      ws.close();
-    }
-  };
-  ws.onclose = () => {
-  };
-  ws.onerror = () => {
-  };
-  state.controller = { abort: () => {
-    r.done = true;
-    cacheStore.setItem(r.rid, "done");
-    try {
-      if (ws.readyState === 1) ws.send(JSON.stringify({ type: "stop", rid: r.rid }));
-    } catch {
-    }
-    signal("");
-  }, disconnect: () => ws.close() };
-  return { ok: true, rid: r.rid };
-}
 const accountTabs = { General: ["accountTabGeneral", "accountPanelGeneral"], API: ["accountTabAPI", "accountPanelAPI"], User: ["accountTabUser", "accountPanelUser"] };
 function showAccountTab(key) {
   Object.entries(accountTabs).forEach(([k, [tb, pn]]) => {
@@ -1267,7 +1322,19 @@ function openAccountSettings() {
   el.userAvatarPreview.src = USER.avatar || "data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=";
   el.userAvatarPreview.classList.toggle("bg-gray-200", !USER.avatar);
   el.set_donor.checked = USER.donor;
-  el.set_donor.disabled = true;
+  const updateProv = () => {
+    const d = el.set_donor.checked;
+    Array.from(el.set_provider.options).forEach((o) => {
+      if (o.value !== "openrouter") {
+        o.disabled = !d;
+        if (!d) o.hidden = true;
+        else o.hidden = false;
+      }
+    });
+    if (!d && el.set_provider.value !== "openrouter") el.set_provider.value = "openrouter";
+  };
+  updateProv();
+  el.set_donor.onchange = updateProv;
   showAccountTab("General");
   el.accountSettingsModal.classList.remove("hidden");
 }
@@ -1362,6 +1429,7 @@ el.importAccountSettingsInput.onchange = async (e) => {
 };
 const getBubbleById = (id) => el.messages.querySelector(`.msg-bubble[data-mid="${CSS.escape(id)}"]`);
 async function syncActiveThread() {
+  if (!USER.donor) return false;
   const id = THREAD.getLastAssistantMessageId();
   if (!id) return false;
   if (await cacheStore.getItem(id) === "done") {
@@ -1461,4 +1529,4 @@ $(el.pasteHTML).on("click", async () => {
   } catch {
   }
 });
-Object.assign(window, { icons, haptic, clamp, num, int, gid, esc, positionPopover, sid, fmtSize, asDataURL, b64, makeSune, getModelShort, resolveSuneSrc, processSuneIncludes, renderSuneHTML, reflectActiveSune, suneRow, enhanceCodeBlocks, getSuneLabel, _createMessageRow, msgRow, partsToText, addSuneBubbleStreaming, clearChat, payloadWithSampling, setBtnStop, setBtnSend, localDemoReply, titleFrom, ensureThreadOnFirstUser, generateTitleWithAI, threadRow, renderThreads, hideThreadPopover, showThreadPopover, hideSunePopover, showSunePopover, updateAttachBadge, toAttach, ensureJars, openSettings, closeSettings, showTab, dl, ts, kbUpdate, kbBind, activeMeta, init, showHtmlTab, buildBody, askOpenRouterStreaming, showAccountTab, openAccountSettings, closeAccountSettings, getBubbleById, syncActiveThread, syncWhileBusy, onForeground, getActiveHtmlParts, imgToWebp });
+Object.assign(window, { icons, haptic, clamp, num, int, gid, esc, positionPopover, sid, fmtSize, asDataURL, b64, makeSune, getModelShort, resolveSuneSrc, processSuneIncludes, renderSuneHTML, reflectActiveSune, suneRow, enhanceCodeBlocks, getSuneLabel, _createMessageRow, msgRow, partsToText, addSuneBubbleStreaming, clearChat, payloadWithSampling, setBtnStop, setBtnSend, localDemoReply, titleFrom, ensureThreadOnFirstUser, generateTitleWithAI, threadRow, renderThreads, hideThreadPopover, showThreadPopover, hideSunePopover, showSunePopover, updateAttachBadge, toAttach, ensureJars, openSettings, closeSettings, showTab, dl, ts, kbUpdate, kbBind, activeMeta, init, showHtmlTab, showAccountTab, openAccountSettings, closeAccountSettings, getBubbleById, syncActiveThread, syncWhileBusy, onForeground, getActiveHtmlParts, imgToWebp, cacheStore });
