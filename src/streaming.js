@@ -10,6 +10,7 @@ export const buildBody=()=>{
   if(SUNE.json_output){let s;try{s=JSON.parse(SUNE.json_schema||'null')}catch{s=null}if(s&&typeof s==='object'&&Object.keys(s).length>0){b.response_format={type:'json_schema',json_schema:s}}else{b.response_format={type:'json_object'}}}
   b.reasoning={...(SUNE.reasoning_effort&&SUNE.reasoning_effort!=='default'?{effort:SUNE.reasoning_effort}:{}),exclude:!SUNE.include_thoughts};
   if(SUNE.verbosity)b.verbosity=SUNE.verbosity;
+  if(SUNE.img_output&&!USER.donor)b.modalities=['text','image'];
   return b
 }
 
@@ -36,8 +37,10 @@ async function streamLocal(body,onDelta,signal){
             const j=JSON.parse(d);
             const delta=j.choices?.[0]?.delta?.content||'';
             const reasoning=j.choices?.[0]?.delta?.reasoning;
+            const imgs=j.choices?.[0]?.delta?.images;
             if(reasoning&&body.reasoning?.exclude!==true)onDelta(reasoning,false);
             if(delta)onDelta(delta,false);
+            if(imgs)imgs.forEach(i=>onDelta(`\n![](${i.image_url.url})\n`,false));
           }catch{}
         }
       }
@@ -77,3 +80,4 @@ export async function streamChat(onDelta,streamId){
   }
   return await streamORP(body,onDelta,streamId)
 }
+
