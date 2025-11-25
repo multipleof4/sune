@@ -103,7 +103,7 @@ const buildBody = () => {
       b.response_format = { type: "json_object" };
     }
   }
-  b.reasoning = { ...SUNE2.reasoning_effort && SUNE2.reasoning_effort !== "default" ? { effort: SUNE2.reasoning_effort } : {}, exclude: !SUNE2.include_thoughts };
+  if (SUNE2.include_thoughts || SUNE2.reasoning_effort && SUNE2.reasoning_effort !== "default") b.reasoning = { ...SUNE2.reasoning_effort && SUNE2.reasoning_effort !== "default" ? { effort: SUNE2.reasoning_effort } : {}, exclude: !SUNE2.include_thoughts };
   if (SUNE2.verbosity) b.verbosity = SUNE2.verbosity;
   if (SUNE2.img_output && !USER2.donor) {
     b.modalities = ["text", "image"];
