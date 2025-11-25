@@ -8,7 +8,7 @@ export const buildBody=()=>{
   msgs.push(...state.messages.filter(m=>m.role!=='system').map(m=>({role:m.role,content:m.content})));
   const b=payloadWithSampling({model:SUNE.model.replace(/^(or:|oai:|g:|cla:|cf:)/,''),messages:msgs,stream:true});
   if(SUNE.json_output){let s;try{s=JSON.parse(SUNE.json_schema||'null')}catch{s=null}if(s&&typeof s==='object'&&Object.keys(s).length>0){b.response_format={type:'json_schema',json_schema:s}}else{b.response_format={type:'json_object'}}}
-  b.reasoning={...(SUNE.reasoning_effort&&SUNE.reasoning_effort!=='default'?{effort:SUNE.reasoning_effort}:{}),exclude:!SUNE.include_thoughts};
+  if(SUNE.include_thoughts||(SUNE.reasoning_effort&&SUNE.reasoning_effort!=='default'))b.reasoning={...(SUNE.reasoning_effort&&SUNE.reasoning_effort!=='default'?{effort:SUNE.reasoning_effort}:{}),exclude:!SUNE.include_thoughts};
   if(SUNE.verbosity)b.verbosity=SUNE.verbosity;
   if(SUNE.img_output&&!USER.donor){b.modalities=['text','image'];b.image_config={aspect_ratio:'1:1'}}
   return b
@@ -80,4 +80,3 @@ export async function streamChat(onDelta,streamId){
   }
   return await streamORP(body,onDelta,streamId)
 }
-
