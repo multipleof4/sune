@@ -1263,7 +1263,7 @@ const USER = window.USER = { log: async (s) => {
 }, set donor(v) {
   localStorage.setItem("user_donor", String(!!v));
 }, get titleModel() {
-  return localStorage.getItem("title_model") ?? "or:deepseek/deepseek-v3.2";
+  return localStorage.getItem("title_model") ?? "or:amazon/nova-micro-v1";
 }, set titleModel(v) {
   localStorage.setItem("title_model", v || "");
 }, get githubToken() {
