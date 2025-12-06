@@ -12,7 +12,7 @@
 <script defer src="https://cdn.jsdelivr.net/npm/cash-dom/dist/cash.min.js"></script>
 <script defer src="//unpkg.com/alpinejs"></script>
 
-  <script type="module" crossorigin src="/assets/index-Baib-owX.js"></script>
+  <script type="module" crossorigin src="/assets/index-Cw29popR.js"></script>
   <link rel="stylesheet" crossorigin href="/assets/index-CZ8Js0gk.css">
 <link rel="manifest" href="/manifest.webmanifest"><script id="vite-plugin-pwa:register-sw" src="/registerSW.js"></script></head>
 <body class="bg-white text-gray-900 selection:bg-black/10" x-data @click.window="if($event.target.closest('button')) haptic(); if(!document.getElementById('threadPopover').contains($event.target)&&!$event.target.closest('[data-thread-menu]')) hideThreadPopover(); if(!document.getElementById('sunePopover').contains($event.target)&&!$event.target.closest('[data-sune-menu]')) hideSunePopover(); if(!document.getElementById('userMenu').contains($event.target)&&!document.getElementById('userMenuBtn').contains($event.target)) document.getElementById('userMenu').classList.add('hidden')">
@@ -78,7 +78,7 @@
 <div id="suneModal" class="hidden fixed inset-0 z-50">
   <div class="absolute inset-0 bg-black/30"></div>
   <div class="absolute inset-x-0 top-12 mx-auto w-full max-w-md px-4">
-    <div class="rounded-2xl bg-white shadow-xl border border-gray-200">
+    <div class="rounded-2xl bg-white shadow-xl border border-gray-200 overflow-hidden">
       <div class="px-4 py-3 border-b text-sm font-semibold flex items-center gap-2"><input id="suneURL" type="text" placeholder="" class="flex-1 min-w-0 h-10 rounded-xl border-0 bg-gray-50 px-3 text-gray-400 placeholder:text-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-200 focus:bg-white text-xs font-mono focus:text-black"/><button id="syncSune" class="p-1.5 rounded hover:bg-gray-100" aria-label="Refresh"><i data-lucide="refresh-cw" class="h-5 w-5"></i></button></div>
       <form id="settingsForm" class="text-sm">
         <div class="border-b flex text-xs font-medium"><button type="button" id="tabModel" class="flex-1 py-2 px-3 text-center border-b-2 border-black">Model & Sampling</button><button type="button" id="tabPrompt" class="flex-1 py-2 px-3 text-center border-b-2 border-transparent hover:border-gray-300">System Prompt</button><button type="button" id="tabScript" class="flex-1 py-2 px-3 text-center border-b-2 border-transparent hover:border-gray-300">HTML</button></div>
@@ -92,21 +92,7 @@
             <div><label class="block text-gray-700 font-medium mb-1">Repetition Penalty <span class="text-gray-400">(0–2)</span></label><input id="set_repetition_penalty" type="number" min="0" max="2" step="0.01" class="w-full rounded-xl border border-gray-300 px-3 py-2" placeholder="1.0"/></div>
             <div><label class="block text-gray-700 font-medium mb-1">Min P <span class="text-gray-400">(0–1)</span></label><input id="set_min_p" type="number" min="0" max="1" step="0.01" class="w-full rounded-xl border border-gray-300 px-3 py-2" placeholder="0.0"/></div>
             <div><label class="block text-gray-700 font-medium mb-1">Top A <span class="text-gray-400">(0–1)</span></label><input id="set_top_a" type="number" min="0" max="1" step="0.01" class="w-full rounded-xl border border-gray-300 px-3 py-2" placeholder="0.0"/></div>
-            <div class="relative">
-              <label class="block text-gray-700 font-medium mb-1">Quantization</label>
-              <button type="button" id="quantDropdownBtn" class="w-full text-left rounded-xl border border-gray-300 px-3 py-2 bg-white truncate text-gray-500">Any</button>
-              <div id="quantDropdownMenu" class="hidden absolute z-20 mt-1 w-full rounded-xl border border-gray-300 bg-white shadow-lg max-h-60 overflow-y-auto p-2 space-y-1">
-                <label class="flex items-center gap-2 p-1 hover:bg-gray-50 rounded cursor-pointer"><input type="checkbox" value="int4" class="rounded border-gray-300 text-black focus:ring-black"> <span class="text-sm">int4</span></label>
-                <label class="flex items-center gap-2 p-1 hover:bg-gray-50 rounded cursor-pointer"><input type="checkbox" value="int8" class="rounded border-gray-300 text-black focus:ring-black"> <span class="text-sm">int8</span></label>
-                <label class="flex items-center gap-2 p-1 hover:bg-gray-50 rounded cursor-pointer"><input type="checkbox" value="fp4" class="rounded border-gray-300 text-black focus:ring-black"> <span class="text-sm">fp4</span></label>
-                <label class="flex items-center gap-2 p-1 hover:bg-gray-50 rounded cursor-pointer"><input type="checkbox" value="fp6" class="rounded border-gray-300 text-black focus:ring-black"> <span class="text-sm">fp6</span></label>
-                <label class="flex items-center gap-2 p-1 hover:bg-gray-50 rounded cursor-pointer"><input type="checkbox" value="fp8" class="rounded border-gray-300 text-black focus:ring-black"> <span class="text-sm">fp8</span></label>
-                <label class="flex items-center gap-2 p-1 hover:bg-gray-50 rounded cursor-pointer"><input type="checkbox" value="fp16" class="rounded border-gray-300 text-black focus:ring-black"> <span class="text-sm">fp16</span></label>
-                <label class="flex items-center gap-2 p-1 hover:bg-gray-50 rounded cursor-pointer"><input type="checkbox" value="bf16" class="rounded border-gray-300 text-black focus:ring-black"> <span class="text-sm">bf16</span></label>
-                <label class="flex items-center gap-2 p-1 hover:bg-gray-50 rounded cursor-pointer"><input type="checkbox" value="fp32" class="rounded border-gray-300 text-black focus:ring-black"> <span class="text-sm">fp32</span></label>
-                <label class="flex items-center gap-2 p-1 hover:bg-gray-50 rounded cursor-pointer"><input type="checkbox" value="unknown" class="rounded border-gray-300 text-black focus:ring-black"> <span class="text-sm">unknown</span></label>
-              </div>
-            </div>
+            <div><label class="block text-gray-700 font-medium mb-1">Verbosity</label><select id="set_verbosity" class="w-full rounded-xl border border-gray-300 px-3 py-2"><option value="">Omitted</option><option value="low">Low</option><option value="medium">Medium</option><option value="high">High</option></select></div>
           </div>
           <div class="flex flex-wrap items-center gap-2 pt-2">
             <div><input id="set_include_thoughts" type="checkbox" class="sr-only peer"><label for="set_include_thoughts" class="inline-flex cursor-pointer items-center rounded-full border border-slate-300 bg-transparent py-0.5 px-3 text-xs text-slate-500 peer-checked:border-gray-300 peer-checked:bg-gray-200 peer-checked:text-slate-800">Include thoughts</label></div>
@@ -172,6 +158,8 @@
   </div>
 </div>
 <input id="importAccountSettingsInput" type="file" class="hidden" accept="application/json,.json">
+
+
 
 <script src="https://unpkg.com/lucide@latest"></script>
 <script src="https://cdn.jsdelivr.net/npm/markdown-it@14.1.0/dist/markdown-it.min.js"></script>
