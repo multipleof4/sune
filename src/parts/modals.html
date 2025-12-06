@@ -29,19 +29,17 @@
             <div><label class="block text-gray-700 font-medium mb-1">Top A <span class="text-gray-400">(0–1)</span></label><input id="set_top_a" type="number" min="0" max="1" step="0.01" class="w-full rounded-xl border border-gray-300 px-3 py-2" placeholder="0.0"/></div>
             <div class="relative">
               <label class="block text-gray-700 font-medium mb-1">Quantization</label>
-              <button type="button" id="quantDropdownBtn" class="w-full rounded-xl border border-gray-300 px-3 py-2 flex items-center justify-between text-left"><span id="quantDropdownLabel" class="truncate text-sm text-gray-700">Any</span><i data-lucide="chevron-down" class="h-4 w-4 text-gray-400"></i></button>
-              <div id="quantDropdown" class="hidden absolute z-20 mt-1 w-full rounded-xl border border-gray-200 bg-white shadow-lg max-h-56 overflow-y-auto">
-                <div class="py-2">
-                  <label class="flex items-center gap-3 px-3 py-1 hover:bg-gray-50"><input type="checkbox" data-quant="int4" class="quant-opt h-4 w-4 rounded border-gray-300 text-black focus:ring-black"><span class="text-sm text-gray-700">Int4</span></label>
-                  <label class="flex items-center gap-3 px-3 py-1 hover:bg-gray-50"><input type="checkbox" data-quant="int8" class="quant-opt h-4 w-4 rounded border-gray-300 text-black focus:ring-black"><span class="text-sm text-gray-700">Int8</span></label>
-                  <label class="flex items-center gap-3 px-3 py-1 hover:bg-gray-50"><input type="checkbox" data-quant="fp4" class="quant-opt h-4 w-4 rounded border-gray-300 text-black focus:ring-black"><span class="text-sm text-gray-700">FP4</span></label>
-                  <label class="flex items-center gap-3 px-3 py-1 hover:bg-gray-50"><input type="checkbox" data-quant="fp6" class="quant-opt h-4 w-4 rounded border-gray-300 text-black focus:ring-black"><span class="text-sm text-gray-700">FP6</span></label>
-                  <label class="flex items-center gap-3 px-3 py-1 hover:bg-gray-50"><input type="checkbox" data-quant="fp8" class="quant-opt h-4 w-4 rounded border-gray-300 text-black focus:ring-black"><span class="text-sm text-gray-700">FP8</span></label>
-                  <label class="flex items-center gap-3 px-3 py-1 hover:bg-gray-50"><input type="checkbox" data-quant="fp16" class="quant-opt h-4 w-4 rounded border-gray-300 text-black focus:ring-black"><span class="text-sm text-gray-700">FP16</span></label>
-                  <label class="flex items-center gap-3 px-3 py-1 hover:bg-gray-50"><input type="checkbox" data-quant="bf16" class="quant-opt h-4 w-4 rounded border-gray-300 text-black focus:ring-black"><span class="text-sm text-gray-700">BF16</span></label>
-                  <label class="flex items-center gap-3 px-3 py-1 hover:bg-gray-50"><input type="checkbox" data-quant="fp32" class="quant-opt h-4 w-4 rounded border-gray-300 text-black focus:ring-black"><span class="text-sm text-gray-700">FP32</span></label>
-                  <label class="flex items-center gap-3 px-3 py-1 hover:bg-gray-50"><input type="checkbox" data-quant="unknown" class="quant-opt h-4 w-4 rounded border-gray-300 text-black focus:ring-black"><span class="text-sm text-gray-700">Unknown</span></label>
-                </div>
+              <button type="button" id="quantDropdownBtn" class="w-full text-left rounded-xl border border-gray-300 px-3 py-2 bg-white truncate text-gray-500">Any</button>
+              <div id="quantDropdownMenu" class="hidden absolute z-10 mt-1 w-full rounded-xl border border-gray-300 bg-white shadow-lg max-h-60 overflow-y-auto p-2 space-y-1">
+                <label class="flex items-center gap-2 p-1 hover:bg-gray-50 rounded cursor-pointer"><input type="checkbox" value="int4" class="rounded border-gray-300 text-black focus:ring-black"> <span class="text-sm">int4</span></label>
+                <label class="flex items-center gap-2 p-1 hover:bg-gray-50 rounded cursor-pointer"><input type="checkbox" value="int8" class="rounded border-gray-300 text-black focus:ring-black"> <span class="text-sm">int8</span></label>
+                <label class="flex items-center gap-2 p-1 hover:bg-gray-50 rounded cursor-pointer"><input type="checkbox" value="fp4" class="rounded border-gray-300 text-black focus:ring-black"> <span class="text-sm">fp4</span></label>
+                <label class="flex items-center gap-2 p-1 hover:bg-gray-50 rounded cursor-pointer"><input type="checkbox" value="fp6" class="rounded border-gray-300 text-black focus:ring-black"> <span class="text-sm">fp6</span></label>
+                <label class="flex items-center gap-2 p-1 hover:bg-gray-50 rounded cursor-pointer"><input type="checkbox" value="fp8" class="rounded border-gray-300 text-black focus:ring-black"> <span class="text-sm">fp8</span></label>
+                <label class="flex items-center gap-2 p-1 hover:bg-gray-50 rounded cursor-pointer"><input type="checkbox" value="fp16" class="rounded border-gray-300 text-black focus:ring-black"> <span class="text-sm">fp16</span></label>
+                <label class="flex items-center gap-2 p-1 hover:bg-gray-50 rounded cursor-pointer"><input type="checkbox" value="bf16" class="rounded border-gray-300 text-black focus:ring-black"> <span class="text-sm">bf16</span></label>
+                <label class="flex items-center gap-2 p-1 hover:bg-gray-50 rounded cursor-pointer"><input type="checkbox" value="fp32" class="rounded border-gray-300 text-black focus:ring-black"> <span class="text-sm">fp32</span></label>
+                <label class="flex items-center gap-2 p-1 hover:bg-gray-50 rounded cursor-pointer"><input type="checkbox" value="unknown" class="rounded border-gray-300 text-black focus:ring-black"> <span class="text-sm">unknown</span></label>
               </div>
             </div>
           </div>
@@ -109,4 +107,3 @@
   </div>
 </div>
 <input id="importAccountSettingsInput" type="file" class="hidden" accept="application/json,.json">
-
