@@ -1,62 +1,3 @@
-<div id="threadPopover" class="menu-card hidden">
-  <button data-action="pin" class="menu-item"><i data-lucide="pin" class="h-4 w-4"></i><span>Pin to top</span></button>
-  <button data-action="rename" class="menu-item"><i data-lucide="edit-3" class="h-4 w-4"></i><span>Rename</span></button>
-  <button data-action="delete" class="menu-item text-red-600"><i data-lucide="trash-2" class="h-4 w-4"></i><span>Delete</span></button>
-  <button data-action="count_tokens" class="menu-item"><i data-lucide="hash" class="h-4 w-4"></i><span>Count tokens (approx.)</span></button>
-</div>
-<div id="sunePopover" class="menu-card hidden">
-  <button data-action="pin" class="menu-item"><i data-lucide="pin" class="h-4 w-4"></i><span>Pin to top</span></button>
-  <button data-action="rename" class="menu-item"><i data-lucide="edit-3" class="h-4 w-4"></i><span>Rename</span></button>
-  <button data-action="pfp" class="menu-item"><i data-lucide="image" class="h-4 w-4"></i><span>Change pfp</span></button>
-  <button data-action="export" class="menu-item"><i data-lucide="download" class="h-4 w-4"></i><span>Export sune (.sune)</span></button>
-</div>
-<div id="suneModal" class="hidden fixed inset-0 z-50">
-  <div class="absolute inset-0 bg-black/30"></div>
-  <div class="absolute inset-x-0 top-12 mx-auto w-full max-w-md px-4">
-    <div class="rounded-2xl bg-white shadow-xl border border-gray-200 overflow-hidden">
-      <div class="px-4 py-3 border-b text-sm font-semibold flex items-center gap-2"><input id="suneURL" type="text" placeholder="" class="flex-1 min-w-0 h-10 rounded-xl border-0 bg-gray-50 px-3 text-gray-400 placeholder:text-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-200 focus:bg-white text-xs font-mono focus:text-black"/><button id="syncSune" class="p-1.5 rounded hover:bg-gray-100" aria-label="Refresh"><i data-lucide="refresh-cw" class="h-5 w-5"></i></button></div>
-      <form id="settingsForm" class="text-sm">
-        <div class="border-b flex text-xs font-medium"><button type="button" id="tabModel" class="flex-1 py-2 px-3 text-center border-b-2 border-black">Model & Sampling</button><button type="button" id="tabPrompt" class="flex-1 py-2 px-3 text-center border-b-2 border-transparent hover:border-gray-300">System Prompt</button><button type="button" id="tabScript" class="flex-1 py-2 px-3 text-center border-b-2 border-transparent hover:border-gray-300">HTML</button></div>
-        <div id="panelModel" class="p-4 space-y-4">
-          <div class="grid grid-cols-2 gap-3"><div><label class="block text-gray-700 font-medium mb-1">Model name</label><input id="set_model" type="text" class="w-full rounded-xl border border-gray-300 px-3 py-2" placeholder="google/gemini-3-pro-preview"/></div><div><label class="block text-gray-700 font-medium mb-1">Reasoning Effort</label><select id="set_reasoning_effort" class="w-full rounded-xl border border-gray-300 px-3 py-2"><option value="default">Omitted</option><option value="low">Low</option><option value="medium">Medium</option><option value="high">High</option></select></div></div>
-          <div class="grid grid-cols-2 gap-3">
-            <div><label class="block text-gray-700 font-medium mb-1">Temperature <span class="text-gray-400">(0–2)</span></label><input id="set_temperature" type="number" min="0" max="2" step="0.01" class="w-full rounded-xl border border-gray-300 px-3 py-2" placeholder="1.0"/></div>
-            <div><label class="block text-gray-700 font-medium mb-1">Top P <span class="text-gray-400">(0–1)</span></label><input id="set_top_p" type="number" min="0" max="1" step="0.01" class="w-full rounded-xl border border-gray-300 px-3 py-2" placeholder="1.0"/></div>
-            <div><label class="block text-gray-700 font-medium mb-1">Top K</label><input id="set_top_k" type="number" min="0" step="1" class="w-full rounded-xl border border-gray-300 px-3 py-2" placeholder="0"/></div>
-            <div><label class="block text-gray-700 font-medium mb-1">Frequency Penalty <span class="text-gray-400">(-2–2)</span></label><input id="set_frequency_penalty" type="number" min="-2" max="2" step="0.1" class="w-full rounded-xl border border-gray-300 px-3 py-2" placeholder="0.0"/></div>
-            <div><label class="block text-gray-700 font-medium mb-1">Repetition Penalty <span class="text-gray-400">(0–2)</span></label><input id="set_repetition_penalty" type="number" min="0" max="2" step="0.01" class="w-full rounded-xl border border-gray-300 px-3 py-2" placeholder="1.0"/></div>
-            <div><label class="block text-gray-700 font-medium mb-1">Min P <span class="text-gray-400">(0–1)</span></label><input id="set_min_p" type="number" min="0" max="1" step="0.01" class="w-full rounded-xl border border-gray-300 px-3 py-2" placeholder="0.0"/></div>
-            <div><label class="block text-gray-700 font-medium mb-1">Top A <span class="text-gray-400">(0–1)</span></label><input id="set_top_a" type="number" min="0" max="1" step="0.01" class="w-full rounded-xl border border-gray-300 px-3 py-2" placeholder="0.0"/></div>
-            <div><label class="block text-gray-700 font-medium mb-1">Verbosity</label><select id="set_verbosity" class="w-full rounded-xl border border-gray-300 px-3 py-2"><option value="">Omitted</option><option value="low">Low</option><option value="medium">Medium</option><option value="high">High</option></select></div>
-          </div>
-          <div class="flex flex-wrap items-center gap-2 pt-2">
-            <div><input id="set_include_thoughts" type="checkbox" class="sr-only peer"><label for="set_include_thoughts" class="inline-flex cursor-pointer items-center rounded-full border border-slate-300 bg-transparent py-0.5 px-3 text-xs text-slate-500 peer-checked:border-gray-300 peer-checked:bg-gray-200 peer-checked:text-slate-800">Include thoughts</label></div>
-            <div><input id="set_json_output" type="checkbox" class="sr-only peer"><label for="set_json_output" class="inline-flex cursor-pointer items-center rounded-full border border-slate-300 bg-transparent py-0.5 px-3 text-xs text-slate-500 peer-checked:border-gray-300 peer-checked:bg-gray-200 peer-checked:text-slate-800">JSON Output</label></div>
-            <div><input id="set_img_output" type="checkbox" class="sr-only peer"><label for="set_img_output" class="inline-flex cursor-pointer items-center rounded-full border border-slate-300 bg-transparent py-0.5 px-3 text-xs text-slate-500 peer-checked:border-gray-300 peer-checked:bg-gray-200 peer-checked:text-slate-800">IMG Output</label></div>
-            <div><input id="set_hide_composer" type="checkbox" class="sr-only peer"><label for="set_hide_composer" class="inline-flex cursor-pointer items-center rounded-full border border-slate-300 bg-transparent py-0.5 px-3 text-xs text-slate-500 peer-checked:border-gray-300 peer-checked:bg-gray-200 peer-checked:text-slate-800">Hide composer</label></div>
-            <div><input id="set_ignore_master_prompt" type="checkbox" class="sr-only peer"><label for="set_ignore_master_prompt" class="inline-flex cursor-pointer items-center rounded-full border border-slate-300 bg-transparent py-0.5 px-3 text-xs text-slate-500 peer-checked:border-gray-300 peer-checked:bg-gray-200 peer-checked:text-slate-800">Ignore master prompt</label></div>
-          </div>
-        </div>
-        <div id="panelPrompt" class="p-4 space-y-4 hidden">
-          <div><div class="flex items-center justify-between mb-1"><label for="set_system_prompt" class="block text-gray-700 font-medium">System Prompt</label><div class="flex gap-2"><button type="button" id="copySystemPrompt" class="px-2 py-1 text-xs rounded-md bg-gray-100 hover:bg-gray-200">Copy</button><button type="button" id="pasteSystemPrompt" class="px-2 py-1 text-xs rounded-md bg-gray-100 hover:bg-gray-200">Paste</button></div></div><textarea id="set_system_prompt" rows="8" class="w-full rounded-xl border border-gray-300 px-3 py-2" placeholder="Enter a system prompt to guide the sune"></textarea></div>
-          <div><label class="block text-gray-700 font-medium mb-1">JSON Schema</label><pre id="jsonSchemaEditor" class="w-full h-48 p-3 rounded-xl border border-gray-300 bg-white overflow-auto font-mono" contenteditable="plaintext-only" spellcheck="false" autocorrect="off" autocapitalize="off" autocomplete="off"></pre><p class="mt-1 text-xs text-gray-500">Requires "JSON Output" to be enabled. Value for <code>json_schema</code>.</p></div>
-        </div>
-        <div id="panelScript" class="p-1 hidden">
-          <div class="border-b flex text-xs font-medium"><button type="button" id="htmlTab_index" class="flex-1 py-2 px-3 text-center border-b-2"></button><button type="button" id="htmlTab_extension" class="flex-1 py-2 px-3 text-center border-b-2"></button></div>
-          <div class="pt-0">
-            <pre id="htmlEditor" class="w-full h-[50vh] p-3 rounded-xl border border-gray-300 bg-white overflow-auto font-mono text-[12px] leading-5" contenteditable="plaintext-only" spellcheck="false" autocorrect="off" autocapitalize="off" autocomplete="off"></pre>
-            <pre id="extensionHtmlEditor" class="w-full h-[50vh] p-3 rounded-xl border border-gray-300 bg-white overflow-auto font-mono text-[12px] leading-5 hidden" contenteditable="plaintext-only" spellcheck="false" autocorrect="off" autocapitalize="off" autocomplete="off"></pre>
-          </div>
-          <div class="mt-2 flex gap-2"><button type="button" id="copyHTML" class="px-3 py-1.5 rounded-lg bg-gray-100 hover:bg-gray-200">Copy</button><button type="button" id="pasteHTML" class="px-3 py-1.5 rounded-lg bg-gray-100 hover:bg-gray-200">Paste</button></div>
-          <p class="mt-1 text-xs text-gray-500">Scripts also run. extension.html runs before index.html.</p>
-        </div>
-        <div class="flex items-center justify-between gap-2 px-4 py-3 border-t">
-          <button type="button" id="deleteSuneBtn" class="inline-flex items-center gap-2 px-3 py-2 rounded-xl border border-red-200 text-red-700 hover:bg-red-50"><svg viewBox="0 0 24 24" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 6h18M8 6v12a2 2 0 0 0 2 2h4a2 2 0 0 0 2-2V6m-9 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg><span>Delete sune</span></button>          <div class="flex items-center justify-end gap-2"><button type="button" id="cancelSettings" class="px-3 py-2 rounded-xl border bg-white hover:bg-gray-50">Cancel</button><button type="submit" class="px-3 py-2 rounded-xl bg-black text-white hover:bg-black/90">Save</button></div>
-        </div>
-      </form>
-    </div>
-  </div>
-</div>
 <div id="accountSettingsModal" class="hidden fixed inset-0 z-50">
   <div class="absolute inset-0 bg-black/30"></div>
   <div class="absolute inset-x-0 top-16 mx-auto w-full max-w-md px-4">
@@ -65,7 +6,7 @@
       <form id="accountSettingsForm" class="text-sm">
         <div class="border-b flex text-xs font-medium"><button type="button" id="accountTabGeneral" class="flex-1 py-2 px-3 text-center border-b-2 border-black">General</button><button type="button" id="accountTabAPI" class="flex-1 py-2 px-3 text-center border-b-2 border-transparent hover:border-gray-300">API</button><button type="button" id="accountTabUser" class="flex-1 py-2 px-3 text-center border-b-2 border-transparent hover:border-gray-300">User</button></div>
         <div id="accountPanelGeneral" class="p-4 space-y-4">
-          <div><label class="block text-gray-700 font-medium mb-1">Provider</label><select id="set_provider" class="w-full rounded-xl border border-gray-300 px-3 py-2"><option value="openrouter">OpenRouter</option><option value="openai">OpenAI</option><option value="google">Google</option><option value="claude">Claude</option><option value="cloudflare">Cloudflare</option></select><p class="mt-1 text-xs text-gray-500">Or you can prefix model names with or:, oai:, g:, cla:, or cf: to override.</p></div>
+          <div><label class="block text-gray-700 font-medium mb-1">Provider</label><select id="set_provider" class="w-full rounded-xl border border-gray-300 px-3 py-2"><option value="openrouter">OpenRouter</option><option value="openai">OpenAI</option><option value="google">Google</option><option value="claude">Claude</option></select><p class="mt-1 text-xs text-gray-500">Or you can prefix model names with or:, oai:, g:, cla:, or cf: to override.</p></div>
           <div><label class="block text-gray-700 font-medium mb-1">Master Prompt</label><textarea id="set_master_prompt" rows="6" class="w-full rounded-xl border border-gray-300 px-3 py-2" placeholder="Applies to all sunes on this device"></textarea><p class="mt-1 text-xs text-gray-500">Stored locally.</p></div>
           <div><label class="block text-gray-700 font-medium mb-1">Model preference for titles</label><input id="set_title_model" type="text" class="w-full rounded-xl border border-gray-300 px-3 py-2" placeholder="or:google/gemma-3-12b-it"/><p class="mt-1 text-xs text-gray-500">Used for auto-generating thread titles.</p></div>
           <div class="flex items-start gap-3">
@@ -93,5 +34,3 @@
   </div>
 </div>
 <input id="importAccountSettingsInput" type="file" class="hidden" accept="application/json,.json">
-
-
