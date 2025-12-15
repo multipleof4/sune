@@ -1223,7 +1223,7 @@ const USER = window.USER = { log: async (s) => {
 }, get provider() {
   return localStorage.getItem("provider") || "openrouter";
 }, set provider(v) {
-  localStorage.setItem("provider", ["openai", "google", "claude", "cloudflare"].includes(v) ? v : "openrouter");
+  localStorage.setItem("provider", ["openai", "google", "claude"].includes(v) ? v : "openrouter");
 }, get apiKeyOpenRouter() {
   return localStorage.getItem("openrouter_api_key") || DEFAULT_API_KEY || "";
 }, set apiKeyOpenRouter(v) {
