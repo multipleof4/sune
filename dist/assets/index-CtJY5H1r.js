@@ -350,7 +350,7 @@ const SUNE = window.SUNE = new Proxy({ get list() {
     const assistantMsg = Object.assign({ id: streamId, role: "assistant", content: [{ type: "text", text: "" }] }, suneMeta);
     state.messages.push(assistantMsg);
     THREAD.persist(false);
-    state.stream = { rid: streamId, bubble: suneBubble, meta: suneMeta, text: "", done: false };
+    state.stream = { rid: null, bubble: null, meta: null, text: "", done: false };
     let buf = "", completed = false;
     const onDelta = (delta, done, imgs) => {
       if (imgs) {
@@ -548,9 +548,12 @@ function partsToText(m) {
   if (!m) return "";
   const c = m.content, i = m.images;
   let t = Array.isArray(c) ? c.map((p) => p?.type === "text" ? p.text : p?.type === "image_url" ? `![](${p.image_url?.url || ""})` : p?.type === "file" ? `[${p.file?.filename || "file"}]` : p?.type === "input_audio" ? `(audio:${p.input_audio?.format || ""})` : "").join("\n") : String(c || "");
-  if (Array.isArray(i)) t += i.map((x) => `
-![](${x.image_url?.url})
-`).join("");
+  if (Array.isArray(i)) t += i.map((x) => {
+    const url = typeof x === "string" ? x : x?.image_url?.url || x?.url || "";
+    return url ? `
+![](${url})
+` : "";
+  }).join("");
   return t;
 }
 const addMessage = window.addMessage = function(m, track = true) {
@@ -1480,7 +1483,7 @@ async function syncActiveThread() {
   const prevText = bubble.textContent || "";
   const j = await fetch(HTTP_BASE + "?uid=" + encodeURIComponent(id)).then((r) => r.ok ? r.json() : null).catch(() => null);
   const finalise = (t, c, imgs) => {
-    renderMarkdown(bubble, t, { enhance: false });
+    renderMarkdown(bubble, partsToText({ content: c, images: imgs }), { enhance: false });
     enhanceCodeBlocks(bubble, true);
     const i = state.messages.findIndex((x) => x.id === id);
     if (i >= 0) {
@@ -1502,7 +1505,7 @@ async function syncActiveThread() {
     return false;
   }
   const text = j.text || "", isDone = j.error || j.done || j.phase === "done";
-  if (text) renderMarkdown(bubble, text, { enhance: false });
+  if (text || j.images && j.images.length) renderMarkdown(bubble, partsToText({ content: text, images: j.images }), { enhance: false });
   if (isDone) {
     const finalText = text || prevText;
     finalise(finalText, [{ type: "text", text: finalText }], j.images);
