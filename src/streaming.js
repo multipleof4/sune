@@ -5,7 +5,11 @@ export const buildBody=()=>{
   const msgs=[];
   if(USER.masterPrompt&&!SUNE.ignore_master_prompt)msgs.push({role:'system',content:[{type:'text',text:USER.masterPrompt}]});
   if(SUNE.system_prompt)msgs.push({role:'system',content:[{type:'text',text:SUNE.system_prompt}]});
-  msgs.push(...state.messages.filter(m=>m.role!=='system').map(m=>({role:m.role,content:m.content})));
+  msgs.push(...state.messages.filter(m=>m.role!=='system').map(m=>({
+    role:m.role,
+    content:m.content,
+    ...(m.images?{images:m.images}:{})
+  })));
   const b=payloadWithSampling({model:SUNE.model.replace(/^(or:|oai:|g:|cla:|cf:)/,''),messages:msgs,stream:true});
   if(SUNE.json_output){let s;try{s=JSON.parse(SUNE.json_schema||'null')}catch{s=null}if(s&&typeof s==='object'&&Object.keys(s).length>0){b.response_format={type:'json_schema',json_schema:s}}else{b.response_format={type:'json_object'}}}
   b.reasoning={...(SUNE.reasoning_effort&&SUNE.reasoning_effort!=='default'?{effort:SUNE.reasoning_effort}:{}),exclude:!SUNE.include_thoughts};
@@ -40,7 +44,7 @@ async function streamLocal(body,onDelta,signal){
             const imgs=j.choices?.[0]?.delta?.images;
             if(reasoning&&body.reasoning?.exclude!==true)onDelta(reasoning,false);
             if(delta)onDelta(delta,false);
-            if(imgs)imgs.forEach(i=>onDelta(`\n![](${i.image_url.url})\n`,false));
+            if(imgs)onDelta('',false,imgs);
           }catch{}
         }
       }
@@ -62,7 +66,7 @@ async function streamORP(body,onDelta,streamId){
   const ws=new WebSocket(HTTP_BASE.replace('https','wss')+'?uid='+encodeURIComponent(r.rid));
   r.ws=ws;
   ws.onopen=()=>ws.send(JSON.stringify({type:'begin',rid:r.rid,provider,apiKey,or_body:body}));
-  ws.onmessage=e=>{let m;try{m=JSON.parse(e.data)}catch{return}if(m.type==='delta'&&typeof m.seq==='number'&&m.seq>r.seq){r.seq=m.seq;onDelta(m.text||'',false)}else if(m.type==='done'||m.type==='err'){r.done=true;cacheStore.setItem(r.rid,'done');signal(m.type==='err'?'\n\n'+(m.message||'error'):'');ws.close()}};
+  ws.onmessage=e=>{let m;try{m=JSON.parse(e.data)}catch{return}if(m.type==='delta'&&typeof m.seq==='number'&&m.seq>r.seq){r.seq=m.seq;onDelta(m.text||'',false,m.images)}else if(m.type==='done'||m.type==='err'){r.done=true;cacheStore.setItem(r.rid,'done');signal(m.type==='err'?'\n\n'+(m.message||'error'):'');ws.close()}};
   ws.onclose=()=>{};ws.onerror=()=>{};
   state.controller={abort:()=>{r.done=true;cacheStore.setItem(r.rid,'done');try{if(ws.readyState===1)ws.send(JSON.stringify({type:'stop',rid:r.rid}))}catch{};signal('')},disconnect:()=>ws.close()};
   return {ok:true,rid:r.rid}
@@ -80,6 +84,3 @@ export async function streamChat(onDelta,streamId){
   }
   return await streamORP(body,onDelta,streamId)
 }
-
-
-
