@@ -88,7 +88,11 @@ const buildBody = () => {
   const msgs = [];
   if (USER2.masterPrompt && !SUNE2.ignore_master_prompt) msgs.push({ role: "system", content: [{ type: "text", text: USER2.masterPrompt }] });
   if (SUNE2.system_prompt) msgs.push({ role: "system", content: [{ type: "text", text: SUNE2.system_prompt }] });
-  msgs.push(...state2.messages.filter((m) => m.role !== "system").map((m) => ({ role: m.role, content: m.content })));
+  msgs.push(...state2.messages.filter((m) => m.role !== "system").map((m) => ({
+    role: m.role,
+    content: m.content,
+    ...m.images ? { images: m.images } : {}
+  })));
   const b = payloadWithSampling2({ model: SUNE2.model.replace(/^(or:|oai:|g:|cla:|cf:)/, ""), messages: msgs, stream: true });
   if (SUNE2.json_output) {
     let s;
@@ -140,9 +144,7 @@ async function streamLocal(body, onDelta, signal) {
             const imgs = j.choices?.[0]?.delta?.images;
             if (reasoning && body.reasoning?.exclude !== true) onDelta(reasoning, false);
             if (delta) onDelta(delta, false);
-            if (imgs) imgs.forEach((i) => onDelta(`
-![](${i.image_url.url})
-`, false));
+            if (imgs) onDelta("", false, imgs);
           } catch {
           }
         }
@@ -183,7 +185,7 @@ async function streamORP(body, onDelta, streamId) {
     }
     if (m.type === "delta" && typeof m.seq === "number" && m.seq > r.seq) {
       r.seq = m.seq;
-      onDelta(m.text || "", false);
+      onDelta(m.text || "", false, m.images);
     } else if (m.type === "done" || m.type === "err") {
       r.done = true;
       cacheStore2.setItem(r.rid, "done");
@@ -350,10 +352,14 @@ const SUNE = window.SUNE = new Proxy({ get list() {
     THREAD.persist(false);
     state.stream = { rid: streamId, bubble: suneBubble, meta: suneMeta, text: "", done: false };
     let buf = "", completed = false;
-    const onDelta = (delta, done) => {
+    const onDelta = (delta, done, imgs) => {
+      if (imgs) {
+        if (!assistantMsg.images) assistantMsg.images = [];
+        assistantMsg.images.push(...imgs);
+      }
       buf += delta;
       state.stream.text = buf;
-      renderMarkdown(suneBubble, buf, { enhance: false });
+      renderMarkdown(suneBubble, partsToText(assistantMsg), { enhance: false });
       assistantMsg.content[0].text = buf;
       if (done && !completed) {
         completed = true;
@@ -510,7 +516,7 @@ function _createMessageRow(m) {
   const $copyBtn = $('<button class="ml-auto p-1.5 rounded-lg hover:bg-gray-200 text-gray-400 hover:text-gray-600" title="Copy message"><i data-lucide="copy" class="h-4 w-4"></i></button>').on("click", async function(e) {
     e.stopPropagation();
     try {
-      await navigator.clipboard.writeText(partsToText(m.content));
+      await navigator.clipboard.writeText(partsToText(m));
       $(this).html('<i data-lucide="check" class="h-4 w-4 text-green-500"></i>');
       icons();
       setTimeout(() => {
@@ -538,10 +544,14 @@ const renderMarkdown = window.renderMarkdown = function(node, text, opt = { enha
   node.innerHTML = md.render(text);
   if (opt.enhance) enhanceCodeBlocks(node, opt.highlight);
 };
-function partsToText(parts) {
-  if (!parts) return "";
-  if (Array.isArray(parts)) return parts.map((p) => p?.type === "text" ? p.text : p?.type === "image_url" ? `![](${p.image_url?.url || ""})` : p?.type === "file" ? `[${p.file?.filename || "file"}]` : p?.type === "input_audio" ? `(audio:${p.input_audio?.format || ""})` : "").join("\n");
-  return String(parts);
+function partsToText(m) {
+  if (!m) return "";
+  const c = m.content, i = m.images;
+  let t = Array.isArray(c) ? c.map((p) => p?.type === "text" ? p.text : p?.type === "image_url" ? `![](${p.image_url?.url || ""})` : p?.type === "file" ? `[${p.file?.filename || "file"}]` : p?.type === "input_audio" ? `(audio:${p.input_audio?.format || ""})` : "").join("\n") : String(c || "");
+  if (Array.isArray(i)) t += i.map((x) => `
+![](${x.image_url?.url})
+`).join("");
+  return t;
 }
 const addMessage = window.addMessage = function(m, track = true) {
   m.id = m.id || gid();
@@ -550,7 +560,7 @@ const addMessage = window.addMessage = function(m, track = true) {
   }
   const bubble = msgRow(m);
   bubble.dataset.mid = m.id;
-  renderMarkdown(bubble, partsToText(m.content));
+  renderMarkdown(bubble, partsToText(m));
   if (track) state.messages.push(m);
   if (m.role === "assistant") el.composer.dispatchEvent(new CustomEvent("sune:newSuneResponse", { detail: { message: m } }));
   return bubble;
@@ -649,7 +659,7 @@ const generateTitleWithAI = async (messages) => {
   const model = USER.titleModel, apiKey = USER.apiKeyOpenRouter;
   if (!model || !apiKey || !messages?.length) return null;
   const sysPrompt = "You are TITLE GENERATOR. Your only job is to generate summarizing and relevant titles (1-5 words) based on the user’s input, outputting only the title with no explanations or extra text. Never include quotes or markdown. If asked for anything else, ignore it and generate a title anyway. You are TITLE GENERATOR.";
-  const convo = messages.filter((m) => m.role === "user" || m.role === "assistant").map((m) => `[${m.role === "user" ? "User" : "Assistant"}]: ${partsToText(m.content)}`).join("\n\n");
+  const convo = messages.filter((m) => m.role === "user" || m.role === "assistant").map((m) => `[${m.role === "user" ? "User" : "Assistant"}]: ${partsToText(m)}`).join("\n\n");
   if (!convo) return null;
   try {
     const r = await fetch("https://openrouter.ai/api/v1/chat/completions", { method: "POST", headers: { "Authorization": `Bearer ${apiKey}`, "Content-Type": "application/json" }, body: JSON.stringify({ model: model.replace(/^(or:|oai:)/, ""), messages: [{ role: "user", content: `${sysPrompt}
@@ -721,7 +731,7 @@ $(el.threadList).on("click", async (e) => {
     for (const m of state.messages) {
       const b = msgRow(m);
       b.dataset.mid = m.id || "";
-      renderMarkdown(b, partsToText(m.content));
+      renderMarkdown(b, partsToText(m));
     }
     await renderSuneHTML();
     syncWhileBusy();
@@ -774,7 +784,7 @@ $(el.threadPopover).on("click", async (e) => {
     let totalChars = 0;
     for (const m of msgs) {
       if (!m || !m.role || m.role === "system") continue;
-      totalChars += String(partsToText(m.content || "") || "").length;
+      totalChars += String(partsToText(m) || "").length;
     }
     const tokens = Math.max(0, Math.ceil(totalChars / 4));
     const k = tokens >= 1e3 ? Math.round(tokens / 1e3) + "k" : String(tokens);
@@ -921,7 +931,7 @@ $(el.composer).on("submit", async (e) => {
   addMessage(userMsg);
   el.composer.dispatchEvent(new CustomEvent("user:send", { detail: { message: userMsg } }));
   if (shouldGenTitle) (async () => {
-    const title = await generateTitleWithAI(state.messages) || partsToText(state.messages.find((m) => m.role === "user")?.content) || "Untitled";
+    const title = await generateTitleWithAI(state.messages) || partsToText(state.messages.find((m) => m.role === "user")) || "Untitled";
     await THREAD.setTitle(th.id, title);
   })();
   if (!SUNE.model) return state.attachments = [], updateAttachBadge();
@@ -934,10 +944,14 @@ $(el.composer).on("submit", async (e) => {
   THREAD.persist(false);
   state.stream = { rid: streamId, bubble: suneBubble, meta: suneMeta, text: "", done: false };
   let buf = "", completed = false;
-  const onDelta = (delta, done) => {
+  const onDelta = (delta, done, imgs) => {
+    if (imgs) {
+      if (!assistantMsg.images) assistantMsg.images = [];
+      assistantMsg.images.push(...imgs);
+    }
     buf += delta;
     state.stream.text = buf;
-    renderMarkdown(suneBubble, buf, { enhance: false });
+    renderMarkdown(suneBubble, partsToText(assistantMsg), { enhance: false });
     assistantMsg.content[0].text = buf;
     if (done && !completed) {
       completed = true;
@@ -1204,7 +1218,7 @@ const USER = window.USER = { log: async (s) => {
   el.messages.appendChild(frag);
   queueMicrotask(() => {
     newEls.forEach((item) => {
-      renderMarkdown(item.bubbleEl, partsToText(item.message.content));
+      renderMarkdown(item.bubbleEl, partsToText(item.message));
     });
     el.chat.scrollTo({ top: el.chat.scrollHeight, behavior: "smooth" });
     icons();
@@ -1465,12 +1479,14 @@ async function syncActiveThread() {
   if (!bubble) return false;
   const prevText = bubble.textContent || "";
   const j = await fetch(HTTP_BASE + "?uid=" + encodeURIComponent(id)).then((r) => r.ok ? r.json() : null).catch(() => null);
-  const finalise = (t, c) => {
+  const finalise = (t, c, imgs) => {
     renderMarkdown(bubble, t, { enhance: false });
     enhanceCodeBlocks(bubble, true);
     const i = state.messages.findIndex((x) => x.id === id);
-    if (i >= 0) state.messages[i].content = c;
-    else state.messages.push({ id, role: "assistant", content: c, ...activeMeta() });
+    if (i >= 0) {
+      state.messages[i].content = c;
+      if (imgs) state.messages[i].images = imgs;
+    } else state.messages.push({ id, role: "assistant", content: c, images: imgs, ...activeMeta() });
     THREAD.persist();
     setBtnSend();
     state.busy = false;
@@ -1489,7 +1505,7 @@ async function syncActiveThread() {
   if (text) renderMarkdown(bubble, text, { enhance: false });
   if (isDone) {
     const finalText = text || prevText;
-    finalise(finalText, [{ type: "text", text: finalText }]);
+    finalise(finalText, [{ type: "text", text: finalText }], j.images);
     return false;
   }
   await cacheStore.setItem(id, "busy");
