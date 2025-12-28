@@ -36,7 +36,7 @@ async function streamLocal(body,onDelta,signal){
       for(const line of lines){
         if(line.startsWith('data: ')){
           const d=line.slice(6);
-          if(d==='[DONE]')return;
+          if(d==='[DONE]'){onDelta('',true);return}
           try{
             const j=JSON.parse(d);
             const delta=j.choices?.[0]?.delta?.content||'';
@@ -84,4 +84,3 @@ export async function streamChat(onDelta,streamId){
   }
   return await streamORP(body,onDelta,streamId)
 }
-
