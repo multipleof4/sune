@@ -1487,12 +1487,13 @@ async function syncActiveThread() {
   const prevText = bubble.textContent || "";
   const j = await fetch(HTTP_BASE + "?uid=" + encodeURIComponent(id)).then((r) => r.ok ? r.json() : null).catch(() => null);
   const finalise = (t, c, imgs) => {
-    renderMarkdown(bubble, t, { enhance: false });
+    const tempMsg = { content: c, images: imgs };
+    renderMarkdown(bubble, partsToText(tempMsg), { enhance: false });
     enhanceCodeBlocks(bubble, true);
     const i = state.messages.findIndex((x) => x.id === id);
     if (i >= 0) {
       state.messages[i].content = c;
-      if (imgs) state.messages[i].images = imgs;
+      state.messages[i].images = imgs;
     } else state.messages.push({ id, role: "assistant", content: c, images: imgs, ...activeMeta() });
     THREAD.persist();
     setBtnSend();
@@ -1509,7 +1510,8 @@ async function syncActiveThread() {
     return false;
   }
   const text = j.text || "", isDone = j.error || j.done || j.phase === "done";
-  if (text) renderMarkdown(bubble, text, { enhance: false });
+  const display = partsToText({ content: [{ type: "text", text }], images: j.images });
+  if (display) renderMarkdown(bubble, display, { enhance: false });
   if (isDone) {
     const finalText = text || prevText;
     finalise(finalText, [{ type: "text", text: finalText }], j.images);
