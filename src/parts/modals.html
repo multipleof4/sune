@@ -36,6 +36,21 @@
             <div><input id="set_hide_composer" type="checkbox" class="sr-only peer"><label for="set_hide_composer" class="inline-flex cursor-pointer items-center rounded-full border border-slate-300 bg-transparent py-0.5 px-3 text-xs text-slate-500 peer-checked:border-gray-300 peer-checked:bg-gray-200 peer-checked:text-slate-800">Hide composer</label></div>
             <div><input id="set_ignore_master_prompt" type="checkbox" class="sr-only peer"><label for="set_ignore_master_prompt" class="inline-flex cursor-pointer items-center rounded-full border border-slate-300 bg-transparent py-0.5 px-3 text-xs text-slate-500 peer-checked:border-gray-300 peer-checked:bg-gray-200 peer-checked:text-slate-800">Ignore master prompt</label></div>
           </div>
+          <div id="aspectRatioContainer" class="hidden pt-2">
+            <label class="block text-gray-700 font-medium mb-1 text-xs">Aspect Ratio</label>
+            <select id="set_aspect_ratio" class="w-full rounded-xl border border-gray-300 px-3 py-2 text-xs">
+              <option value="1:1">1:1 (Square)</option>
+              <option value="2:3">2:3 (Portrait)</option>
+              <option value="3:2">3:2 (Landscape)</option>
+              <option value="3:4">3:4</option>
+              <option value="4:3">4:3</option>
+              <option value="4:5">4:5</option>
+              <option value="5:4">5:4</option>
+              <option value="9:16">9:16 (Story)</option>
+              <option value="16:9">16:9 (Cinematic)</option>
+              <option value="21:9">21:9 (Ultra-wide)</option>
+            </select>
+          </div>
         </div>
         <div id="panelPrompt" class="p-4 space-y-4 hidden">
           <div><div class="flex items-center justify-between mb-1"><label for="set_system_prompt" class="block text-gray-700 font-medium">System Prompt</label><div class="flex gap-2"><button type="button" id="copySystemPrompt" class="px-2 py-1 text-xs rounded-md bg-gray-100 hover:bg-gray-200">Copy</button><button type="button" id="pasteSystemPrompt" class="px-2 py-1 text-xs rounded-md bg-gray-100 hover:bg-gray-200">Paste</button></div></div><textarea id="set_system_prompt" rows="8" class="w-full rounded-xl border border-gray-300 px-3 py-2" placeholder="Enter a system prompt to guide the sune"></textarea></div>
@@ -93,6 +108,3 @@
   </div>
 </div>
 <input id="importAccountSettingsInput" type="file" class="hidden" accept="application/json,.json">
-
-
-
