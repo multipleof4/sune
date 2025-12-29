@@ -109,9 +109,9 @@ const buildBody = () => {
   }
   b.reasoning = { ...SUNE2.reasoning_effort && SUNE2.reasoning_effort !== "default" ? { effort: SUNE2.reasoning_effort } : {}, exclude: !SUNE2.include_thoughts };
   if (SUNE2.verbosity) b.verbosity = SUNE2.verbosity;
-  if (SUNE2.img_output && !USER2.donor) {
+  if (SUNE2.img_output) {
     b.modalities = ["text", "image"];
-    b.image_config = { aspect_ratio: "1:1" };
+    b.image_config = { aspect_ratio: SUNE2.aspect_ratio || "1:1" };
   }
   return b;
 };
@@ -234,7 +234,7 @@ async function streamChat(onDelta, streamId) {
   };
 })();
 const DEFAULT_MODEL = "google/gemini-3-pro-preview", DEFAULT_API_KEY = "";
-const el = window.el = Object.fromEntries(["topbar", "chat", "messages", "composer", "input", "sendBtn", "suneBtnTop", "suneModal", "suneURL", "settingsForm", "closeSettings", "cancelSettings", "tabModel", "tabPrompt", "tabScript", "panelModel", "panelPrompt", "panelScript", "set_model", "set_temperature", "set_top_p", "set_top_k", "set_frequency_penalty", "set_repetition_penalty", "set_min_p", "set_top_a", "set_verbosity", "set_reasoning_effort", "set_system_prompt", "set_hide_composer", "set_include_thoughts", "set_json_output", "set_img_output", "set_ignore_master_prompt", "deleteSuneBtn", "sidebarLeft", "sidebarOverlayLeft", "sidebarBtnLeft", "suneList", "newSuneBtn", "userMenuBtn", "userMenu", "accountSettingsOption", "sunesImportOption", "sunesExportOption", "threadsImportOption", "threadsExportOption", "importInput", "sidebarBtnRight", "sidebarRight", "sidebarOverlayRight", "threadList", "closeThreads", "threadPopover", "sunePopover", "footer", "attachBtn", "attachBadge", "fileInput", "htmlEditor", "extensionHtmlEditor", "jsonSchemaEditor", "htmlTab_index", "htmlTab_extension", "suneHtml", "accountSettingsModal", "accountSettingsForm", "closeAccountSettings", "cancelAccountSettings", "set_master_prompt", "set_provider", "set_api_key_or", "set_api_key_oai", "set_api_key_g", "set_api_key_claude", "set_api_key_cf", "set_title_model", "copySystemPrompt", "pasteSystemPrompt", "copyHTML", "pasteHTML", "accountTabGeneral", "accountTabAPI", "accountPanelGeneral", "accountPanelAPI", "set_gh_token", "gcpSAInput", "gcpSAUploadBtn", "importAccountSettings", "exportAccountSettings", "importAccountSettingsInput", "accountTabUser", "accountPanelUser", "set_user_name", "userAvatarPreview", "setUserAvatarBtn", "userAvatarInput", "set_donor"].map((id) => [id, $("#" + id)[0]]));
+const el = window.el = Object.fromEntries(["topbar", "chat", "messages", "composer", "input", "sendBtn", "suneBtnTop", "suneModal", "suneURL", "settingsForm", "closeSettings", "cancelSettings", "tabModel", "tabPrompt", "tabScript", "panelModel", "panelPrompt", "panelScript", "set_model", "set_temperature", "set_top_p", "set_top_k", "set_frequency_penalty", "set_repetition_penalty", "set_min_p", "set_top_a", "set_verbosity", "set_reasoning_effort", "set_system_prompt", "set_hide_composer", "set_include_thoughts", "set_json_output", "set_img_output", "set_aspect_ratio", "aspectRatioContainer", "set_ignore_master_prompt", "deleteSuneBtn", "sidebarLeft", "sidebarOverlayLeft", "sidebarBtnLeft", "suneList", "newSuneBtn", "userMenuBtn", "userMenu", "accountSettingsOption", "sunesImportOption", "sunesExportOption", "threadsImportOption", "threadsExportOption", "importInput", "sidebarBtnRight", "sidebarRight", "sidebarOverlayRight", "threadList", "closeThreads", "threadPopover", "sunePopover", "footer", "attachBtn", "attachBadge", "fileInput", "htmlEditor", "extensionHtmlEditor", "jsonSchemaEditor", "htmlTab_index", "htmlTab_extension", "suneHtml", "accountSettingsModal", "accountSettingsForm", "closeAccountSettings", "cancelAccountSettings", "set_master_prompt", "set_provider", "set_api_key_or", "set_api_key_oai", "set_api_key_g", "set_api_key_claude", "set_api_key_cf", "set_title_model", "copySystemPrompt", "pasteSystemPrompt", "copyHTML", "pasteHTML", "accountTabGeneral", "accountTabAPI", "accountPanelGeneral", "accountPanelAPI", "set_gh_token", "gcpSAInput", "gcpSAUploadBtn", "importAccountSettings", "exportAccountSettings", "importAccountSettingsInput", "accountTabUser", "accountPanelUser", "set_user_name", "userAvatarPreview", "setUserAvatarBtn", "userAvatarInput", "set_donor"].map((id) => [id, $("#" + id)[0]]));
 const icons = () => window.lucide && lucide.createIcons();
 const haptic = () => /android/i.test(navigator.userAgent) && navigator.vibrate?.(1);
 const clamp = (v, min, max) => Math.max(min, Math.min(max, v)), num = (v, d) => v == null || v === "" || isNaN(+v) ? d : +v, int = (v, d) => v == null || v === "" || isNaN(parseInt(v)) ? d : parseInt(v), gid = () => Math.random().toString(36).slice(2, 9), esc = (s) => String(s).replace(/[&<>'"`]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;", "`": "&#96;" })[c]), positionPopover = (a, p) => {
@@ -287,7 +287,7 @@ const su = { key: "sunes_v1", activeKey: "active_sune_id", load() {
 }, setActiveId(id) {
   localStorage.setItem(this.activeKey, id || "");
 } };
-const defaultSettings = { model: DEFAULT_MODEL, temperature: "", top_p: "", top_k: "", frequency_penalty: "", repetition_penalty: "", min_p: "", top_a: "", verbosity: "", reasoning_effort: "default", system_prompt: "", html: "", extension_html: "<sune src='https://raw.githubusercontent.com/sune-org/store/refs/heads/main/sync.sune' private></sune>", hide_composer: false, include_thoughts: false, json_output: false, img_output: false, ignore_master_prompt: false, json_schema: "" };
+const defaultSettings = { model: DEFAULT_MODEL, temperature: "", top_p: "", top_k: "", frequency_penalty: "", repetition_penalty: "", min_p: "", top_a: "", verbosity: "", reasoning_effort: "default", system_prompt: "", html: "", extension_html: "<sune src='https://raw.githubusercontent.com/sune-org/store/refs/heads/main/sync.sune' private></sune>", hide_composer: false, include_thoughts: false, json_output: false, img_output: false, aspect_ratio: "1:1", ignore_master_prompt: false, json_schema: "" };
 const makeSune = (p = {}) => ({ id: p.id || gid(), name: p.name?.trim() || "Default", pinned: !!p.pinned, avatar: p.avatar || "", url: p.url || "", updatedAt: p.updatedAt || Date.now(), settings: Object.assign({}, defaultSettings, p.settings || {}), storage: p.storage || {} });
 let sunes = (su.load() || []).map(makeSune);
 const SUNE = window.SUNE = new Proxy({ get list() {
@@ -998,6 +998,8 @@ function openSettings() {
   el.set_hide_composer.checked = !!s.hide_composer;
   el.set_json_output.checked = !!s.json_output;
   el.set_img_output.checked = !!s.img_output;
+  el.set_aspect_ratio.value = s.aspect_ratio || "1:1";
+  el.aspectRatioContainer.classList.toggle("hidden", !s.img_output);
   el.set_include_thoughts.checked = !!s.include_thoughts;
   el.set_ignore_master_prompt.checked = !!s.ignore_master_prompt;
   showTab("Model");
@@ -1035,6 +1037,7 @@ $(el.suneModal).on("click", (e) => {
 $(el.tabModel).on("click", () => showTab("Model"));
 $(el.tabPrompt).on("click", () => showTab("Prompt"));
 $(el.tabScript).on("click", () => showTab("Script"));
+$(el.set_img_output).on("change", (e) => el.aspectRatioContainer.classList.toggle("hidden", !e.target.checked));
 $(el.settingsForm).on("submit", async (e) => {
   e.preventDefault();
   SUNE.url = (el.suneURL.value || "").trim();
@@ -1046,6 +1049,7 @@ $(el.settingsForm).on("submit", async (e) => {
   SUNE.hide_composer = el.set_hide_composer.checked;
   SUNE.json_output = el.set_json_output.checked;
   SUNE.img_output = el.set_img_output.checked;
+  SUNE.aspect_ratio = el.set_aspect_ratio.value;
   SUNE.include_thoughts = el.set_include_thoughts.checked;
   SUNE.ignore_master_prompt = el.set_ignore_master_prompt.checked;
   SUNE.json_schema = el.jsonSchemaEditor.textContent;
