@@ -792,6 +792,8 @@ $(el.threadPopover).on("click", async (e) => {
     const tokens = Math.max(0, Math.ceil(totalChars / 4));
     const k = tokens >= 1e3 ? Math.round(tokens / 1e3) + "k" : String(tokens);
     alert(tokens + " tokens (" + k + ")");
+  } else if (act === "export") {
+    dl(`thread-${(th.title || "thread").replace(/\W/g, "_")}-${ts()}.json`, { version: 1, threads: [th] });
   }
   hideThreadPopover();
   await THREAD.save();
