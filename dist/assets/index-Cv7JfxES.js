@@ -1488,16 +1488,16 @@ async function syncActiveThread() {
   }
   const bubble = getBubbleById(id);
   if (!bubble) return false;
-  const prevText = bubble.textContent || "";
+  const msgIdx = state.messages.findIndex((x) => x.id === id);
+  const localText = msgIdx >= 0 ? partsToText(state.messages[msgIdx]) : bubble.textContent || "";
   const j = await fetch(HTTP_BASE + "?uid=" + encodeURIComponent(id)).then((r) => r.ok ? r.json() : null).catch(() => null);
   const finalise = (t, c, imgs) => {
     const tempMsg = { content: c, images: imgs };
     renderMarkdown(bubble, partsToText(tempMsg), { enhance: false });
     enhanceCodeBlocks(bubble, true);
-    const i = state.messages.findIndex((x) => x.id === id);
-    if (i >= 0) {
-      state.messages[i].content = c;
-      state.messages[i].images = imgs;
+    if (msgIdx >= 0) {
+      state.messages[msgIdx].content = c;
+      state.messages[msgIdx].images = imgs;
     } else state.messages.push({ id, role: "assistant", content: c, images: imgs, ...activeMeta() });
     THREAD.persist();
     setBtnSend();
@@ -1508,16 +1508,16 @@ async function syncActiveThread() {
   };
   if (!j || j.rid !== id) {
     if (j && j.error) {
-      const t = prevText + "\n\n" + j.error;
+      const t = localText + "\n\n" + j.error;
       finalise(t, [{ type: "text", text: t }]);
     }
     return false;
   }
-  const text = j.text || "", isDone = j.error || j.done || j.phase === "done";
-  const display = partsToText({ content: [{ type: "text", text }], images: j.images });
+  const serverText = j.text || "", isDone = j.error || j.done || j.phase === "done";
+  const finalText = serverText.length >= localText.length || isDone ? serverText : localText;
+  const display = partsToText({ content: [{ type: "text", text: finalText }], images: j.images });
   if (display) renderMarkdown(bubble, display, { enhance: false });
   if (isDone) {
-    const finalText = text || prevText;
     finalise(finalText, [{ type: "text", text: finalText }], j.images);
     return false;
   }
