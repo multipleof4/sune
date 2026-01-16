@@ -1374,8 +1374,9 @@ const ghApi = async (path, method = "GET", body = null) => {
   return r.status === 404 ? null : r.json();
 };
 const parseGhUrl = (u) => {
-  const p = u.substring(5).split("/"), owner = p[0], repo = p[1], branch = repo?.includes("@") ? repo.split("@")[1] : "main", cleanRepo = repo?.split("@")[0], path = p.slice(2).join("/");
-  return { owner, repo: cleanRepo, branch, path, full: `${owner}/${cleanRepo}/contents/${path ? path + "/" : ""}index.json?ref=${branch}`, dir: `${owner}/${cleanRepo}/contents/${path ? path + "/" : " "}`.trim() };
+  const p = u.substring(5).split("/"), owner = p[0], repoPart = p[1] || "", branch = repoPart.includes("@") ? repoPart.split("@")[1] : "main", repo = repoPart.split("@")[0], path = p.slice(2).join("/");
+  const dirPath = path ? path + "/" : "";
+  return { owner, repo, branch, path, full: `${owner}/${repo}/contents/${dirPath}index.json?ref=${branch}`, dir: `${owner}/${repo}/contents/${dirPath}` };
 };
 $(el.threadRepoInput).on("change", async () => {
   const u = el.threadRepoInput.value.trim();
@@ -1413,11 +1414,11 @@ $(el.threadSyncBtn).on("click", async () => {
       for (const t of THREAD.list) {
         if (t.type === "thread" && (t.status === "modified" || t.status === "new")) {
           const msgs = await localforage.getItem("rem_t_" + t.id), fPath = `${info.dir}${t.id}.json`, ex = await ghApi(fPath + "?ref=" + info.branch);
-          await ghApi(fPath, "PUT", { message: `Sync thread ${t.id}`, content: utob(JSON.stringify(msgs)), branch: info.branch, sha: ex?.sha });
+          await ghApi(fPath, "PUT", { message: `Sync thread ${t.id}`, content: utob(JSON.stringify(msgs, null, 2)), branch: info.branch, sha: ex?.sha });
           t.status = "synced";
         }
       }
-      await ghApi(info.full, "PUT", { message: "Update index.json", content: utob(JSON.stringify(THREAD.list)), branch: info.branch, sha });
+      await ghApi(info.full, "PUT", { message: "Update index.json", content: utob(JSON.stringify(THREAD.list, null, 2)), branch: info.branch, sha });
       alert("Pushed to GitHub.");
     } else {
       const idxFile = await ghApi(info.full);
