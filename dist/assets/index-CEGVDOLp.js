@@ -1421,14 +1421,19 @@ $(el.threadSyncBtn).on("click", async () => {
     if (mode) {
       const idxFile = await ghApi(info.full), sha = idxFile?.sha, toRemove = [];
       for (const t of THREAD.list) {
+        if (t.status === "deleted") {
+          if (t.type === "thread") {
+            const fPath2 = `${info.dir}${t.id}.json`;
+            const ex = await ghApi(fPath2 + "?ref=" + info.branch);
+            if (ex?.sha) await ghApi(fPath2, "DELETE", { message: `Delete thread ${t.id}`, sha: ex.sha, branch: info.branch });
+            await localforage.removeItem("rem_t_" + t.id);
+          }
+          toRemove.push(t.id);
+          continue;
+        }
         if (t.type !== "thread") continue;
         const fPath = `${info.dir}${t.id}.json`;
-        if (t.status === "deleted") {
-          const ex = await ghApi(fPath + "?ref=" + info.branch);
-          if (ex?.sha) await ghApi(fPath, "DELETE", { message: `Delete thread ${t.id}`, sha: ex.sha, branch: info.branch });
-          await localforage.removeItem("rem_t_" + t.id);
-          toRemove.push(t.id);
-        } else if (t.status === "modified" || t.status === "new") {
+        if (t.status === "modified" || t.status === "new") {
           const msgs = await localforage.getItem("rem_t_" + t.id), ex = await ghApi(fPath + "?ref=" + info.branch);
           await ghApi(fPath, "PUT", { message: `Sync thread ${t.id}`, content: utob(JSON.stringify(msgs, null, 2)), branch: info.branch, sha: ex?.sha });
           t.status = "synced";
