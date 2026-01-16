@@ -1189,16 +1189,17 @@ $(el.importInput).on("change", async () => {
       alert(`${added} new, ${updated} updated.`);
     } else if (importMode === "threads") {
       if (!data || !data.id || !Array.isArray(data.messages)) throw new Error("Invalid thread format");
-      const norm = (t) => ({ id: t.id || gid(), title: titleFrom(t.title || titleFrom(t.messages?.find?.((m) => m.role === "user")?.content || "")), pinned: !!t.pinned, updatedAt: t.updatedAt || Date.now() });
+      const u = el.threadRepoInput.value.trim(), prefix = u.startsWith("gh://") ? "rem_t_" : "t_";
+      const norm = (t) => ({ id: t.id || gid(), title: titleFrom(t.title || titleFrom(t.messages?.find?.((m) => m.role === "user")?.content || "")), pinned: !!t.pinned, updatedAt: t.updatedAt || Date.now(), ...u.startsWith("gh://") ? { status: "new" } : {} });
       const n = norm(data), msgs = data.messages, idx = THREAD.list.findIndex((x) => x.id === n.id);
       if (idx > -1) {
         if (n.updatedAt > THREAD.list[idx].updatedAt) {
           THREAD.list[idx] = n;
-          await localforage.setItem("t_" + n.id, msgs);
+          await localforage.setItem(prefix + n.id, msgs);
         }
       } else {
         THREAD.list.unshift(n);
-        await localforage.setItem("t_" + n.id, msgs);
+        await localforage.setItem(prefix + n.id, msgs);
       }
       await THREAD.save();
       await renderThreads();
