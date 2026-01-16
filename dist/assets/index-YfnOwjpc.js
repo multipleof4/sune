@@ -711,7 +711,7 @@ const threadRow = (t) => `<div class="relative flex items-center gap-2 px-3 py-2
 let sortedThreads = [], isAddingThreads = false;
 const THREAD_PAGE_SIZE = 50;
 async function renderThreads() {
-  sortedThreads = [...THREAD.list].sort((a, b) => b.pinned - a.pinned || b.updatedAt - a.updatedAt);
+  sortedThreads = [...THREAD.list].filter((t) => t.status !== "deleted").sort((a, b) => b.pinned - a.pinned || b.updatedAt - a.updatedAt);
   el.threadList.innerHTML = sortedThreads.slice(0, THREAD_PAGE_SIZE).map(threadRow).join("");
   el.threadList.scrollTop = 0;
   isAddingThreads = false;
@@ -815,8 +815,13 @@ $(el.threadPopover).on("click", async (e) => {
     }
   } else if (act === "delete") {
     if (confirm("Delete this chat?")) {
-      THREAD.list = THREAD.list.filter((x) => x.id !== th.id);
-      await localforage.removeItem(prefix + th.id);
+      if (u.startsWith("gh://")) {
+        th.status = "deleted";
+        th.updatedAt = Date.now();
+      } else {
+        THREAD.list = THREAD.list.filter((x) => x.id !== th.id);
+        await localforage.removeItem(prefix + th.id);
+      }
       if (state.currentThreadId === th.id) {
         state.currentThreadId = null;
         clearChat();
@@ -1381,6 +1386,10 @@ const parseGhUrl = (u) => {
 $(el.threadRepoInput).on("change", async () => {
   const u = el.threadRepoInput.value.trim();
   localStorage.setItem("thread_repo_url", u);
+  if (state.currentThreadId) {
+    state.currentThreadId = null;
+    clearChat();
+  }
   el.threadFolderBtn.classList.toggle("hidden", !u.startsWith("gh://"));
   el.threadBackBtn.classList.toggle("hidden", !u.startsWith("gh://") || u.split("/").length <= 3);
   await THREAD.load();
@@ -1410,14 +1419,22 @@ $(el.threadSyncBtn).on("click", async () => {
   const info = parseGhUrl(u);
   try {
     if (mode) {
-      const idxFile = await ghApi(info.full), sha = idxFile?.sha;
+      const idxFile = await ghApi(info.full), sha = idxFile?.sha, toRemove = [];
       for (const t of THREAD.list) {
-        if (t.type === "thread" && (t.status === "modified" || t.status === "new")) {
-          const msgs = await localforage.getItem("rem_t_" + t.id), fPath = `${info.dir}${t.id}.json`, ex = await ghApi(fPath + "?ref=" + info.branch);
+        if (t.type !== "thread") continue;
+        const fPath = `${info.dir}${t.id}.json`;
+        if (t.status === "deleted") {
+          const ex = await ghApi(fPath + "?ref=" + info.branch);
+          if (ex?.sha) await ghApi(fPath, "DELETE", { message: `Delete thread ${t.id}`, sha: ex.sha, branch: info.branch });
+          await localforage.removeItem("rem_t_" + t.id);
+          toRemove.push(t.id);
+        } else if (t.status === "modified" || t.status === "new") {
+          const msgs = await localforage.getItem("rem_t_" + t.id), ex = await ghApi(fPath + "?ref=" + info.branch);
           await ghApi(fPath, "PUT", { message: `Sync thread ${t.id}`, content: utob(JSON.stringify(msgs, null, 2)), branch: info.branch, sha: ex?.sha });
           t.status = "synced";
         }
       }
+      THREAD.list = THREAD.list.filter((x) => !toRemove.includes(x.id));
       await ghApi(info.full, "PUT", { message: "Update index.json", content: utob(JSON.stringify(THREAD.list, null, 2)), branch: info.branch, sha });
       alert("Pushed to GitHub.");
     } else {
