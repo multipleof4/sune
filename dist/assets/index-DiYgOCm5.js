@@ -1387,9 +1387,8 @@ const ghApi = async (path, method = "GET", body = null) => {
   return r.status === 404 ? null : r.json();
 };
 const parseGhUrl = (u) => {
-  const p = u.substring(5).split("/"), owner = p[0], repoPart = p[1] || "", branch = repoPart.includes("@") ? repoPart.split("@")[1] : "main", repo = repoPart.split("@")[0], path = p.slice(2).join("/");
-  const dirPath = path ? path + "/" : "";
-  return { owner, repo, branch, path, full: `${owner}/${repo}/contents/${dirPath}index.json?ref=${branch}`, dir: `${owner}/${repo}/contents/${dirPath}`.replace(/\/$/, "") + "/" };
+  const p = u.substring(5).split("/"), owner = p[0], repoPart = p[1] || "", branch = repoPart.includes("@") ? repoPart.split("@")[1] : "main", repo = repoPart.split("@")[0], path = p.slice(2).join("/").replace(/\/$/, "");
+  return { owner, repo, branch, path, apiPath: `${owner}/${repo}/contents${path ? "/" + path : ""}` };
 };
 $(el.threadRepoInput).on("change", async () => {
   const u = el.threadRepoInput.value.trim();
@@ -1427,7 +1426,7 @@ $(el.threadSyncBtn).on("click", async () => {
   const info = parseGhUrl(u);
   try {
     if (mode) {
-      const remoteItems = await ghApi(`${info.owner}/${info.repo}/contents/${info.path}?ref=${info.branch}`) || [], remoteMap = {};
+      const remoteItems = await ghApi(`${info.apiPath}?ref=${info.branch}`) || [], remoteMap = {};
       remoteItems.forEach((i) => {
         const d = deserializeThreadName(i.name);
         if (d) remoteMap[d.id] = { name: i.name, sha: i.sha };
@@ -1436,7 +1435,7 @@ $(el.threadSyncBtn).on("click", async () => {
       for (const t of THREAD.list) {
         if (t.status === "deleted") {
           if (remoteMap[t.id]) {
-            await ghApi(`${info.owner}/${info.repo}/contents/${info.path}/${remoteMap[t.id].name}`, "DELETE", { message: `Delete thread ${t.id}`, sha: remoteMap[t.id].sha, branch: info.branch });
+            await ghApi(`${info.apiPath}/${remoteMap[t.id].name}`, "DELETE", { message: `Delete thread ${t.id}`, sha: remoteMap[t.id].sha, branch: info.branch });
             await localforage.removeItem("rem_t_" + t.id);
           }
           toRemove.push(t.id);
@@ -1446,10 +1445,10 @@ $(el.threadSyncBtn).on("click", async () => {
         if (t.status === "modified" || t.status === "new") {
           const newName = serializeThreadName(t), msgs = await localforage.getItem("rem_t_" + t.id);
           if (remoteMap[t.id] && remoteMap[t.id].name !== newName) {
-            await ghApi(`${info.owner}/${info.repo}/contents/${info.path}/${remoteMap[t.id].name}`, "DELETE", { message: `Rename thread ${t.id}`, sha: remoteMap[t.id].sha, branch: info.branch });
+            await ghApi(`${info.apiPath}/${remoteMap[t.id].name}`, "DELETE", { message: `Rename thread ${t.id}`, sha: remoteMap[t.id].sha, branch: info.branch });
           }
-          const ex = await ghApi(`${info.owner}/${info.repo}/contents/${info.path}/${newName}?ref=${info.branch}`);
-          await ghApi(`${info.owner}/${info.repo}/contents/${info.path}/${newName}`, "PUT", { message: `Sync thread ${t.id}`, content: utob(JSON.stringify(msgs, null, 2)), branch: info.branch, sha: ex?.sha });
+          const ex = await ghApi(`${info.apiPath}/${newName}?ref=${info.branch}`);
+          await ghApi(`${info.apiPath}/${newName}`, "PUT", { message: `Sync thread ${t.id}`, content: utob(JSON.stringify(msgs, null, 2)), branch: info.branch, sha: ex?.sha });
           t.status = "synced";
         }
       }
@@ -1457,7 +1456,7 @@ $(el.threadSyncBtn).on("click", async () => {
       await THREAD.save();
       alert("Pushed to GitHub.");
     } else {
-      const items = await ghApi(`${info.owner}/${info.repo}/contents/${info.path}?ref=${info.branch}`);
+      const items = await ghApi(`${info.apiPath}?ref=${info.branch}`);
       if (!items) {
         THREAD.list = [];
         await THREAD.save();
