@@ -484,7 +484,7 @@ const reflectActiveSune = async () => {
   await renderSuneHTML();
   icons();
 };
-const suneRow = (a) => `<div class="relative flex items-center gap-2 px-3 py-2 ${a.pinned ? "bg-yellow-50" : ""}"><button data-sune-id="${a.id}" class="flex-1 text-left flex items-center gap-2 ${a.id === SUNE.id ? "font-medium" : ""}">${a.avatar ? `<img src="${esc(a.avatar)}" alt="" class="h-6 w-6 rounded-full object-cover"/>` : `<span class="h-6 w-6 rounded-full bg-gray-200 flex items-center justify-center">✺</span>`}<span class="truncate">${a.pinned ? "📌 " : ""}${esc(a.name)}</span></button><button data-sune-menu="${a.id}" class="h-8 w-8 rounded hover:bg-gray-100 flex items-center justify-center" title="More"><i data-lucide="more-horizontal" class="h-4 w-4"></i></button></div>`;
+const suneRow = (a) => `<div class="relative flex items-center gap-2 px-3 py-2 ${a.pinned ? "bg-yellow-50" : ""}"><button data-sune-id="${a.id}" class="flex-1 text-left flex items-center gap-2 ${a.id === SUNE.id ? "font-medium" : ""}">${a.avatar ? `<img src="${esc(a.avatar)}" alt="" class="h-8 w-8 rounded-full object-cover"/>` : `<span class="h-6 w-6 rounded-full bg-gray-200 flex items-center justify-center">✺</span>`}<span class="truncate">${a.pinned ? "📌 " : ""}${esc(a.name)}</span></button><button data-sune-menu="${a.id}" class="h-8 w-8 rounded hover:bg-gray-100 flex items-center justify-center" title="More"><i data-lucide="more-horizontal" class="h-4 w-4"></i></button></div>`;
 const renderSidebar = window.renderSidebar = () => {
   const list = [...SUNE.list].sort((a, b) => b.pinned - a.pinned);
   el.suneList.innerHTML = list.map(suneRow).join("");
@@ -668,7 +668,7 @@ const TKEY = "threads_v1", THREAD = window.THREAD = { list: [], load: async func
   await localforage.setItem(prefix + id, [...state.messages]);
   if (full) {
     meta.updatedAt = Date.now();
-    if (u.startsWith("gh://")) meta.status = "modified";
+    if (u.startsWith("gh://") && meta.status !== "new") meta.status = "modified";
     await this.save();
     await renderThreads();
   }
@@ -678,7 +678,7 @@ const TKEY = "threads_v1", THREAD = window.THREAD = { list: [], load: async func
   th.title = titleFrom(title);
   th.updatedAt = Date.now();
   const u = el.threadRepoInput.value.trim();
-  if (u.startsWith("gh://")) th.status = "modified";
+  if (u.startsWith("gh://") && th.status !== "new") th.status = "modified";
   await this.save();
   await renderThreads();
 }, getLastAssistantMessageId: () => {
@@ -791,6 +791,8 @@ $(el.threadList).on("click", async (e) => {
         if (res && res.content) {
           msgs = JSON.parse(btou(res.content));
           await localforage.setItem(prefix + id, msgs);
+          th.status = "synced";
+          await THREAD.save();
         }
       } catch (e2) {
         console.error("Remote fetch failed", e2);
@@ -835,13 +837,13 @@ $(el.threadPopover).on("click", async (e) => {
   const u = el.threadRepoInput.value.trim(), prefix = u.startsWith("gh://") ? "rem_t_" : "t_";
   if (act === "pin") {
     th.pinned = !th.pinned;
-    if (u.startsWith("gh://")) th.status = "modified";
+    if (u.startsWith("gh://") && th.status !== "new") th.status = "modified";
   } else if (act === "rename") {
     const nv = prompt("Rename to:", th.title);
     if (nv != null) {
       th.title = titleFrom(nv);
       th.updatedAt = Date.now();
-      if (u.startsWith("gh://")) th.status = "modified";
+      if (u.startsWith("gh://") && th.status !== "new") th.status = "modified";
     }
   } else if (act === "delete") {
     if (confirm("Delete this chat?")) {
@@ -1420,7 +1422,6 @@ $(el.threadBackBtn).on("click", () => {
   if (p.length > 3) {
     p.pop();
     el.threadRepoInput.value = p.join("/");
-    el.threadRepoInput.value = p.join("/");
     el.threadRepoInput.dispatchEvent(new Event("change"));
   }
 });
@@ -1673,7 +1674,16 @@ async function syncActiveThread() {
   const display = partsToText({ content: [{ type: "text", text: finalText }], images: j.images });
   if (display) renderMarkdown(bubble, display, { enhance: false });
   if (isDone) {
-    finalise(finalText, [{ type: "text", text: finalText }], j.images);
+    if (finalText !== localText) {
+      finalise(finalText, [{ type: "text", text: finalText }], j.images);
+    } else {
+      await cacheStore.setItem(id, "done");
+      if (state.busy) {
+        setBtnSend();
+        state.busy = false;
+        state.controller = null;
+      }
+    }
     return false;
   }
   await cacheStore.setItem(id, "busy");
