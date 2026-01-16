@@ -1335,7 +1335,10 @@ const USER = window.USER = { log: async (s) => {
   localStorage.setItem("gcp_sa_json", v ? JSON.stringify(v) : "");
 } };
 async function init() {
-  el.threadRepoInput.value = localStorage.getItem("thread_repo_url") || "";
+  const u = localStorage.getItem("thread_repo_url") || "";
+  el.threadRepoInput.value = u;
+  el.threadFolderBtn.classList.toggle("hidden", !u.startsWith("gh://"));
+  el.threadBackBtn.classList.toggle("hidden", !u.startsWith("gh://") || u.split("/").length <= 3);
   await THREAD.load();
   await renderThreads();
   renderSidebar();
@@ -1377,6 +1380,7 @@ const parseGhUrl = (u) => {
 $(el.threadRepoInput).on("change", async () => {
   const u = el.threadRepoInput.value.trim();
   localStorage.setItem("thread_repo_url", u);
+  el.threadFolderBtn.classList.toggle("hidden", !u.startsWith("gh://"));
   el.threadBackBtn.classList.toggle("hidden", !u.startsWith("gh://") || u.split("/").length <= 3);
   await THREAD.load();
   await renderThreads();
