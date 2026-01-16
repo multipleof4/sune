@@ -9,3 +9,4 @@ html,body{overscroll-behavior-y:contain;font-family:'Assistant',sans-serif}
 .menu-item{width:100%;text-align:left;padding:.5rem .75rem;font-size:0.875rem;display:flex;align-items:center;gap:.5rem}
 #htmlEditor,#extensionHtmlEditor,#jsonSchemaEditor{outline:none;white-space:pre!important;font-size:11px;line-height:1.5;}
 :not(pre)>code{font-size:85%;padding:.2em .4em;margin:0;border-radius:6px;background-color:rgba(175,184,193,0.2)}
+#threadRepoInput::placeholder{font-family:sans-serif;font-weight:500;color:#9ca3af}
