@@ -650,18 +650,6 @@ const TKEY = "threads_v1", THREAD = window.THREAD = { list: [], load: async func
     if (!/^\s*You\b/.test(h.textContent || "")) return b.dataset.mid || null;
   }
   return null;
-}, migrate: async function() {
-  const old = await localforage.getItem(TKEY);
-  if (Array.isArray(old) && old.length > 0 && old[0].messages) {
-    for (const t of old) {
-      if (t.messages) {
-        await localforage.setItem("t_" + t.id, t.messages);
-        delete t.messages;
-      }
-    }
-    await localforage.setItem(TKEY, old);
-    this.list = old;
-  }
 } };
 const cacheStore = localforage.createInstance({ name: "threads_cache", storeName: "streams_status" });
 async function ensureThreadOnFirstUser(text) {
@@ -1168,32 +1156,21 @@ $(el.importInput).on("change", async () => {
       clearChat();
       alert(`${added} new, ${updated} updated.`);
     } else if (importMode === "threads") {
-      const arr = Array.isArray(data) ? data : data.threads ? data.threads : data.id ? [data] : [];
-      if (!arr.length) throw new Error("No threads");
-      const norm = (t) => ({ id: t.id || gid(), title: titleFrom(t.title || titleFrom(t.messages?.find?.((m) => m.role === "user")?.content || "")), pinned: !!t.pinned, updatedAt: t.updatedAt || Date.now(), messages: Array.isArray(t.messages) ? t.messages.filter((m) => m && m.role && m.content) : [] });
-      const best = {};
-      arr.forEach((t) => {
-        const n = norm(t), k = n.id, prev = best[k];
-        best[k] = !prev || +n.updatedAt > +prev.updatedAt ? n : prev;
-      });
-      let kept = 0, skipped = 0;
-      const idx = Object.fromEntries(THREAD.list.map((t) => [t.id, t]));
-      for (const th of Object.values(best)) {
-        const ex = idx[th.id];
-        if (ex && +ex.updatedAt >= +th.updatedAt) {
-          skipped++;
-          continue;
+      if (!data || !data.id || !Array.isArray(data.messages)) throw new Error("Invalid thread format");
+      const norm = (t) => ({ id: t.id || gid(), title: titleFrom(t.title || titleFrom(t.messages?.find?.((m) => m.role === "user")?.content || "")), pinned: !!t.pinned, updatedAt: t.updatedAt || Date.now() });
+      const n = norm(data), msgs = data.messages, idx = THREAD.list.findIndex((x) => x.id === n.id);
+      if (idx > -1) {
+        if (n.updatedAt > THREAD.list[idx].updatedAt) {
+          THREAD.list[idx] = n;
+          await localforage.setItem("t_" + n.id, msgs);
         }
-        const msgs = th.messages;
-        delete th.messages;
-        if (!ex) THREAD.list.push(th);
-        else Object.assign(ex, th);
-        await localforage.setItem("t_" + th.id, msgs);
-        kept++;
+      } else {
+        THREAD.list.unshift(n);
+        await localforage.setItem("t_" + n.id, msgs);
       }
       await THREAD.save();
       await renderThreads();
-      alert(`${kept} imported, ${skipped} skipped (older).`);
+      alert("Thread imported.");
     }
     el.userMenu.classList.add("hidden");
   } catch {
@@ -1325,7 +1302,6 @@ const USER = window.USER = { log: async (s) => {
   localStorage.setItem("gcp_sa_json", v ? JSON.stringify(v) : "");
 } };
 async function init() {
-  await THREAD.migrate();
   await SUNE.fetchDotSune("sune-org/store@main/marketplace.sune");
   await THREAD.load();
   await renderThreads();
