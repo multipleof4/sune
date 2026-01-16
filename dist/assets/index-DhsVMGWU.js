@@ -234,7 +234,7 @@ async function streamChat(onDelta, streamId) {
   };
 })();
 const DEFAULT_MODEL = "google/gemini-3-pro-preview", DEFAULT_API_KEY = "";
-const el = window.el = Object.fromEntries(["topbar", "chat", "messages", "composer", "input", "sendBtn", "suneBtnTop", "suneModal", "suneURL", "settingsForm", "closeSettings", "cancelSettings", "tabModel", "tabPrompt", "tabScript", "panelModel", "panelPrompt", "panelScript", "set_model", "set_temperature", "set_top_p", "set_top_k", "set_frequency_penalty", "set_repetition_penalty", "set_min_p", "set_top_a", "set_verbosity", "set_reasoning_effort", "set_system_prompt", "set_hide_composer", "set_include_thoughts", "set_json_output", "set_img_output", "set_aspect_ratio", "set_image_size", "aspectRatioContainer", "set_ignore_master_prompt", "deleteSuneBtn", "sidebarLeft", "sidebarOverlayLeft", "sidebarBtnLeft", "suneList", "newSuneBtn", "userMenuBtn", "userMenu", "accountSettingsOption", "sunesImportOption", "sunesExportOption", "threadsImportOption", "threadsExportOption", "importInput", "sidebarBtnRight", "sidebarRight", "sidebarOverlayRight", "threadList", "closeThreads", "threadPopover", "sunePopover", "footer", "attachBtn", "attachBadge", "fileInput", "htmlEditor", "extensionHtmlEditor", "jsonSchemaEditor", "htmlTab_index", "htmlTab_extension", "suneHtml", "accountSettingsModal", "accountSettingsForm", "closeAccountSettings", "cancelAccountSettings", "set_master_prompt", "set_provider", "set_api_key_or", "set_api_key_oai", "set_api_key_g", "set_api_key_claude", "set_api_key_cf", "set_title_model", "copySystemPrompt", "pasteSystemPrompt", "copyHTML", "pasteHTML", "accountTabGeneral", "accountTabAPI", "accountPanelGeneral", "accountPanelAPI", "set_gh_token", "gcpSAInput", "gcpSAUploadBtn", "importAccountSettings", "exportAccountSettings", "importAccountSettingsInput", "accountTabUser", "accountPanelUser", "set_user_name", "userAvatarPreview", "setUserAvatarBtn", "userAvatarInput", "set_donor"].map((id) => [id, $("#" + id)[0]]));
+const el = window.el = Object.fromEntries(["topbar", "chat", "messages", "composer", "input", "sendBtn", "suneBtnTop", "suneModal", "suneURL", "settingsForm", "closeSettings", "cancelSettings", "tabModel", "tabPrompt", "tabScript", "panelModel", "panelPrompt", "panelScript", "set_model", "set_temperature", "set_top_p", "set_top_k", "set_frequency_penalty", "set_repetition_penalty", "set_min_p", "set_top_a", "set_verbosity", "set_reasoning_effort", "set_system_prompt", "set_hide_composer", "set_include_thoughts", "set_json_output", "set_img_output", "set_aspect_ratio", "set_image_size", "aspectRatioContainer", "set_ignore_master_prompt", "deleteSuneBtn", "sidebarLeft", "sidebarOverlayLeft", "sidebarBtnLeft", "suneList", "newSuneBtn", "userMenuBtn", "userMenu", "accountSettingsOption", "sunesImportOption", "sunesExportOption", "threadsImportOption", "importInput", "sidebarBtnRight", "sidebarRight", "sidebarOverlayRight", "threadList", "closeThreads", "threadPopover", "sunePopover", "footer", "attachBtn", "attachBadge", "fileInput", "htmlEditor", "extensionHtmlEditor", "jsonSchemaEditor", "htmlTab_index", "htmlTab_extension", "suneHtml", "accountSettingsModal", "accountSettingsForm", "closeAccountSettings", "cancelAccountSettings", "set_master_prompt", "set_provider", "set_api_key_or", "set_api_key_oai", "set_api_key_g", "set_api_key_claude", "set_api_key_cf", "set_title_model", "copySystemPrompt", "pasteSystemPrompt", "copyHTML", "pasteHTML", "accountTabGeneral", "accountTabAPI", "accountPanelGeneral", "accountPanelAPI", "set_gh_token", "gcpSAInput", "gcpSAUploadBtn", "importAccountSettings", "exportAccountSettings", "importAccountSettingsInput", "accountTabUser", "accountPanelUser", "set_user_name", "userAvatarPreview", "setUserAvatarBtn", "userAvatarInput", "set_donor"].map((id) => [id, $("#" + id)[0]]));
 const icons = () => window.lucide && lucide.createIcons();
 const haptic = () => /android/i.test(navigator.userAgent) && navigator.vibrate?.(1);
 const clamp = (v, min, max) => Math.max(min, Math.min(max, v)), num = (v, d) => v == null || v === "" || isNaN(+v) ? d : +v, int = (v, d) => v == null || v === "" || isNaN(parseInt(v)) ? d : parseInt(v), gid = () => Math.random().toString(36).slice(2, 9), esc = (s) => String(s).replace(/[&<>'"`]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;", "`": "&#96;" })[c]), positionPopover = (a, p) => {
@@ -814,7 +814,7 @@ $(el.threadPopover).on("click", async (e) => {
     alert(tokens + " tokens (" + k + ")");
   } else if (act === "export") {
     const msgs = await localforage.getItem("t_" + th.id) || [];
-    dl(`thread-${(th.title || "thread").replace(/\W/g, "_")}-${ts()}.json`, { version: 1, threads: [{ ...th, messages: msgs }] });
+    dl(`thread-${(th.title || "thread").replace(/\W/g, "_")}-${ts()}.json`, { ...th, messages: msgs });
   }
   hideThreadPopover();
   await THREAD.save();
@@ -1127,15 +1127,6 @@ $(el.sunesImportOption).on("click", () => {
   el.importInput.value = "";
   el.importInput.click();
 });
-$(el.threadsExportOption).on("click", async () => {
-  const all = [];
-  for (const t of THREAD.list) {
-    const msgs = await localforage.getItem("t_" + t.id) || [];
-    all.push({ ...t, messages: msgs });
-  }
-  dl(`threads-${ts()}.json`, { version: 1, threads: all });
-  el.userMenu.classList.add("hidden");
-});
 $(el.threadsImportOption).on("click", () => {
   importMode = "threads";
   el.importInput.value = "";
@@ -1177,7 +1168,7 @@ $(el.importInput).on("change", async () => {
       clearChat();
       alert(`${added} new, ${updated} updated.`);
     } else if (importMode === "threads") {
-      const arr = Array.isArray(data) ? data : Array.isArray(data.threads) ? data.threads : [];
+      const arr = Array.isArray(data) ? data : data.threads ? data.threads : data.id ? [data] : [];
       if (!arr.length) throw new Error("No threads");
       const norm = (t) => ({ id: t.id || gid(), title: titleFrom(t.title || titleFrom(t.messages?.find?.((m) => m.role === "user")?.content || "")), pinned: !!t.pinned, updatedAt: t.updatedAt || Date.now(), messages: Array.isArray(t.messages) ? t.messages.filter((m) => m && m.role && m.content) : [] });
       const best = {};
@@ -1334,9 +1325,9 @@ const USER = window.USER = { log: async (s) => {
   localStorage.setItem("gcp_sa_json", v ? JSON.stringify(v) : "");
 } };
 async function init() {
+  await THREAD.migrate();
   await SUNE.fetchDotSune("sune-org/store@main/marketplace.sune");
   await THREAD.load();
-  await THREAD.migrate();
   await renderThreads();
   renderSidebar();
   await reflectActiveSune();
