@@ -274,7 +274,7 @@ const imgToWebp = (f, D = 128, q = 80) => new Promise((r, j) => {
   i.src = URL.createObjectURL(f);
 });
 const b64 = (x) => x.split(",")[1] || "";
-const utob = (s) => btoa(unescape(encodeURIComponent(s))), btou = (s) => decodeURIComponent(escape(atob(s.replace(/\s/g, ""))));
+const utob = (s) => btoa(unescape(encodeURIComponent(s)));
 const su = { key: "sunes_v1", activeKey: "active_sune_id", load() {
   try {
     return JSON.parse(localStorage.getItem(this.key) || "[]");
@@ -613,19 +613,26 @@ function localDemoReply() {
   return "Tip: open the sidebar → Account & Backup to set your API key.";
 }
 const titleFrom = (t) => (t || "").replace(/\s+/g, " ").trim().slice(0, 60) || "Untitled";
+const serializeThreadName = (t) => {
+  const s = (t.title || "Untitled").replace(/[^a-zA-Z0-9]/g, "_").slice(0, 150);
+  return `${t.pinned ? "1" : "0"}-${t.updatedAt || Date.now()}-${t.id}-${s}.json`;
+};
+const deserializeThreadName = (n) => {
+  const p = n.replace(".json", "").split("-");
+  if (p.length < 4) return null;
+  return { pinned: p[0] === "1", updatedAt: parseInt(p[1]), id: p[2], title: p.slice(3).join("-").replace(/_/g, " "), status: "synced", type: "thread" };
+};
 const TKEY = "threads_v1", THREAD = window.THREAD = { list: [], load: async function() {
   const u = el.threadRepoInput.value.trim();
   if (u.startsWith("gh://")) {
-    const p = u.substring(5);
-    this.list = await localforage.getItem("rem_index_" + p).then((v) => Array.isArray(v) ? v : []) || [];
+    this.list = await localforage.getItem("rem_index_" + u.substring(5)).then((v) => Array.isArray(v) ? v : []) || [];
   } else {
     this.list = await localforage.getItem(TKEY).then((v) => Array.isArray(v) ? v : []) || [];
   }
 }, save: async function() {
   const u = el.threadRepoInput.value.trim();
   if (u.startsWith("gh://")) {
-    const p = u.substring(5);
-    await localforage.setItem("rem_index_" + p, this.list.map((t) => {
+    await localforage.setItem("rem_index_" + u.substring(5), this.list.map((t) => {
       const n = { ...t };
       delete n.messages;
       return n;
@@ -806,6 +813,7 @@ $(el.threadPopover).on("click", async (e) => {
   const u = el.threadRepoInput.value.trim(), prefix = u.startsWith("gh://") ? "rem_t_" : "t_";
   if (act === "pin") {
     th.pinned = !th.pinned;
+    if (u.startsWith("gh://")) th.status = "modified";
   } else if (act === "rename") {
     const nv = prompt("Rename to:", th.title);
     if (nv != null) {
@@ -1381,7 +1389,7 @@ const ghApi = async (path, method = "GET", body = null) => {
 const parseGhUrl = (u) => {
   const p = u.substring(5).split("/"), owner = p[0], repoPart = p[1] || "", branch = repoPart.includes("@") ? repoPart.split("@")[1] : "main", repo = repoPart.split("@")[0], path = p.slice(2).join("/");
   const dirPath = path ? path + "/" : "";
-  return { owner, repo, branch, path, full: `${owner}/${repo}/contents/${dirPath}index.json?ref=${branch}`, dir: `${owner}/${repo}/contents/${dirPath}index.json?ref=${branch}`.replace("index.json?ref=", "").split("?")[0].split("/").slice(0, -1).join("/") + "/" };
+  return { owner, repo, branch, path, full: `${owner}/${repo}/contents/${dirPath}index.json?ref=${branch}`, dir: `${owner}/${repo}/contents/${dirPath}`.replace(/\/$/, "") + "/" };
 };
 $(el.threadRepoInput).on("change", async () => {
   const u = el.threadRepoInput.value.trim();
@@ -1419,39 +1427,47 @@ $(el.threadSyncBtn).on("click", async () => {
   const info = parseGhUrl(u);
   try {
     if (mode) {
-      const idxFile = await ghApi(info.full), sha = idxFile?.sha, toRemove = [];
+      const remoteItems = await ghApi(`${info.owner}/${info.repo}/contents/${info.path}?ref=${info.branch}`) || [], remoteMap = {};
+      remoteItems.forEach((i) => {
+        const d = deserializeThreadName(i.name);
+        if (d) remoteMap[d.id] = { name: i.name, sha: i.sha };
+      });
+      const toRemove = [];
       for (const t of THREAD.list) {
         if (t.status === "deleted") {
-          if (t.type === "thread") {
-            const fPath2 = `${info.dir}${t.id}.json`;
-            const ex = await ghApi(fPath2 + "?ref=" + info.branch);
-            if (ex?.sha) await ghApi(fPath2, "DELETE", { message: `Delete thread ${t.id}`, sha: ex.sha, branch: info.branch });
+          if (remoteMap[t.id]) {
+            await ghApi(`${info.owner}/${info.repo}/contents/${info.path}/${remoteMap[t.id].name}`, "DELETE", { message: `Delete thread ${t.id}`, sha: remoteMap[t.id].sha, branch: info.branch });
             await localforage.removeItem("rem_t_" + t.id);
           }
           toRemove.push(t.id);
           continue;
         }
         if (t.type !== "thread") continue;
-        const fPath = `${info.dir}${t.id}.json`;
         if (t.status === "modified" || t.status === "new") {
-          const msgs = await localforage.getItem("rem_t_" + t.id), ex = await ghApi(fPath + "?ref=" + info.branch);
-          await ghApi(fPath, "PUT", { message: `Sync thread ${t.id}`, content: utob(JSON.stringify(msgs, null, 2)), branch: info.branch, sha: ex?.sha });
+          const newName = serializeThreadName(t), msgs = await localforage.getItem("rem_t_" + t.id);
+          if (remoteMap[t.id] && remoteMap[t.id].name !== newName) {
+            await ghApi(`${info.owner}/${info.repo}/contents/${info.path}/${remoteMap[t.id].name}`, "DELETE", { message: `Rename thread ${t.id}`, sha: remoteMap[t.id].sha, branch: info.branch });
+          }
+          const ex = await ghApi(`${info.owner}/${info.repo}/contents/${info.path}/${newName}?ref=${info.branch}`);
+          await ghApi(`${info.owner}/${info.repo}/contents/${info.path}/${newName}`, "PUT", { message: `Sync thread ${t.id}`, content: utob(JSON.stringify(msgs, null, 2)), branch: info.branch, sha: ex?.sha });
           t.status = "synced";
         }
       }
       THREAD.list = THREAD.list.filter((x) => !toRemove.includes(x.id));
-      await ghApi(info.full, "PUT", { message: "Update index.json", content: utob(JSON.stringify(THREAD.list, null, 2)), branch: info.branch, sha });
       await THREAD.save();
       alert("Pushed to GitHub.");
     } else {
-      const idxFile = await ghApi(info.full);
-      if (!idxFile) {
+      const items = await ghApi(`${info.owner}/${info.repo}/contents/${info.path}?ref=${info.branch}`);
+      if (!items) {
         THREAD.list = [];
         await THREAD.save();
-        alert("Remote is empty. Local list cleared.");
+        alert("Remote is empty.");
       } else {
-        const remoteList = JSON.parse(btou(idxFile.content));
-        THREAD.list = remoteList.map((t) => ({ ...t, status: "synced" }));
+        THREAD.list = items.map((i) => {
+          if (i.type === "dir") return { id: i.name, title: i.name, type: "folder", updatedAt: 0 };
+          const d = deserializeThreadName(i.name);
+          return d ? { ...d, status: "synced" } : null;
+        }).filter(Boolean);
         await THREAD.save();
         alert("Pulled from GitHub.");
       }
@@ -1696,4 +1712,4 @@ $(el.pasteHTML).on("click", async () => {
   } catch {
   }
 });
-Object.assign(window, { icons, haptic, clamp, num, int, gid, esc, positionPopover, sid, fmtSize, asDataURL, b64, makeSune, getModelShort, resolveSuneSrc, processSuneIncludes, renderSuneHTML, reflectActiveSune, suneRow, enhanceCodeBlocks, getSuneLabel, _createMessageRow, msgRow, partsToText, addSuneBubbleStreaming, clearChat, payloadWithSampling, setBtnStop, setBtnSend, localDemoReply, titleFrom, ensureThreadOnFirstUser, generateTitleWithAI, threadRow, renderThreads, hideThreadPopover, showThreadPopover, hideSunePopover, showSunePopover, updateAttachBadge, toAttach, ensureJars, openSettings, closeSettings, showTab, dl, ts, kbUpdate, kbBind, activeMeta, init, showHtmlTab, showAccountTab, openAccountSettings, closeAccountSettings, getBubbleById, syncActiveThread, syncWhileBusy, onForeground, getActiveHtmlParts, imgToWebp, cacheStore });
+Object.assign(window, { icons, haptic, clamp, num, int, gid, esc, positionPopover, sid, fmtSize, asDataURL, b64, makeSune, getModelShort, resolveSuneSrc, processSuneIncludes, renderSuneHTML, reflectActiveSune, suneRow, enhanceCodeBlocks, getSuneLabel, _createMessageRow, msgRow, partsToText, addSuneBubbleStreaming, clearChat, payloadWithSampling, setBtnStop, setBtnSend, localDemoReply, titleFrom, serializeThreadName, deserializeThreadName, ensureThreadOnFirstUser, generateTitleWithAI, threadRow, renderThreads, hideThreadPopover, showThreadPopover, hideSunePopover, showSunePopover, updateAttachBadge, toAttach, ensureJars, openSettings, closeSettings, showTab, dl, ts, kbUpdate, kbBind, activeMeta, init, showHtmlTab, showAccountTab, openAccountSettings, closeAccountSettings, getBubbleById, syncActiveThread, syncWhileBusy, onForeground, getActiveHtmlParts, imgToWebp, cacheStore });
