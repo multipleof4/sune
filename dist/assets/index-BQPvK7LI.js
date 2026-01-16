@@ -1381,7 +1381,7 @@ const ghApi = async (path, method = "GET", body = null) => {
 const parseGhUrl = (u) => {
   const p = u.substring(5).split("/"), owner = p[0], repoPart = p[1] || "", branch = repoPart.includes("@") ? repoPart.split("@")[1] : "main", repo = repoPart.split("@")[0], path = p.slice(2).join("/");
   const dirPath = path ? path + "/" : "";
-  return { owner, repo, branch, path, full: `${owner}/${repo}/contents/${dirPath}index.json?ref=${branch}`, dir: `${owner}/${repo}/contents/${dirPath}` };
+  return { owner, repo, branch, path, full: `${owner}/${repo}/contents/${dirPath}index.json?ref=${branch}`, dir: `${owner}/${repo}/contents/${dirPath}index.json?ref=${branch}`.replace("index.json?ref=", "").split("?")[0].split("/").slice(0, -1).join("/") + "/" };
 };
 $(el.threadRepoInput).on("change", async () => {
   const u = el.threadRepoInput.value.trim();
@@ -1436,6 +1436,7 @@ $(el.threadSyncBtn).on("click", async () => {
       }
       THREAD.list = THREAD.list.filter((x) => !toRemove.includes(x.id));
       await ghApi(info.full, "PUT", { message: "Update index.json", content: utob(JSON.stringify(THREAD.list, null, 2)), branch: info.branch, sha });
+      await THREAD.save();
       alert("Pushed to GitHub.");
     } else {
       const idxFile = await ghApi(info.full);
