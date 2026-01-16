@@ -615,21 +615,26 @@ const titleFrom = (t) => (t || "").replace(/\s+/g, " ").trim().slice(0, 60) || "
 const TKEY = "threads_v1", THREAD = window.THREAD = { list: [], load: async function() {
   this.list = await localforage.getItem(TKEY).then((v) => Array.isArray(v) ? v : []) || [];
 }, save: async function() {
-  await localforage.setItem(TKEY, this.list);
+  await localforage.setItem(TKEY, this.list.map((t) => {
+    const n = { ...t };
+    delete n.messages;
+    return n;
+  }));
 }, get: function(id) {
   return this.list.find((t) => t.id === id);
 }, get active() {
   return this.get(state.currentThreadId);
 }, persist: async function(full = true) {
-  if (!state.currentThreadId) return;
-  const th = this.active;
-  if (!th) return;
-  th.messages = [...state.messages];
+  const id = state.currentThreadId;
+  if (!id) return;
+  const meta = this.get(id);
+  if (!meta) return;
+  await localforage.setItem("t_" + id, [...state.messages]);
   if (full) {
-    th.updatedAt = Date.now();
+    meta.updatedAt = Date.now();
+    await this.save();
+    await renderThreads();
   }
-  await this.save();
-  if (full) await renderThreads();
 }, setTitle: async function(id, title) {
   const th = this.get(id);
   if (!th || !title) return;
@@ -645,6 +650,18 @@ const TKEY = "threads_v1", THREAD = window.THREAD = { list: [], load: async func
     if (!/^\s*You\b/.test(h.textContent || "")) return b.dataset.mid || null;
   }
   return null;
+}, migrate: async function() {
+  const old = await localforage.getItem(TKEY);
+  if (Array.isArray(old) && old.length > 0 && old[0].messages) {
+    for (const t of old) {
+      if (t.messages) {
+        await localforage.setItem("t_" + t.id, t.messages);
+        delete t.messages;
+      }
+    }
+    await localforage.setItem(TKEY, old);
+    this.list = old;
+  }
 } };
 const cacheStore = localforage.createInstance({ name: "threads_cache", storeName: "streams_status" });
 async function ensureThreadOnFirstUser(text) {
@@ -652,10 +669,11 @@ async function ensureThreadOnFirstUser(text) {
   if (state.messages.length === 0) state.currentThreadId = null;
   if (state.currentThreadId && !THREAD.get(state.currentThreadId)) needNew = true;
   if (!needNew) return;
-  const id = gid(), now = Date.now(), th = { id, title: "", pinned: false, updatedAt: now, messages: [] };
+  const id = gid(), now = Date.now(), th = { id, title: "", pinned: false, updatedAt: now };
   state.currentThreadId = id;
   THREAD.list.unshift(th);
   await THREAD.save();
+  await localforage.setItem("t_" + id, []);
   await renderThreads();
 }
 const generateTitleWithAI = async (messages) => {
@@ -730,7 +748,8 @@ $(el.threadList).on("click", async (e) => {
     }
     state.currentThreadId = id;
     clearChat();
-    state.messages = Array.isArray(th.messages) ? [...th.messages] : [];
+    const msgs = await localforage.getItem("t_" + id);
+    state.messages = Array.isArray(msgs) ? [...msgs] : [];
     for (const m of state.messages) {
       const b = msgRow(m);
       b.dataset.mid = m.id || "";
@@ -777,13 +796,14 @@ $(el.threadPopover).on("click", async (e) => {
   } else if (act === "delete") {
     if (confirm("Delete this chat?")) {
       THREAD.list = THREAD.list.filter((x) => x.id !== th.id);
+      await localforage.removeItem("t_" + th.id);
       if (state.currentThreadId === th.id) {
         state.currentThreadId = null;
         clearChat();
       }
     }
   } else if (act === "count_tokens") {
-    const msgs = Array.isArray(th.messages) ? th.messages : [];
+    const msgs = await localforage.getItem("t_" + th.id) || [];
     let totalChars = 0;
     for (const m of msgs) {
       if (!m || !m.role || m.role === "system") continue;
@@ -793,7 +813,8 @@ $(el.threadPopover).on("click", async (e) => {
     const k = tokens >= 1e3 ? Math.round(tokens / 1e3) + "k" : String(tokens);
     alert(tokens + " tokens (" + k + ")");
   } else if (act === "export") {
-    dl(`thread-${(th.title || "thread").replace(/\W/g, "_")}-${ts()}.json`, { version: 1, threads: [th] });
+    const msgs = await localforage.getItem("t_" + th.id) || [];
+    dl(`thread-${(th.title || "thread").replace(/\W/g, "_")}-${ts()}.json`, { version: 1, threads: [{ ...th, messages: msgs }] });
   }
   hideThreadPopover();
   await THREAD.save();
@@ -1106,8 +1127,13 @@ $(el.sunesImportOption).on("click", () => {
   el.importInput.value = "";
   el.importInput.click();
 });
-$(el.threadsExportOption).on("click", () => {
-  dl(`threads-${ts()}.json`, { version: 1, threads: THREAD.list });
+$(el.threadsExportOption).on("click", async () => {
+  const all = [];
+  for (const t of THREAD.list) {
+    const msgs = await localforage.getItem("t_" + t.id) || [];
+    all.push({ ...t, messages: msgs });
+  }
+  dl(`threads-${ts()}.json`, { version: 1, threads: all });
   el.userMenu.classList.add("hidden");
 });
 $(el.threadsImportOption).on("click", () => {
@@ -1167,8 +1193,11 @@ $(el.importInput).on("change", async () => {
           skipped++;
           continue;
         }
+        const msgs = th.messages;
+        delete th.messages;
         if (!ex) THREAD.list.push(th);
         else Object.assign(ex, th);
+        await localforage.setItem("t_" + th.id, msgs);
         kept++;
       }
       await THREAD.save();
@@ -1307,6 +1336,7 @@ const USER = window.USER = { log: async (s) => {
 async function init() {
   await SUNE.fetchDotSune("sune-org/store@main/marketplace.sune");
   await THREAD.load();
+  await THREAD.migrate();
   await renderThreads();
   renderSidebar();
   await reflectActiveSune();
