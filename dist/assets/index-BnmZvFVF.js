@@ -234,7 +234,7 @@ async function streamChat(onDelta, streamId) {
   };
 })();
 const DEFAULT_MODEL = "google/gemini-3-pro-preview", DEFAULT_API_KEY = "";
-const el = window.el = Object.fromEntries(["topbar", "chat", "messages", "composer", "input", "sendBtn", "suneBtnTop", "suneModal", "suneURL", "settingsForm", "closeSettings", "cancelSettings", "tabModel", "tabPrompt", "tabScript", "panelModel", "panelPrompt", "panelScript", "set_model", "set_temperature", "set_top_p", "set_top_k", "set_frequency_penalty", "set_repetition_penalty", "set_min_p", "set_top_a", "set_verbosity", "set_reasoning_effort", "set_system_prompt", "set_hide_composer", "set_include_thoughts", "set_json_output", "set_img_output", "set_aspect_ratio", "set_image_size", "aspectRatioContainer", "set_ignore_master_prompt", "deleteSuneBtn", "sidebarLeft", "sidebarOverlayLeft", "sidebarBtnLeft", "suneList", "newSuneBtn", "userMenuBtn", "userMenu", "accountSettingsOption", "sunesImportOption", "sunesExportOption", "threadsImportOption", "importInput", "sidebarBtnRight", "sidebarRight", "sidebarOverlayRight", "threadList", "closeThreads", "threadPopover", "sunePopover", "footer", "attachBtn", "attachBadge", "fileInput", "htmlEditor", "extensionHtmlEditor", "jsonSchemaEditor", "htmlTab_index", "htmlTab_extension", "suneHtml", "accountSettingsModal", "accountSettingsForm", "closeAccountSettings", "cancelAccountSettings", "set_master_prompt", "set_provider", "set_api_key_or", "set_api_key_oai", "set_api_key_g", "set_api_key_claude", "set_api_key_cf", "set_title_model", "copySystemPrompt", "pasteSystemPrompt", "copyHTML", "pasteHTML", "accountTabGeneral", "accountTabAPI", "accountPanelGeneral", "accountPanelAPI", "set_gh_token", "gcpSAInput", "gcpSAUploadBtn", "importAccountSettings", "exportAccountSettings", "importAccountSettingsInput", "accountTabUser", "accountPanelUser", "set_user_name", "userAvatarPreview", "setUserAvatarBtn", "userAvatarInput", "set_donor"].map((id) => [id, $("#" + id)[0]]));
+const el = window.el = Object.fromEntries(["topbar", "chat", "messages", "composer", "input", "sendBtn", "suneBtnTop", "suneModal", "suneURL", "settingsForm", "closeSettings", "cancelSettings", "tabModel", "tabPrompt", "tabScript", "panelModel", "panelPrompt", "panelScript", "set_model", "set_temperature", "set_top_p", "set_top_k", "set_frequency_penalty", "set_repetition_penalty", "set_min_p", "set_top_a", "set_verbosity", "set_reasoning_effort", "set_system_prompt", "set_hide_composer", "set_include_thoughts", "set_json_output", "set_img_output", "set_aspect_ratio", "set_image_size", "aspectRatioContainer", "set_ignore_master_prompt", "deleteSuneBtn", "sidebarLeft", "sidebarOverlayLeft", "sidebarBtnLeft", "suneList", "newSuneBtn", "userMenuBtn", "userMenu", "accountSettingsOption", "sunesImportOption", "sunesExportOption", "threadsImportOption", "importInput", "sidebarBtnRight", "sidebarRight", "sidebarOverlayRight", "threadList", "closeThreads", "threadPopover", "sunePopover", "footer", "attachBtn", "attachBadge", "fileInput", "htmlEditor", "extensionHtmlEditor", "jsonSchemaEditor", "htmlTab_index", "htmlTab_extension", "suneHtml", "accountSettingsModal", "accountSettingsForm", "closeAccountSettings", "cancelAccountSettings", "set_master_prompt", "set_provider", "set_api_key_or", "set_api_key_oai", "set_api_key_g", "set_api_key_claude", "set_api_key_cf", "set_title_model", "copySystemPrompt", "pasteSystemPrompt", "copyHTML", "pasteHTML", "accountTabGeneral", "accountTabAPI", "accountPanelGeneral", "accountPanelAPI", "set_gh_token", "gcpSAInput", "gcpSAUploadBtn", "importAccountSettings", "exportAccountSettings", "importAccountSettingsInput", "accountTabUser", "accountPanelUser", "set_user_name", "userAvatarPreview", "setUserAvatarBtn", "userAvatarInput", "set_donor", "threadRepoInput", "threadBackBtn", "threadFolderBtn", "threadSyncBtn"].map((id) => [id, $("#" + id)[0]]));
 const icons = () => window.lucide && lucide.createIcons();
 const haptic = () => /android/i.test(navigator.userAgent) && navigator.vibrate?.(1);
 const clamp = (v, min, max) => Math.max(min, Math.min(max, v)), num = (v, d) => v == null || v === "" || isNaN(+v) ? d : +v, int = (v, d) => v == null || v === "" || isNaN(parseInt(v)) ? d : parseInt(v), gid = () => Math.random().toString(36).slice(2, 9), esc = (s) => String(s).replace(/[&<>'"`]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;", "`": "&#96;" })[c]), positionPopover = (a, p) => {
@@ -613,13 +613,29 @@ function localDemoReply() {
 }
 const titleFrom = (t) => (t || "").replace(/\s+/g, " ").trim().slice(0, 60) || "Untitled";
 const TKEY = "threads_v1", THREAD = window.THREAD = { list: [], load: async function() {
-  this.list = await localforage.getItem(TKEY).then((v) => Array.isArray(v) ? v : []) || [];
+  const u = el.threadRepoInput.value.trim();
+  if (u.startsWith("gh://")) {
+    const p = u.substring(5);
+    this.list = await localforage.getItem("rem_index_" + p).then((v) => Array.isArray(v) ? v : []) || [];
+  } else {
+    this.list = await localforage.getItem(TKEY).then((v) => Array.isArray(v) ? v : []) || [];
+  }
 }, save: async function() {
-  await localforage.setItem(TKEY, this.list.map((t) => {
-    const n = { ...t };
-    delete n.messages;
-    return n;
-  }));
+  const u = el.threadRepoInput.value.trim();
+  if (u.startsWith("gh://")) {
+    const p = u.substring(5);
+    await localforage.setItem("rem_index_" + p, this.list.map((t) => {
+      const n = { ...t };
+      delete n.messages;
+      return n;
+    }));
+  } else {
+    await localforage.setItem(TKEY, this.list.map((t) => {
+      const n = { ...t };
+      delete n.messages;
+      return n;
+    }));
+  }
 }, get: function(id) {
   return this.list.find((t) => t.id === id);
 }, get active() {
@@ -629,9 +645,11 @@ const TKEY = "threads_v1", THREAD = window.THREAD = { list: [], load: async func
   if (!id) return;
   const meta = this.get(id);
   if (!meta) return;
-  await localforage.setItem("t_" + id, [...state.messages]);
+  const u = el.threadRepoInput.value.trim(), prefix = u.startsWith("gh://") ? "rem_t_" : "t_";
+  await localforage.setItem(prefix + id, [...state.messages]);
   if (full) {
     meta.updatedAt = Date.now();
+    if (u.startsWith("gh://")) meta.status = "modified";
     await this.save();
     await renderThreads();
   }
@@ -640,6 +658,8 @@ const TKEY = "threads_v1", THREAD = window.THREAD = { list: [], load: async func
   if (!th || !title) return;
   th.title = titleFrom(title);
   th.updatedAt = Date.now();
+  const u = el.threadRepoInput.value.trim();
+  if (u.startsWith("gh://")) th.status = "modified";
   await this.save();
   await renderThreads();
 }, getLastAssistantMessageId: () => {
@@ -657,11 +677,13 @@ async function ensureThreadOnFirstUser(text) {
   if (state.messages.length === 0) state.currentThreadId = null;
   if (state.currentThreadId && !THREAD.get(state.currentThreadId)) needNew = true;
   if (!needNew) return;
-  const id = gid(), now = Date.now(), th = { id, title: "", pinned: false, updatedAt: now };
+  const id = gid(), now = Date.now(), u = el.threadRepoInput.value.trim(), th = { id, title: "", pinned: false, updatedAt: now, type: "thread" };
+  if (u.startsWith("gh://")) th.status = "new";
   state.currentThreadId = id;
   THREAD.list.unshift(th);
   await THREAD.save();
-  await localforage.setItem("t_" + id, []);
+  const prefix = u.startsWith("gh://") ? "rem_t_" : "t_";
+  await localforage.setItem(prefix + id, []);
   await renderThreads();
 }
 const generateTitleWithAI = async (messages) => {
@@ -684,7 +706,7 @@ ${sysPrompt}` }], max_tokens: 20, temperature: 0.2 }) });
     return null;
   }
 };
-const threadRow = (t) => `<div class="relative flex items-center gap-2 px-3 py-2 ${t.pinned ? "bg-yellow-50" : ""}"><button data-open-thread="${t.id}" class="flex-1 text-left truncate">${t.pinned ? "📌 " : ""}${esc(t.title)}</button><button data-thread-menu="${t.id}" class="h-8 w-8 rounded hover:bg-gray-100 flex items-center justify-center" title="More"><i data-lucide="more-horizontal" class="h-4 w-4"></i></button></div>`;
+const threadRow = (t) => `<div class="relative flex items-center gap-2 px-3 py-2 ${t.pinned ? "bg-yellow-50" : ""}"><button data-open-thread="${t.id}" data-type="${t.type || "thread"}" class="flex-1 text-left truncate flex items-center gap-2">${t.type === "folder" ? '<i data-lucide="folder" class="h-4 w-4"></i>' : ""}${t.pinned ? "📌 " : ""}${esc(t.title || "Untitled")}${t.status === "modified" ? "*" : t.status === "new" ? "+" : ""}</button><button data-thread-menu="${t.id}" class="h-8 w-8 rounded hover:bg-gray-100 flex items-center justify-center" title="More"><i data-lucide="more-horizontal" class="h-4 w-4"></i></button></div>`;
 let sortedThreads = [], isAddingThreads = false;
 const THREAD_PAGE_SIZE = 50;
 async function renderThreads() {
@@ -719,7 +741,13 @@ function showSunePopover(btn, id) {
 $(el.threadList).on("click", async (e) => {
   const openBtn = e.target.closest("[data-open-thread]"), menuBtn = e.target.closest("[data-thread-menu]");
   if (openBtn) {
-    const id = openBtn.getAttribute("data-open-thread");
+    const id = openBtn.getAttribute("data-open-thread"), type = openBtn.getAttribute("data-type");
+    if (type === "folder") {
+      const u2 = el.threadRepoInput.value.trim();
+      el.threadRepoInput.value = u2 + (u2.endsWith("/") ? "" : "/") + id;
+      el.threadRepoInput.dispatchEvent(new Event("change"));
+      return;
+    }
     if (id !== state.currentThreadId && state.busy) {
       state.controller?.disconnect?.();
       setBtnSend();
@@ -736,7 +764,8 @@ $(el.threadList).on("click", async (e) => {
     }
     state.currentThreadId = id;
     clearChat();
-    const msgs = await localforage.getItem("t_" + id);
+    const u = el.threadRepoInput.value.trim(), prefix = u.startsWith("gh://") ? "rem_t_" : "t_";
+    const msgs = await localforage.getItem(prefix + id);
     state.messages = Array.isArray(msgs) ? [...msgs] : [];
     for (const m of state.messages) {
       const b = msgRow(m);
@@ -773,6 +802,7 @@ $(el.threadPopover).on("click", async (e) => {
   if (!act || !menuThreadId) return;
   const th = THREAD.get(menuThreadId);
   if (!th) return;
+  const u = el.threadRepoInput.value.trim(), prefix = u.startsWith("gh://") ? "rem_t_" : "t_";
   if (act === "pin") {
     th.pinned = !th.pinned;
   } else if (act === "rename") {
@@ -780,18 +810,19 @@ $(el.threadPopover).on("click", async (e) => {
     if (nv != null) {
       th.title = titleFrom(nv);
       th.updatedAt = Date.now();
+      if (u.startsWith("gh://")) th.status = "modified";
     }
   } else if (act === "delete") {
     if (confirm("Delete this chat?")) {
       THREAD.list = THREAD.list.filter((x) => x.id !== th.id);
-      await localforage.removeItem("t_" + th.id);
+      await localforage.removeItem(prefix + th.id);
       if (state.currentThreadId === th.id) {
         state.currentThreadId = null;
         clearChat();
       }
     }
   } else if (act === "count_tokens") {
-    const msgs = await localforage.getItem("t_" + th.id) || [];
+    const msgs = await localforage.getItem(prefix + th.id) || [];
     let totalChars = 0;
     for (const m of msgs) {
       if (!m || !m.role || m.role === "system") continue;
@@ -801,7 +832,7 @@ $(el.threadPopover).on("click", async (e) => {
     const k = tokens >= 1e3 ? Math.round(tokens / 1e3) + "k" : String(tokens);
     alert(tokens + " tokens (" + k + ")");
   } else if (act === "export") {
-    const msgs = await localforage.getItem("t_" + th.id) || [];
+    const msgs = await localforage.getItem(prefix + th.id) || [];
     dl(`thread-${(th.title || "thread").replace(/\W/g, "_")}-${ts()}.json`, { ...th, messages: msgs });
   }
   hideThreadPopover();
@@ -1302,7 +1333,7 @@ const USER = window.USER = { log: async (s) => {
   localStorage.setItem("gcp_sa_json", v ? JSON.stringify(v) : "");
 } };
 async function init() {
-  await SUNE.fetchDotSune("sune-org/store@main/marketplace.sune");
+  el.threadRepoInput.value = localStorage.getItem("thread_repo_url") || "";
   await THREAD.load();
   await renderThreads();
   renderSidebar();
@@ -1330,6 +1361,71 @@ el.htmlTab_index.textContent = "index.html";
 el.htmlTab_extension.textContent = "extension.html";
 el.htmlTab_index.onclick = () => showHtmlTab("index");
 el.htmlTab_extension.onclick = () => showHtmlTab("extension");
+const ghApi = async (path, method = "GET", body = null) => {
+  const t = USER.githubToken;
+  if (!t) throw new Error("No GH token");
+  const r = await fetch(`https://api.github.com/repos/${path}`, { method, headers: { "Authorization": `token ${t}`, "Accept": "application/vnd.github.v3+json", "Content-Type": "application/json" }, body: body ? JSON.stringify(body) : null });
+  if (!r.ok && r.status !== 404) throw new Error(`GH API ${r.status}`);
+  return r.status === 404 ? null : r.json();
+};
+const parseGhUrl = (u) => {
+  const p = u.substring(5).split("/"), owner = p[0], repo = p[1], branch = repo?.includes("@") ? repo.split("@")[1] : "main", cleanRepo = repo?.split("@")[0], path = p.slice(2).join("/");
+  return { owner, repo: cleanRepo, branch, path, full: `${owner}/${cleanRepo}/contents/${path ? path + "/" : ""}index.json?ref=${branch}`, dir: `${owner}/${cleanRepo}/contents/${path ? path + "/" : ""}` };
+};
+$(el.threadRepoInput).on("change", async () => {
+  const u = el.threadRepoInput.value.trim();
+  localStorage.setItem("thread_repo_url", u);
+  el.threadBackBtn.classList.toggle("hidden", !u.startsWith("gh://") || u.split("/").length <= 3);
+  await THREAD.load();
+  await renderThreads();
+});
+$(el.threadBackBtn).on("click", () => {
+  const u = el.threadRepoInput.value.trim();
+  if (!u.startsWith("gh://")) return;
+  const p = u.split("/");
+  if (p.length > 3) {
+    p.pop();
+    el.threadRepoInput.value = p.join("/");
+    el.threadRepoInput.dispatchEvent(new Event("change"));
+  }
+});
+$(el.threadFolderBtn).on("click", async () => {
+  const n = prompt("Folder name:");
+  if (!n) return;
+  THREAD.list.unshift({ id: n.trim(), title: n.trim(), type: "folder", updatedAt: Date.now() });
+  await THREAD.save();
+  await renderThreads();
+});
+$(el.threadSyncBtn).on("click", async () => {
+  const u = el.threadRepoInput.value.trim();
+  if (!u.startsWith("gh://")) return;
+  const mode = confirm("Sync Threads:\nOK = Upload (Push)\nCancel = Download (Pull)");
+  const info = parseGhUrl(u);
+  try {
+    if (mode) {
+      const idxFile = await ghApi(info.full), sha = idxFile?.sha;
+      for (const t of THREAD.list) {
+        if (t.type === "thread" && (t.status === "modified" || t.status === "new")) {
+          const msgs = await localforage.getItem("rem_t_" + t.id), fPath = `${info.dir}${t.id}.json`, ex = await ghApi(fPath + "?ref=" + info.branch);
+          await ghApi(fPath, "PUT", { message: `Sync thread ${t.id}`, content: btoa(JSON.stringify(msgs)), branch: info.branch, sha: ex?.sha });
+          t.status = "synced";
+        }
+      }
+      await ghApi(info.full, "PUT", { message: "Update index.json", content: btoa(JSON.stringify(THREAD.list)), branch: info.branch, sha });
+      alert("Pushed to GitHub.");
+    } else {
+      const idxFile = await ghApi(info.full);
+      if (!idxFile) throw new Error("Remote index.json not found");
+      const remoteList = JSON.parse(atob(idxFile.content));
+      THREAD.list = remoteList.map((t) => ({ ...t, status: "synced" }));
+      await THREAD.save();
+      alert("Pulled from GitHub.");
+    }
+    await renderThreads();
+  } catch (e) {
+    alert("Sync failed: " + e.message);
+  }
+});
 init();
 const accountTabs = { General: ["accountTabGeneral", "accountPanelGeneral"], API: ["accountTabAPI", "accountPanelAPI"], User: ["accountTabUser", "accountPanelUser"] };
 function showAccountTab(key) {
