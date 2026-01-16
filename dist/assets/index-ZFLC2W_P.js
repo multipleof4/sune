@@ -274,7 +274,18 @@ const imgToWebp = (f, D = 128, q = 80) => new Promise((r, j) => {
   i.src = URL.createObjectURL(f);
 });
 const b64 = (x) => x.split(",")[1] || "";
-const utob = (s) => btoa(unescape(encodeURIComponent(s)));
+const utob = (s) => btoa(unescape(encodeURIComponent(s))), btou = (s) => decodeURIComponent(escape(atob(s.replace(/\s/g, ""))));
+const ghApi = async (path, method = "GET", body = null) => {
+  const t = USER.githubToken;
+  if (!t) throw new Error("No GH token");
+  const r = await fetch(`https://api.github.com/repos/${path}`, { method, headers: { "Authorization": `token ${t}`, "Accept": "application/vnd.github.v3+json", "Content-Type": "application/json" }, body: body ? JSON.stringify(body) : null });
+  if (!r.ok && r.status !== 404) throw new Error(`GH API ${r.status}`);
+  return r.status === 404 ? null : r.json();
+};
+const parseGhUrl = (u) => {
+  const p = u.substring(5).split("/"), owner = p[0], repoPart = p[1] || "", branch = repoPart.includes("@") ? repoPart.split("@")[1] : "main", repo = repoPart.split("@")[0], path = p.slice(2).join("/").replace(/\/$/, "");
+  return { owner, repo, branch, path, apiPath: `${owner}/${repo}/contents${path ? "/" + path : ""}` };
+};
 const su = { key: "sunes_v1", activeKey: "active_sune_id", load() {
   try {
     return JSON.parse(localStorage.getItem(this.key) || "[]");
@@ -773,7 +784,18 @@ $(el.threadList).on("click", async (e) => {
     state.currentThreadId = id;
     clearChat();
     const u = el.threadRepoInput.value.trim(), prefix = u.startsWith("gh://") ? "rem_t_" : "t_";
-    const msgs = await localforage.getItem(prefix + id);
+    let msgs = await localforage.getItem(prefix + id);
+    if (!msgs && u.startsWith("gh://")) {
+      try {
+        const info = parseGhUrl(u), fileName = serializeThreadName(th), res = await ghApi(`${info.apiPath}/${fileName}?ref=${info.branch}`);
+        if (res && res.content) {
+          msgs = JSON.parse(btou(res.content));
+          await localforage.setItem(prefix + id, msgs);
+        }
+      } catch (e2) {
+        console.error("Remote fetch failed", e2);
+      }
+    }
     state.messages = Array.isArray(msgs) ? [...msgs] : [];
     for (const m of state.messages) {
       const b = msgRow(m);
@@ -1379,17 +1401,6 @@ el.htmlTab_index.textContent = "index.html";
 el.htmlTab_extension.textContent = "extension.html";
 el.htmlTab_index.onclick = () => showHtmlTab("index");
 el.htmlTab_extension.onclick = () => showHtmlTab("extension");
-const ghApi = async (path, method = "GET", body = null) => {
-  const t = USER.githubToken;
-  if (!t) throw new Error("No GH token");
-  const r = await fetch(`https://api.github.com/repos/${path}`, { method, headers: { "Authorization": `token ${t}`, "Accept": "application/vnd.github.v3+json", "Content-Type": "application/json" }, body: body ? JSON.stringify(body) : null });
-  if (!r.ok && r.status !== 404) throw new Error(`GH API ${r.status}`);
-  return r.status === 404 ? null : r.json();
-};
-const parseGhUrl = (u) => {
-  const p = u.substring(5).split("/"), owner = p[0], repoPart = p[1] || "", branch = repoPart.includes("@") ? repoPart.split("@")[1] : "main", repo = repoPart.split("@")[0], path = p.slice(2).join("/").replace(/\/$/, "");
-  return { owner, repo, branch, path, apiPath: `${owner}/${repo}/contents${path ? "/" + path : ""}` };
-};
 $(el.threadRepoInput).on("change", async () => {
   const u = el.threadRepoInput.value.trim();
   localStorage.setItem("thread_repo_url", u);
@@ -1408,6 +1419,7 @@ $(el.threadBackBtn).on("click", () => {
   const p = u.split("/");
   if (p.length > 3) {
     p.pop();
+    el.threadRepoInput.value = p.join("/");
     el.threadRepoInput.value = p.join("/");
     el.threadRepoInput.dispatchEvent(new Event("change"));
   }
@@ -1711,4 +1723,4 @@ $(el.pasteHTML).on("click", async () => {
   } catch {
   }
 });
-Object.assign(window, { icons, haptic, clamp, num, int, gid, esc, positionPopover, sid, fmtSize, asDataURL, b64, makeSune, getModelShort, resolveSuneSrc, processSuneIncludes, renderSuneHTML, reflectActiveSune, suneRow, enhanceCodeBlocks, getSuneLabel, _createMessageRow, msgRow, partsToText, addSuneBubbleStreaming, clearChat, payloadWithSampling, setBtnStop, setBtnSend, localDemoReply, titleFrom, serializeThreadName, deserializeThreadName, ensureThreadOnFirstUser, generateTitleWithAI, threadRow, renderThreads, hideThreadPopover, showThreadPopover, hideSunePopover, showSunePopover, updateAttachBadge, toAttach, ensureJars, openSettings, closeSettings, showTab, dl, ts, kbUpdate, kbBind, activeMeta, init, showHtmlTab, showAccountTab, openAccountSettings, closeAccountSettings, getBubbleById, syncActiveThread, syncWhileBusy, onForeground, getActiveHtmlParts, imgToWebp, cacheStore });
+Object.assign(window, { icons, haptic, clamp, num, int, gid, esc, positionPopover, sid, fmtSize, asDataURL, b64, makeSune, getModelShort, resolveSuneSrc, processSuneIncludes, renderSuneHTML, reflectActiveSune, suneRow, enhanceCodeBlocks, getSuneLabel, _createMessageRow, msgRow, partsToText, addSuneBubbleStreaming, clearChat, payloadWithSampling, setBtnStop, setBtnSend, localDemoReply, titleFrom, serializeThreadName, deserializeThreadName, ensureThreadOnFirstUser, generateTitleWithAI, threadRow, renderThreads, hideThreadPopover, showThreadPopover, hideSunePopover, showSunePopover, updateAttachBadge, toAttach, ensureJars, openSettings, closeSettings, showTab, dl, ts, kbUpdate, kbBind, activeMeta, init, showHtmlTab, showAccountTab, openAccountSettings, closeAccountSettings, getBubbleById, syncActiveThread, syncWhileBusy, onForeground, getActiveHtmlParts, imgToWebp, cacheStore, ghApi, parseGhUrl });
