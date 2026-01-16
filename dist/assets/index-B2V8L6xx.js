@@ -1403,6 +1403,28 @@ el.htmlTab_index.textContent = "index.html";
 el.htmlTab_extension.textContent = "extension.html";
 el.htmlTab_index.onclick = () => showHtmlTab("index");
 el.htmlTab_extension.onclick = () => showHtmlTab("extension");
+const pullThreads = async () => {
+  const u = el.threadRepoInput.value.trim();
+  if (!u.startsWith("gh://")) return;
+  const info = parseGhUrl(u);
+  try {
+    const items = await ghApi(`${info.apiPath}?ref=${info.branch}`);
+    if (!items) {
+      THREAD.list = [];
+      await THREAD.save();
+    } else {
+      THREAD.list = items.map((i) => {
+        if (i.type === "dir") return { id: i.name, title: i.name, type: "folder", updatedAt: 0 };
+        const d = deserializeThreadName(i.name);
+        return d ? { ...d, status: "synced" } : null;
+      }).filter(Boolean);
+      await THREAD.save();
+    }
+    await renderThreads();
+  } catch (e) {
+    console.error("Auto-pull failed:", e);
+  }
+};
 $(el.threadRepoInput).on("change", async () => {
   const u = el.threadRepoInput.value.trim();
   localStorage.setItem("thread_repo_url", u);
@@ -1412,8 +1434,11 @@ $(el.threadRepoInput).on("change", async () => {
   }
   el.threadFolderBtn.classList.toggle("hidden", !u.startsWith("gh://"));
   el.threadBackBtn.classList.toggle("hidden", !u.startsWith("gh://") || u.split("/").length <= 3);
-  await THREAD.load();
-  await renderThreads();
+  if (u.startsWith("gh://")) await pullThreads();
+  else {
+    await THREAD.load();
+    await renderThreads();
+  }
 });
 $(el.threadBackBtn).on("click", () => {
   const u = el.threadRepoInput.value.trim();
@@ -1469,20 +1494,8 @@ $(el.threadSyncBtn).on("click", async () => {
       await THREAD.save();
       alert("Pushed to GitHub.");
     } else {
-      const items = await ghApi(`${info.apiPath}?ref=${info.branch}`);
-      if (!items) {
-        THREAD.list = [];
-        await THREAD.save();
-        alert("Remote is empty.");
-      } else {
-        THREAD.list = items.map((i) => {
-          if (i.type === "dir") return { id: i.name, title: i.name, type: "folder", updatedAt: 0 };
-          const d = deserializeThreadName(i.name);
-          return d ? { ...d, status: "synced" } : null;
-        }).filter(Boolean);
-        await THREAD.save();
-        alert("Pulled from GitHub.");
-      }
+      await pullThreads();
+      alert("Pulled from GitHub.");
     }
     await renderThreads();
   } catch (e) {
@@ -1733,4 +1746,4 @@ $(el.pasteHTML).on("click", async () => {
   } catch {
   }
 });
-Object.assign(window, { icons, haptic, clamp, num, int, gid, esc, positionPopover, sid, fmtSize, asDataURL, b64, makeSune, getModelShort, resolveSuneSrc, processSuneIncludes, renderSuneHTML, reflectActiveSune, suneRow, enhanceCodeBlocks, getSuneLabel, _createMessageRow, msgRow, partsToText, addSuneBubbleStreaming, clearChat, payloadWithSampling, setBtnStop, setBtnSend, localDemoReply, titleFrom, serializeThreadName, deserializeThreadName, ensureThreadOnFirstUser, generateTitleWithAI, threadRow, renderThreads, hideThreadPopover, showThreadPopover, hideSunePopover, showSunePopover, updateAttachBadge, toAttach, ensureJars, openSettings, closeSettings, showTab, dl, ts, kbUpdate, kbBind, activeMeta, init, showHtmlTab, showAccountTab, openAccountSettings, closeAccountSettings, getBubbleById, syncActiveThread, syncWhileBusy, onForeground, getActiveHtmlParts, imgToWebp, cacheStore, ghApi, parseGhUrl });
+Object.assign(window, { icons, haptic, clamp, num, int, gid, esc, positionPopover, sid, fmtSize, asDataURL, b64, makeSune, getModelShort, resolveSuneSrc, processSuneIncludes, renderSuneHTML, reflectActiveSune, suneRow, enhanceCodeBlocks, getSuneLabel, _createMessageRow, msgRow, partsToText, addSuneBubbleStreaming, clearChat, payloadWithSampling, setBtnStop, setBtnSend, localDemoReply, titleFrom, serializeThreadName, deserializeThreadName, ensureThreadOnFirstUser, generateTitleWithAI, threadRow, renderThreads, hideThreadPopover, showThreadPopover, hideSunePopover, showSunePopover, updateAttachBadge, toAttach, ensureJars, openSettings, closeSettings, showTab, dl, ts, kbUpdate, kbBind, activeMeta, init, showHtmlTab, showAccountTab, openAccountSettings, closeAccountSettings, getBubbleById, syncActiveThread, syncWhileBusy, onForeground, getActiveHtmlParts, imgToWebp, cacheStore, ghApi, parseGhUrl, pullThreads });
