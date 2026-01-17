@@ -849,6 +849,14 @@ $(el.threadPopover).on("click", async (e) => {
       th.updatedAt = Date.now();
       if (u.startsWith("gh://") && th.status !== "new") th.status = "modified";
     }
+  } else if (act === "duplicate") {
+    const newId = gid(), msgs = await localforage.getItem(prefix + th.id) || [];
+    const newTh = { ...th, id: newId, title: th.title + " (Copy)", updatedAt: Date.now() };
+    if (u.startsWith("gh://")) newTh.status = "new";
+    THREAD.list.unshift(newTh);
+    await localforage.setItem(prefix + newId, msgs);
+    await THREAD.save();
+    await renderThreads();
   } else if (act === "delete") {
     if (confirm("Delete this chat?")) {
       if (u.startsWith("gh://")) {
