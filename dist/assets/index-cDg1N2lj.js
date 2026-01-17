@@ -623,7 +623,11 @@ function setBtnSend() {
 function localDemoReply() {
   return "Tip: open the sidebar → Account & Backup to set your API key.";
 }
-const titleFrom = (t) => (t || "").replace(/\s+/g, " ").trim().slice(0, 60) || "Untitled";
+const titleFrom = (t) => {
+  if (!t) return "Untitled";
+  const s = typeof t === "string" ? t : Array.isArray(t) ? partsToText({ content: t }) : "Untitled";
+  return s.replace(/\s+/g, " ").trim().slice(0, 60) || "Untitled";
+};
 const serializeThreadName = (t) => {
   const s = (t.title || "Untitled").replace(/[^a-zA-Z0-9]/g, "_").slice(0, 150);
   return `${t.pinned ? "1" : "0"}-${t.updatedAt || Date.now()}-${t.id}-${s}.json`;
@@ -1227,7 +1231,7 @@ $(el.importInput).on("change", async () => {
     } else if (importMode === "threads") {
       if (!data || !data.id || !Array.isArray(data.messages)) throw new Error("Invalid thread format");
       const u = el.threadRepoInput.value.trim(), prefix = u.startsWith("gh://") ? "rem_t_" : "t_";
-      const norm = (t) => ({ id: t.id || gid(), title: titleFrom(t.title || titleFrom(t.messages?.find?.((m) => m.role === "user")?.content || "")), pinned: !!t.pinned, updatedAt: t.updatedAt || Date.now(), ...u.startsWith("gh://") ? { status: "new" } : {} });
+      const norm = (t) => ({ id: t.id || gid(), title: titleFrom(t.title || t.messages), pinned: !!t.pinned, updatedAt: num(t.updatedAt, Date.now()), type: "thread", ...u.startsWith("gh://") ? { status: "new" } : {} });
       const n = norm(data), msgs = data.messages, idx = THREAD.list.findIndex((x) => x.id === n.id);
       if (idx > -1) {
         if (n.updatedAt > THREAD.list[idx].updatedAt) {
