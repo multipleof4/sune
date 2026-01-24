@@ -729,11 +729,18 @@ ${sysPrompt}` }], max_tokens: 20, temperature: 0.2 }) });
     return null;
   }
 };
-const threadRow = (t) => `<div class="relative flex items-center gap-2 px-3 py-2 ${t.pinned ? "bg-yellow-50" : ""}"><button data-open-thread="${t.id}" data-type="${t.type || "thread"}" class="flex-1 text-left truncate flex items-center gap-2">${t.type === "folder" ? '<i data-lucide="folder" class="h-4 w-4"></i>' : ""}${t.pinned ? "📌 " : ""}${esc(t.title || "Untitled")}${t.status === "modified" ? "*" : t.status === "new" ? "+" : ""}</button><button data-thread-menu="${t.id}" class="h-8 w-8 rounded hover:bg-gray-100 flex items-center justify-center" title="More"><i data-lucide="more-horizontal" class="h-4 w-4"></i></button></div>`;
+const threadRow = (t) => {
+  const icon = t.type === "folder" ? "folder" : t.type === "file" ? "file-text" : "";
+  return `<div class="relative flex items-center gap-2 px-3 py-2 ${t.pinned ? "bg-yellow-50" : ""}"><button data-open-thread="${t.id}" data-type="${t.type || "thread"}" class="flex-1 text-left truncate flex items-center gap-2">${icon ? `<i data-lucide="${icon}" class="h-4 w-4"></i>` : ""}${t.pinned ? "📌 " : ""}${esc(t.title || "Untitled")}${t.status === "modified" ? "*" : t.status === "new" ? "+" : ""}</button>${t.type === "file" ? "" : `<button data-thread-menu="${t.id}" class="h-8 w-8 rounded hover:bg-gray-100 flex items-center justify-center" title="More"><i data-lucide="more-horizontal" class="h-4 w-4"></i></button>`}</div>`;
+};
 let sortedThreads = [], isAddingThreads = false;
 const THREAD_PAGE_SIZE = 50;
 async function renderThreads() {
-  sortedThreads = [...THREAD.list].filter((t) => t.status !== "deleted").sort((a, b) => b.pinned - a.pinned || b.updatedAt - a.updatedAt);
+  sortedThreads = [...THREAD.list].filter((t) => t.status !== "deleted").sort((a, b) => {
+    if (a.type === "file" && b.type !== "file") return -1;
+    if (a.type !== "file" && b.type === "file") return 1;
+    return b.pinned - a.pinned || b.updatedAt - a.updatedAt;
+  });
   el.threadList.innerHTML = sortedThreads.slice(0, THREAD_PAGE_SIZE).map(threadRow).join("");
   el.threadList.scrollTop = 0;
   isAddingThreads = false;
@@ -765,6 +772,21 @@ $(el.threadList).on("click", async (e) => {
   const openBtn = e.target.closest("[data-open-thread]"), menuBtn = e.target.closest("[data-thread-menu]");
   if (openBtn) {
     const id = openBtn.getAttribute("data-open-thread"), type = openBtn.getAttribute("data-type");
+    if (type === "file") {
+      const u2 = el.threadRepoInput.value.trim();
+      if (u2.startsWith("gh://")) {
+        const info = parseGhUrl(u2);
+        try {
+          await navigator.clipboard.writeText(`${info.owner}/${info.repo}/${id}`);
+          const old = openBtn.innerHTML;
+          openBtn.innerHTML = '<i data-lucide="check" class="h-4 w-4 text-green-500"></i> Copied Path';
+          icons();
+          setTimeout(() => (openBtn.innerHTML = old, icons()), 1200);
+        } catch {
+        }
+      }
+      return;
+    }
     if (type === "folder") {
       const u2 = el.threadRepoInput.value.trim();
       el.threadRepoInput.value = u2 + (u2.endsWith("/") ? "" : "/") + id;
@@ -1427,6 +1449,7 @@ const pullThreads = async () => {
     } else {
       THREAD.list = items.map((i) => {
         if (i.type === "dir") return { id: i.name, title: i.name, type: "folder", updatedAt: 0 };
+        if (i.type === "file" && i.name.endsWith(".md")) return { id: i.path, title: i.name, type: "file", updatedAt: 0 };
         const d = deserializeThreadName(i.name);
         return d ? { ...d, status: "synced" } : null;
       }).filter(Boolean);
