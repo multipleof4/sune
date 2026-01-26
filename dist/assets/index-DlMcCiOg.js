@@ -424,7 +424,7 @@ if (!sunes.length) {
   const def = SUNE.create({ name: "Default" });
   SUNE.setActive(def.id);
 }
-const state = window.state = { messages: [], busy: false, controller: null, currentThreadId: null, abortRequested: false, attachments: [], stream: { rid: null, bubble: null, meta: null, text: "", done: false } };
+const state = window.state = { messages: [], busy: false, controller: null, currentThreadId: null, abortRequested: false, attachments: [], stream: { rid: null, bubble: null, meta: null, text: "", done: false }, viewingFile: false };
 const getModelShort = (m) => {
   const mm = m || SUNE.model || "";
   return mm.includes("/") ? mm.split("/").pop() : mm;
@@ -480,7 +480,7 @@ const reflectActiveSune = async () => {
   const a = SUNE.active;
   el.suneBtnTop.title = `Settings — ${a.name}`;
   el.suneBtnTop.innerHTML = a.avatar ? `<img src="${esc(a.avatar)}" alt="" class="h-8 w-8 rounded-full object-cover"/>` : "✺";
-  el.footer.classList.toggle("hidden", !!a.settings.hide_composer);
+  el.footer.classList.toggle("hidden", !!a.settings.hide_composer || state.viewingFile);
   await renderSuneHTML();
   icons();
 };
@@ -588,6 +588,8 @@ const clearChat = () => {
   state.attachments = [];
   updateAttachBadge();
   el.fileInput.value = "";
+  state.viewingFile = false;
+  el.footer.classList.toggle("hidden", !!SUNE.active?.settings?.hide_composer);
 };
 const payloadWithSampling = (b) => {
   const o = Object.assign({}, b), s = SUNE, p = { temperature: num(s.temperature, null), top_p: num(s.top_p, null), top_k: int(s.top_k, null), frequency_penalty: num(s.frequency_penalty, null), repetition_penalty: num(s.repetition_penalty, null), min_p: num(s.min_p, null), top_a: num(s.top_a, null) };
@@ -731,7 +733,7 @@ ${sysPrompt}` }], max_tokens: 20, temperature: 0.2 }) });
 };
 const threadRow = (t) => {
   const icon = t.type === "folder" ? "folder" : t.type === "file" ? "file-text" : "";
-  return `<div class="relative flex items-center gap-2 px-3 py-2 ${t.pinned ? "bg-yellow-50" : ""}"><button data-open-thread="${t.id}" data-type="${t.type || "thread"}" class="flex-1 text-left truncate flex items-center gap-2">${icon ? `<i data-lucide="${icon}" class="h-4 w-4"></i>` : ""}${t.pinned ? "📌 " : ""}${esc(t.title || "Untitled")}${t.status === "modified" ? "*" : t.status === "new" ? "+" : ""}</button>${t.type === "file" ? "" : `<button data-thread-menu="${t.id}" class="h-8 w-8 rounded hover:bg-gray-100 flex items-center justify-center" title="More"><i data-lucide="more-horizontal" class="h-4 w-4"></i></button>`}</div>`;
+  return `<div class="relative flex items-center gap-2 px-3 py-2 ${t.pinned ? "bg-yellow-50" : ""}"><button data-open-thread="${t.id}" data-type="${t.type || "thread"}" class="flex-1 text-left truncate flex items-center gap-2">${icon ? `<i data-lucide="${icon}" class="h-4 w-4"></i>` : ""}${t.pinned ? "📌 " : ""}${esc(t.title || "Untitled")}${t.status === "modified" ? "*" : t.status === "new" ? "+" : ""}</button>${t.type === "folder" ? "" : `<button data-thread-menu="${t.id}" class="h-8 w-8 rounded hover:bg-gray-100 flex items-center justify-center" title="More"><i data-lucide="more-horizontal" class="h-4 w-4"></i></button>`}</div>`;
 };
 let sortedThreads = [], isAddingThreads = false;
 const THREAD_PAGE_SIZE = 50;
@@ -773,16 +775,25 @@ $(el.threadList).on("click", async (e) => {
   if (openBtn) {
     const id = openBtn.getAttribute("data-open-thread"), type = openBtn.getAttribute("data-type");
     if (type === "file") {
-      const u2 = el.threadRepoInput.value.trim();
-      if (u2.startsWith("gh://")) {
-        const info = parseGhUrl(u2);
-        try {
-          await navigator.clipboard.writeText(`${info.owner}/${info.repo}/${id}`);
-          const old = openBtn.innerHTML;
-          openBtn.innerHTML = '<i data-lucide="check" class="h-4 w-4 text-green-500"></i> Copied Path';
-          icons();
-          setTimeout(() => (openBtn.innerHTML = old, icons()), 1200);
-        } catch {
+      if (id.toLowerCase().endsWith(".md")) {
+        const u2 = el.threadRepoInput.value.trim();
+        if (u2.startsWith("gh://")) {
+          const info = parseGhUrl(u2);
+          try {
+            const res = await ghApi(`${info.apiPath}/${id}?ref=${info.branch}`);
+            if (res && res.content) {
+              const content = btou(res.content);
+              clearChat();
+              state.viewingFile = true;
+              el.footer.classList.add("hidden");
+              addMessage({ role: "system", content: [{ type: "text", text: content }], sune_name: "File Preview", model: id });
+              el.sidebarRight.classList.add("translate-x-full");
+              el.sidebarOverlayRight.classList.add("hidden");
+              hideThreadPopover();
+            }
+          } catch (e2) {
+            console.error("File fetch failed", e2);
+          }
         }
       }
       return;
@@ -859,8 +870,24 @@ $(el.threadPopover).on("click", async (e) => {
   const act = e.target.closest("[data-action]")?.getAttribute("data-action");
   if (!act || !menuThreadId) return;
   const th = THREAD.get(menuThreadId);
-  if (!th) return;
   const u = el.threadRepoInput.value.trim(), prefix = u.startsWith("gh://") ? "rem_t_" : "t_";
+  if (act === "copy_path") {
+    if (u.startsWith("gh://")) {
+      const info = parseGhUrl(u);
+      try {
+        await navigator.clipboard.writeText(`${info.owner}/${info.repo}@${info.branch}/${menuThreadId}`);
+        const btn = e.target.closest("[data-action]");
+        const old = btn.innerHTML;
+        btn.innerHTML = '<i data-lucide="check" class="h-4 w-4 text-green-500"></i><span>Copied!</span>';
+        icons();
+        setTimeout(() => (btn.innerHTML = old, icons()), 1200);
+      } catch {
+      }
+    }
+    hideThreadPopover();
+    return;
+  }
+  if (!th) return;
   if (act === "pin") {
     th.pinned = !th.pinned;
     if (u.startsWith("gh://") && th.status !== "new") th.status = "modified";
