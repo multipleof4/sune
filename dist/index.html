@@ -12,7 +12,7 @@
 <script defer src="https://cdn.jsdelivr.net/npm/cash-dom/dist/cash.min.js"></script>
 <script defer src="//unpkg.com/alpinejs"></script>
 
-  <script type="module" crossorigin src="/assets/index-zttrb_rF.js"></script>
+  <script type="module" crossorigin src="/assets/index-Bt4ejZdu.js"></script>
   <link rel="stylesheet" crossorigin href="/assets/index-JLEDB1oP.css">
 <link rel="manifest" href="/manifest.webmanifest"><script id="vite-plugin-pwa:register-sw" src="/registerSW.js"></script></head>
 <body class="bg-white text-gray-900 selection:bg-black/10" x-data @click.window="if($event.target.closest('button')) haptic(); if(!document.getElementById('threadPopover').contains($event.target)&&!$event.target.closest('[data-thread-menu]')) hideThreadPopover(); if(!document.getElementById('sunePopover').contains($event.target)&&!$event.target.closest('[data-sune-menu]')) hideSunePopover(); if(!document.getElementById('userMenu').contains($event.target)&&!document.getElementById('userMenuBtn').contains($event.target)) document.getElementById('userMenu').classList.add('hidden')">
@@ -75,6 +75,7 @@
   <button data-action="pin" class="menu-item"><i data-lucide="pin" class="h-4 w-4"></i><span>Pin to top</span></button>
   <button data-action="rename" class="menu-item"><i data-lucide="edit-3" class="h-4 w-4"></i><span>Rename</span></button>
   <button data-action="duplicate" class="menu-item"><i data-lucide="copy" class="h-4 w-4"></i><span>Duplicate</span></button>
+  <button data-action="copy_path" class="menu-item"><i data-lucide="link" class="h-4 w-4"></i><span>Copy Path (GH)</span></button>
   <button data-action="export" class="menu-item"><i data-lucide="download" class="h-4 w-4"></i><span>Export thread (.json)</span></button>
   <button data-action="delete" class="menu-item text-red-600"><i data-lucide="trash-2" class="h-4 w-4"></i><span>Delete</span></button>
   <button data-action="count_tokens" class="menu-item"><i data-lucide="hash" class="h-4 w-4"></i><span>Count tokens (approx.)</span></button>
@@ -193,7 +194,6 @@
   </div>
 </div>
 <input id="importAccountSettingsInput" type="file" class="hidden" accept="application/json,.json">
-
 
 <script src="https://unpkg.com/lucide@latest"></script>
 <script src="https://cdn.jsdelivr.net/npm/markdown-it@14.1.0/dist/markdown-it.min.js"></script>
