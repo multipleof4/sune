@@ -731,7 +731,7 @@ ${sysPrompt}` }], max_tokens: 20, temperature: 0.2 }) });
 };
 const threadRow = (t) => {
   const icon = t.type === "folder" ? "folder" : t.type === "file" ? "file-text" : "";
-  return `<div class="relative flex items-center gap-2 px-3 py-2 ${t.pinned ? "bg-yellow-50" : ""}"><button data-open-thread="${t.id}" data-type="${t.type || "thread"}" class="flex-1 text-left truncate flex items-center gap-2">${icon ? `<i data-lucide="${icon}" class="h-4 w-4"></i>` : ""}${t.pinned ? "📌 " : ""}${esc(t.title || "Untitled")}${t.status === "modified" ? "*" : t.status === "new" ? "+" : ""}</button>${t.type === "file" ? "" : `<button data-thread-menu="${t.id}" class="h-8 w-8 rounded hover:bg-gray-100 flex items-center justify-center" title="More"><i data-lucide="more-horizontal" class="h-4 w-4"></i></button>`}</div>`;
+  return `<div class="relative flex items-center gap-2 px-3 py-2 ${t.pinned ? "bg-yellow-50" : ""}"><button data-open-thread="${t.id}" data-type="${t.type || "thread"}" class="flex-1 text-left truncate flex items-center gap-2">${icon ? `<i data-lucide="${icon}" class="h-4 w-4"></i>` : ""}${t.pinned ? "📌 " : ""}${esc(t.title || "Untitled")}${t.status === "modified" ? "*" : t.status === "new" ? "+" : ""}</button><button data-thread-menu="${t.id}" class="h-8 w-8 rounded hover:bg-gray-100 flex items-center justify-center" title="More"><i data-lucide="more-horizontal" class="h-4 w-4"></i></button></div>`;
 };
 let sortedThreads = [], isAddingThreads = false;
 const THREAD_PAGE_SIZE = 50;
@@ -776,14 +776,7 @@ $(el.threadList).on("click", async (e) => {
       const u2 = el.threadRepoInput.value.trim();
       if (u2.startsWith("gh://")) {
         const info = parseGhUrl(u2);
-        try {
-          await navigator.clipboard.writeText(`${info.owner}/${info.repo}/${id}`);
-          const old = openBtn.innerHTML;
-          openBtn.innerHTML = '<i data-lucide="check" class="h-4 w-4 text-green-500"></i> Copied Path';
-          icons();
-          setTimeout(() => (openBtn.innerHTML = old, icons()), 1200);
-        } catch {
-        }
+        window.open(`https://github.com/${info.owner}/${info.repo}/blob/${info.branch}/${id}`, "_blank");
       }
       return;
     }
@@ -906,6 +899,16 @@ $(el.threadPopover).on("click", async (e) => {
   } else if (act === "export") {
     const msgs = await localforage.getItem(prefix + th.id) || [];
     dl(`thread-${(th.title || "thread").replace(/\W/g, "_")}-${ts()}.json`, { ...th, messages: msgs });
+  } else if (act === "copy_path") {
+    const u2 = el.threadRepoInput.value.trim();
+    if (u2.startsWith("gh://")) {
+      const info = parseGhUrl(u2);
+      try {
+        await navigator.clipboard.writeText(th.type === "file" ? th.id : `${info.owner}/${info.repo}/${th.id}`);
+        alert("Path copied");
+      } catch {
+      }
+    }
   }
   hideThreadPopover();
   await THREAD.save();
