@@ -1,0 +1,192 @@
+<!--
+Sune: GitHub Commit & Delete Helper
+Version: 3.3
+-->
+<div id="sune_github_helper" x-data="{v:'3.3'}" class="hidden"></div>
+<script>
+(()=>{
+  const suneEl=document.getElementById('sune_github_helper');
+  if(!suneEl){console.error("Sune container not found.");return}
+  const SUNE_NAME='[Sune: GitHub Helper]', SUNE_V=suneEl.getAttribute('x-data').match(/v:'(.*?)'/)[1];
+  console.log(`${SUNE_NAME} Initializing v${SUNE_V}`);
+
+  const defaultClasses=['bg-slate-100','text-slate-700','hover:bg-slate-200'],
+        successClasses=['bg-green-100','text-green-800'],
+        errorClasses=['bg-red-100','text-red-800'];
+
+  const safeJson=async(res)=>{
+    const txt=await res.text();
+    try{return JSON.parse(txt)}
+    catch(e){
+      // If we got raw content instead of JSON, we show a snippet to help debug
+      const snippet = txt.substring(0, 50).replace(/\n/g, ' ');
+      return{_isRaw:true, message:`Expected JSON but got raw text: "${snippet}..."`};
+    }
+  };
+
+  const deleteFile=async(btn,owner,repo,branch,path,commitMsg)=>{
+    const token=window.USER?.githubToken;
+    if(!token){alert('GitHub token not set in Account Settings > API.');return}
+    
+    btn.disabled=true;
+    btn.innerHTML='<span class="relative flex h-3 w-3"><span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-sky-400 opacity-75"></span><span class="relative inline-flex rounded-full h-3 w-3 bg-sky-500"></span></span> Checking...';
+
+    const H={'Authorization':`Bearer ${token}`,'Accept':'application/vnd.github.v3+json'};
+    try{
+      const safePath=path.split('/').map(encodeURIComponent).join('/');
+      // Add timestamp to bypass TWA/ServiceWorker cache
+      const CONTENTS_URL=`https://api.github.com/repos/${owner}/${repo}/contents/${safePath}?t=${Date.now()}`;
+      
+      const fileCheckRes=await fetch(`${CONTENTS_URL}&ref=${branch}`,{headers:H, cache:'no-store'});
+      if(fileCheckRes.status===404)throw new Error('File not found. Nothing to delete.');
+      
+      const fileData=await safeJson(fileCheckRes);
+      if(!fileCheckRes.ok || fileData._isRaw)throw new Error(fileData.message || 'Failed to get file info');
+      if(!fileData.sha)throw new Error('API returned content without SHA.');
+
+      btn.innerHTML='<span class="relative flex h-3 w-3"><span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-sky-400 opacity-75"></span><span class="relative inline-flex rounded-full h-3 w-3 bg-sky-500"></span></span> Deleting...';
+
+      const msg=commitMsg?.trim()||`Chore: Delete ${path.split('/').pop()}`;
+      const body={message:msg,sha:fileData.sha,branch};
+
+      // DELETE requests also need the cache buster in some environments
+      const deleteRes=await fetch(CONTENTS_URL,{method:'DELETE',headers:H,body:JSON.stringify(body), cache:'no-store'});
+      if(!deleteRes.ok)throw new Error(`DELETE file failed: ${(await safeJson(deleteRes)).message}`);
+      
+      btn.classList.remove(...defaultClasses);btn.classList.add(...successClasses);
+      btn.innerHTML='<i data-lucide="check" class="h-3.5 w-3.5"></i> Deleted';
+    }catch(err){
+      alert(`${SUNE_NAME} Deletion Failed:\n\n${err.message}`);
+      btn.classList.remove(...defaultClasses);btn.classList.add(...errorClasses);
+      btn.innerHTML='<i data-lucide="x" class="h-3.5 w-3.5"></i> Failed';
+      setTimeout(()=>{
+        btn.disabled=false;
+        btn.classList.remove(...errorClasses);btn.classList.add(...defaultClasses);
+        btn.innerHTML='<i data-lucide="trash-2" class="h-3.5 w-3.5"></i> Delete';
+        window.lucide?.createIcons();
+      },4e3);
+    }finally{window.lucide?.createIcons()}
+  };
+
+  const commitFile=async(btn,owner,repo,branch,path,content,commitMsg)=>{
+    const token=window.USER?.githubToken;
+    if(!token){alert('GitHub token not set in Account Settings > API.');return}
+    
+    btn.disabled=true;
+    btn.innerHTML='<span class="relative flex h-3 w-3"><span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-sky-400 opacity-75"></span><span class="relative inline-flex rounded-full h-3 w-3 bg-sky-500"></span></span> Authenticating...';
+
+    const H={'Authorization':`Bearer ${token}`,'Accept':'application/vnd.github.v3+json'};
+    try{
+      const userRes=await fetch(`https://api.github.com/user?t=${Date.now()}`,{headers:H, cache:'no-store'});
+      if(!userRes.ok)throw new Error('GitHub token invalid or lacks user:read scope.');
+      const userData = await safeJson(userRes);
+      const username=userData.login;
+
+      btn.innerHTML='<span class="relative flex h-3 w-3"><span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-sky-400 opacity-75"></span><span class="relative inline-flex rounded-full h-3 w-3 bg-sky-500"></span></span> Committing...';
+
+      const repoCheckRes=await fetch(`https://api.github.com/repos/${owner}/${repo}?t=${Date.now()}`,{headers:H, cache:'no-store'});
+      if(repoCheckRes.status===404){
+        const isOrg=owner.toLowerCase()!==username.toLowerCase(),createRepoUrl=isOrg?`https://api.github.com/orgs/${owner}/repos`:'https://api.github.com/user/repos';
+        const createRepoRes=await fetch(createRepoUrl,{method:'POST',headers:H,body:JSON.stringify({name:repo,private:false})});
+        if(!createRepoRes.ok){
+          let data=await safeJson(createRepoRes);
+          throw new Error(`Repo creation failed: ${data.message}`);
+        }
+      }
+
+      const safePath=path.split('/').map(encodeURIComponent).join('/');
+      const CONTENTS_URL=`https://api.github.com/repos/${owner}/${repo}/contents/${safePath}?t=${Date.now()}`;
+      let sha;
+      
+      const fileCheckRes=await fetch(`${CONTENTS_URL}&ref=${branch}`,{headers:H, cache:'no-store'});
+      if(fileCheckRes.ok){
+        const fileData=await safeJson(fileCheckRes);
+        if(fileData._isRaw) throw new Error('TWA Cache Error: Received raw file instead of API response.');
+        sha=fileData.sha;
+      }
+
+      const msg=commitMsg?.trim()||(sha?`Revert: Update ${path.split('/').pop()}`:`Feat: Add ${path.split('/').pop()}`);
+      const b64c=btoa(unescape(encodeURIComponent(content)));
+      const body={message:msg,content:b64c,sha,branch};
+      
+      const putRes=await fetch(CONTENTS_URL,{method:'PUT',headers:H,body:JSON.stringify(body), cache:'no-store'});
+      if(!putRes.ok)throw new Error(`PUT file failed: ${(await safeJson(putRes)).message}`);
+      
+      btn.classList.remove(...defaultClasses);btn.classList.add(...successClasses);
+      btn.innerHTML='<i data-lucide="check" class="h-3.5 w-3.5"></i> Success';
+    }catch(err){
+      alert(`${SUNE_NAME} Commit Failed:\n\n${err.message}`);
+      btn.classList.remove(...defaultClasses);btn.classList.add(...errorClasses);
+      btn.innerHTML='<i data-lucide="x" class="h-3.5 w-3.5"></i> Failed';
+      setTimeout(()=>{
+        btn.disabled=false;
+        btn.classList.remove(...errorClasses);btn.classList.add(...defaultClasses);
+        btn.innerHTML='<i data-lucide="github" class="h-3.5 w-3.5"></i> Commit';
+        window.lucide?.createIcons();
+      },4e3);
+    }finally{window.lucide?.createIcons()}
+  };
+
+  const processBubble=bubble=>{
+    if(!bubble||bubble.dataset.suneGchProcessed)return;
+    let buttonAdded=false;
+    bubble.querySelectorAll('p:not(:has(button.commit-btn))').forEach(p=>{
+      const link=p.querySelector('a');
+      if(!link)return;
+      const m=link.textContent.trim().match(/^([^\/]+)\/([^\/]+)@([^\/]+)\/(.+)$/);
+      if(!m)return;
+
+      const[_,owner,repo,branch,path]=m,commitMsg=link.title,isDelete=(commitMsg||'').toLowerCase().startsWith('delete:');
+      const btn=document.createElement('button');
+      btn.className='commit-btn ml-2 inline-flex items-center gap-1.5 rounded-md bg-slate-100 px-2 py-1 text-xs font-medium text-slate-700 hover:bg-slate-200 transition-colors';
+
+      if(isDelete){
+        btn.innerHTML='<i data-lucide="trash-2" class="h-3.5 w-3.5"></i> Delete';
+        btn.onclick=()=>deleteFile(btn,owner,repo,branch,path.trim(),commitMsg);
+        p.append(btn);
+        buttonAdded=true;
+      }else{
+        const preEl=p.nextElementSibling;
+        if(preEl?.tagName!=='PRE')return;
+        const code=preEl.querySelector('code')?.innerText;
+        if(code==null)return;
+        btn.innerHTML='<i data-lucide="github" class="h-3.5 w-3.5"></i> Commit';
+        btn.onclick=()=>commitFile(btn,owner,repo,branch,path.trim(),code,commitMsg);
+        p.append(btn);
+        buttonAdded=true;
+      }
+    });
+    if(buttonAdded){bubble.dataset.suneGchProcessed='true';window.lucide?.createIcons()}
+    return buttonAdded;
+  };
+
+  const scanExisting=()=>document.querySelectorAll('#messages .msg-bubble').forEach(processBubble);
+  const observer=new MutationObserver(mutations=>{for(const m of mutations)for(const node of m.addedNodes)if(node.nodeType===1){const b=node.matches?.('.msg-bubble')?[node]:node.querySelectorAll?.('.msg-bubble');b?.forEach(processBubble)}});
+  
+  const newResponseListener=e=>{
+    const id=e?.detail?.message?.id; if(!id)return;
+    let attempts=0,maxAttempts=8,interval=300;
+    const tryProcess=()=>{
+      attempts++;
+      const bubble=window.getBubbleById(id);
+      if(bubble&&processBubble(bubble))return;
+      if(attempts<maxAttempts)setTimeout(tryProcess,interval);
+    };
+    setTimeout(tryProcess,150);
+  };
+
+  const composerEl=window.el?.composer,chatContainer=window.el?.messages;
+  if(chatContainer&&composerEl){
+    observer.observe(chatContainer,{childList:true,subtree:true});
+    composerEl.addEventListener('sune:newSuneResponse',newResponseListener);
+    scanExisting();
+    console.log(`${SUNE_NAME} Observer and event listener attached. Initial scan complete.`);
+  }
+  
+  suneEl.addEventListener('sune:unmount',()=>{
+    observer.disconnect();
+    if(composerEl)composerEl.removeEventListener('sune:newSuneResponse',newResponseListener);
+    console.log(`${SUNE_NAME} Unmounted.`);
+  });
+})();
+</script>
