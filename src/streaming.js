@@ -3,13 +3,35 @@ export const HTTP_BASE='https://orp.aww.4ev.link/ws'
 export const buildBody=()=>{
   const {USER,SUNE,state,payloadWithSampling}=window;
   const msgs=[];
-  if(USER.masterPrompt&&!SUNE.ignore_master_prompt)msgs.push({role:'system',content:[{type:'text',text:USER.masterPrompt}]});
-  if(SUNE.system_prompt)msgs.push({role:'system',content:[{type:'text',text:SUNE.system_prompt}]});
-  msgs.push(...state.messages.filter(m=>m.role!=='system').map(m=>({
-    role:m.role,
-    content:m.content,
-    ...(m.images?{images:m.images}:{})
-  })));
+  
+  const mPrompt = (USER.masterPrompt || '').trim();
+  if(mPrompt && !SUNE.ignore_master_prompt) {
+    msgs.push({role:'system', content: mPrompt});
+  }
+  
+  const sPrompt = (SUNE.system_prompt || '').trim();
+  if(sPrompt) {
+    msgs.push({role:'system', content: sPrompt});
+  }
+
+  state.messages.filter(m=>m.role!=='system').forEach(m=>{
+    let content = Array.isArray(m.content) ? [...m.content] : [{type:'text',text:String(m.content||'')}];
+    
+    // Filter out empty text parts which cause 400 errors on strict providers like Moonshot
+    content = content.filter(p => p.type !== 'text' || (p.text && p.text.trim().length > 0));
+    
+    // Ensure every message has at least some text content if it's otherwise empty (e.g. multimodal only)
+    if (content.length === 0 || !content.some(p => p.type === 'text')) {
+      content.push({type: 'text', text: '.'});
+    }
+
+    msgs.push({
+      role: m.role,
+      content: content,
+      ...(m.images?.length ? {images: m.images} : {})
+    });
+  });
+
   const b=payloadWithSampling({model:SUNE.model.replace(/^(or:|oai:|g:|cla:|cf:)/,''),messages:msgs,stream:true});
   if(SUNE.json_output){let s;try{s=JSON.parse(SUNE.json_schema||'null')}catch{s=null}if(s&&typeof s==='object'&&Object.keys(s).length>0){b.response_format={type:'json_schema',json_schema:s}}else{b.response_format={type:'json_object'}}}
   b.reasoning={...(SUNE.reasoning_effort&&SUNE.reasoning_effort!=='default'?{effort:SUNE.reasoning_effort}:{}),exclude:!SUNE.include_thoughts};
