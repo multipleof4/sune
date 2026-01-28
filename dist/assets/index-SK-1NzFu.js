@@ -86,13 +86,26 @@ const HTTP_BASE = "https://orp.aww.4ev.link/ws";
 const buildBody = () => {
   const { USER: USER2, SUNE: SUNE2, state: state2, payloadWithSampling: payloadWithSampling2 } = window;
   const msgs = [];
-  if (USER2.masterPrompt && !SUNE2.ignore_master_prompt) msgs.push({ role: "system", content: [{ type: "text", text: USER2.masterPrompt }] });
-  if (SUNE2.system_prompt) msgs.push({ role: "system", content: [{ type: "text", text: SUNE2.system_prompt }] });
-  msgs.push(...state2.messages.filter((m) => m.role !== "system").map((m) => ({
-    role: m.role,
-    content: m.content,
-    ...m.images ? { images: m.images } : {}
-  })));
+  const mPrompt = (USER2.masterPrompt || "").trim();
+  if (mPrompt && !SUNE2.ignore_master_prompt) {
+    msgs.push({ role: "system", content: mPrompt });
+  }
+  const sPrompt = (SUNE2.system_prompt || "").trim();
+  if (sPrompt) {
+    msgs.push({ role: "system", content: sPrompt });
+  }
+  state2.messages.filter((m) => m.role !== "system").forEach((m) => {
+    let content = Array.isArray(m.content) ? [...m.content] : [{ type: "text", text: String(m.content || "") }];
+    content = content.filter((p) => p.type !== "text" || p.text && p.text.trim().length > 0);
+    if (content.length === 0 || !content.some((p) => p.type === "text")) {
+      content.push({ type: "text", text: "." });
+    }
+    msgs.push({
+      role: m.role,
+      content,
+      ...m.images?.length ? { images: m.images } : {}
+    });
+  });
   const b = payloadWithSampling2({ model: SUNE2.model.replace(/^(or:|oai:|g:|cla:|cf:)/, ""), messages: msgs, stream: true });
   if (SUNE2.json_output) {
     let s;
