@@ -97,9 +97,6 @@ const buildBody = () => {
   state2.messages.filter((m) => m.role !== "system").forEach((m) => {
     let content = Array.isArray(m.content) ? [...m.content] : [{ type: "text", text: String(m.content || "") }];
     content = content.filter((p) => p.type !== "text" || p.text && p.text.trim().length > 0);
-    if (content.length === 0 || !content.some((p) => p.type === "text")) {
-      content.push({ type: "text", text: "." });
-    }
     msgs.push({
       role: m.role,
       content,
