@@ -20,11 +20,6 @@ export const buildBody=()=>{
     // Filter out empty text parts which cause 400 errors on strict providers like Moonshot
     content = content.filter(p => p.type !== 'text' || (p.text && p.text.trim().length > 0));
     
-    // Ensure every message has at least some text content if it's otherwise empty (e.g. multimodal only)
-    if (content.length === 0 || !content.some(p => p.type === 'text')) {
-      content.push({type: 'text', text: '.'});
-    }
-
     msgs.push({
       role: m.role,
       content: content,
