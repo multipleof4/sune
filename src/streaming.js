@@ -27,6 +27,15 @@ export const buildBody=()=>{
     });
   });
 
+  // Strip trailing empty assistant message (prevents 400 on models without prefill support)
+  // We keep the UI bubble in main.js, but the API never sees the empty placeholder.
+  if (msgs.length > 0) {
+    const last = msgs[msgs.length - 1];
+    if (last.role === 'assistant' && last.content.length === 0 && (!last.images || last.images.length === 0)) {
+      msgs.pop();
+    }
+  }
+
   const b=payloadWithSampling({model:SUNE.model.replace(/^(or:|oai:|g:|cla:|cf:)/,''),messages:msgs,stream:true});
   if(SUNE.json_output){let s;try{s=JSON.parse(SUNE.json_schema||'null')}catch{s=null}if(s&&typeof s==='object'&&Object.keys(s).length>0){b.response_format={type:'json_schema',json_schema:s}}else{b.response_format={type:'json_object'}}}
   b.reasoning={...(SUNE.reasoning_effort&&SUNE.reasoning_effort!=='default'?{effort:SUNE.reasoning_effort}:{}),exclude:!SUNE.include_thoughts};
