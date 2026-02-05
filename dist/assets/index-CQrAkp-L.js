@@ -103,6 +103,12 @@ const buildBody = () => {
       ...m.images?.length ? { images: m.images } : {}
     });
   });
+  if (msgs.length > 0) {
+    const last = msgs[msgs.length - 1];
+    if (last.role === "assistant" && last.content.length === 0 && (!last.images || last.images.length === 0)) {
+      msgs.pop();
+    }
+  }
   const b = payloadWithSampling2({ model: SUNE2.model.replace(/^(or:|oai:|g:|cla:|cf:)/, ""), messages: msgs, stream: true });
   if (SUNE2.json_output) {
     let s;
