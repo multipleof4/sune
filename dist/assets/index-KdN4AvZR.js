@@ -126,7 +126,7 @@ const buildBody = () => {
   b.reasoning = { ...SUNE2.reasoning_effort && SUNE2.reasoning_effort !== "default" ? { effort: SUNE2.reasoning_effort } : {}, exclude: !SUNE2.include_thoughts };
   if (SUNE2.verbosity) b.verbosity = SUNE2.verbosity;
   if (SUNE2.img_output) {
-    b.modalities = ["text", "image"];
+    b.modalities = ["image"];
     b.image_config = { aspect_ratio: SUNE2.aspect_ratio || "1:1", image_size: SUNE2.image_size || "1K" };
   }
   return b;
