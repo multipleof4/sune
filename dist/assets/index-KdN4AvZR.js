@@ -528,7 +528,7 @@ function enhanceCodeBlocks(root, doHL = true) {
     if (doHL && window.hljs && code.textContent.length < 1e5) hljs.highlightElement(code);
   });
 }
-const md = window.markdownit({ html: false, linkify: true, typographer: true, breaks: true }).use(window.texmath, { engine: window.katex, delimiters: "dollars", katexOptions: { macros: { "\\RR": "\\mathbb{R}" } } });
+const md = window.markdownit({ html: false, linkify: true, typographer: true, breaks: true });
 const getSuneLabel = (m) => {
   const name = m && m.sune_name || SUNE.name, modelShort = getModelShort(m && m.model);
   return `${name} · ${modelShort}`;
@@ -1539,8 +1539,8 @@ $(el.threadSyncBtn).on("click", async () => {
           if (remoteMap[t.id] && remoteMap[t.id].name !== newName) {
             await ghApi(`${info.apiPath}/${remoteMap[t.id].name}`, "DELETE", { message: `Rename thread ${t.id}`, sha: remoteMap[t.id].sha, branch: info.branch });
           }
-          const x = await ghApi(`${info.apiPath}/${newName}?ref=${info.branch}`);
-          await ghApi(`${info.apiPath}/${newName}`, "PUT", { message: `Sync thread ${t.id}`, content: utob(JSON.stringify(msgs, null, 2)), branch: info.branch, sha: x?.sha });
+          const ex = await ghApi(`${info.apiPath}/${newName}?ref=${info.branch}`);
+          await ghApi(`${info.apiPath}/${newName}`, "PUT", { message: `Sync thread ${t.id}`, content: utob(JSON.stringify(msgs, null, 2)), branch: info.branch, sha: ex?.sha });
           t.status = "synced";
         }
       }
