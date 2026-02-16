@@ -36,10 +36,10 @@ Never lose a conversation again. Sune can sync all your threads to a GitHub repo
 
 ### Setup
 
-1. **Create a GitHub repo** — can be private or public, whatever you prefer. Something like `my-sune-threads`.
+1. **Create a GitHub repo** — can be private or public, whatever you prefer. Something like `.chats`.
 
 2. **Generate a Personal Access Token (PAT)**
-   - Go to [github.com/settings/tokens](https://github.com/settings/tokens) → **Fine-grained tokens** → **Generate new token**
+   - Go to [github.com/settings/tokens](https://github.com/settings/tokens) → **Classic Token** → **Generate new token**
    - Give it **Read and write** access to **Contents** on your repo
    - Copy the token
 
