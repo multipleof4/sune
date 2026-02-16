@@ -528,7 +528,7 @@ function enhanceCodeBlocks(root, doHL = true) {
     if (doHL && window.hljs && code.textContent.length < 1e5) hljs.highlightElement(code);
   });
 }
-const md = window.markdownit({ html: false, linkify: true, typographer: true, breaks: true }).use(mathjax3);
+const md = window.markdownit({ html: false, linkify: true, typographer: true, breaks: false }).use(mathjax3);
 const getSuneLabel = (m) => {
   const name = m && m.sune_name || SUNE.name, modelShort = getModelShort(m && m.model);
   return `${name} · ${modelShort}`;
