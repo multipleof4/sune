@@ -528,11 +528,7 @@ function enhanceCodeBlocks(root, doHL = true) {
     if (doHL && window.hljs && code.textContent.length < 1e5) hljs.highlightElement(code);
   });
 }
-const md = window.markdownit({ html: false, linkify: true, typographer: true, breaks: true });
-const getSuneLabel = (m) => {
-  const name = m && m.sune_name || SUNE.name, modelShort = getModelShort(m && m.model);
-  return `${name} · ${modelShort}`;
-};
+const md = window.markdownit({ html: false, linkify: true, typographer: true, breaks: true }).use(window.texmath, { engine: window.katex, delimiters: "dollars", katexOptions: { macros: { "\\RR": "\\mathbb{R}" } } });
 function _createMessageRow(m) {
   const role = typeof m === "string" ? m : m && m.role || "assistant", meta = typeof m === "string" ? {} : m || {}, isUser = role === "user", $row = $('<div class="flex flex-col gap-2"></div>'), $head = $('<div class="flex items-center gap-2 px-4"></div>'), $avatar = $("<div></div>");
   const uAva = isUser ? USER.avatar : meta.avatar;
