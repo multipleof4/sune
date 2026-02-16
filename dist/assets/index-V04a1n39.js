@@ -1539,8 +1539,8 @@ $(el.threadSyncBtn).on("click", async () => {
           if (remoteMap[t.id] && remoteMap[t.id].name !== newName) {
             await ghApi(`${info.apiPath}/${remoteMap[t.id].name}`, "DELETE", { message: `Rename thread ${t.id}`, sha: remoteMap[t.id].sha, branch: info.branch });
           }
-          const ex = await ghApi(`${info.apiPath}/${newName}?ref=${info.branch}`);
-          await ghApi(`${info.apiPath}/${newName}`, "PUT", { message: `Sync thread ${t.id}`, content: utob(JSON.stringify(msgs, null, 2)), branch: info.branch, sha: ex?.sha });
+          const x = await ghApi(`${info.apiPath}/${newName}?ref=${info.branch}`);
+          await ghApi(`${info.apiPath}/${newName}`, "PUT", { message: `Sync thread ${t.id}`, content: utob(JSON.stringify(msgs, null, 2)), branch: info.branch, sha: x?.sha });
           t.status = "synced";
         }
       }
@@ -1606,7 +1606,7 @@ $(el.accountSettingsOption).on("click", () => {
 $(el.closeAccountSettings).on("click", closeAccountSettings);
 $(el.cancelAccountSettings).on("click", closeAccountSettings);
 $(el.accountSettingsModal).on("click", (e) => {
-  if (e.target === el.accountSettingsModal || e.target.classList.contains("bg-black/30")) closeSettings();
+  if (e.target === el.accountSettingsModal || e.target.classList.contains("bg-black/30")) closeAccountSettings();
 });
 $(el.accountSettingsForm).on("submit", (e) => {
   e.preventDefault();
