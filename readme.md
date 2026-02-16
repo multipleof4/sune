@@ -55,7 +55,7 @@ Never lose a conversation again. Sune can sync all your threads to a GitHub repo
    - Press Enter
 
 5. **Sync**
-   - Hit the **Sync** button
+   - Hit the **Sync** button after starting a new chat in there.
    - **OK** = Push your local threads up to GitHub
    - **Cancel** = Pull threads down from GitHub
 
