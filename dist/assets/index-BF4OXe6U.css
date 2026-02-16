@@ -15,3 +15,17 @@ html,body{overscroll-behavior-y:contain;font-family:'Assistant',sans-serif}
 #htmlEditor,#extensionHtmlEditor,#jsonSchemaEditor{outline:none;white-space:pre!important;font-size:11px;line-height:1.5;}
 :not(pre)>code{font-size:85%;padding:.2em .4em;margin:0;border-radius:6px;background-color:rgba(175,184,193,0.2)}
 #threadRepoInput::placeholder{font-family:sans-serif;font-weight:500;color:#9ca3af}
+/* MathJax 3 SVG Scaling & Alignment */
+mjx-container[jax="SVG"] {
+  display: inline-block;
+  vertical-align: middle;
+  margin: 0 0.125em !important;
+}
+mjx-container[jax="SVG"][display="true"] {
+  display: block;
+  text-align: center;
+  margin: 1em 0 !important;
+}
+mjx-container svg {
+  max-width: 100%;
+}
