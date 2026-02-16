@@ -22,3 +22,41 @@
 
 ![Marketplace](./public/appstore_content/screenshot_marketplace.jpg)
 
+> LaTeX support out of the box.
+
+![LaTeX](./public/appstore_content/latex.png)
+
+---
+
+## 🔄 Sync Your Chats with GitHub
+
+Never lose a conversation again. Sune can sync all your threads to a GitHub repo.
+
+![Sync](./public/appstore_content/sync.png)
+
+### Setup
+
+1. **Create a GitHub repo** — can be private or public, whatever you prefer. Something like `my-sune-threads`.
+
+2. **Generate a Personal Access Token (PAT)**
+   - Go to [github.com/settings/tokens](https://github.com/settings/tokens) → **Fine-grained tokens** → **Generate new token**
+   - Give it **Read and write** access to **Contents** on your repo
+   - Copy the token
+
+3. **Add your token in Sune**
+   - Open the left sidebar → **Account & Backup** → **Settings**
+   - Go to the **API** tab
+   - Paste your token into the **Github Token** field
+   - Hit **Save**
+
+4. **Point Sune to your repo**
+   - Open the right sidebar (Threads panel)
+   - In the repo input at the top, enter: `gh://your-username/my-sune-threads`
+   - Press Enter
+
+5. **Sync**
+   - Hit the **Sync** button
+   - **OK** = Push your local threads up to GitHub
+   - **Cancel** = Pull threads down from GitHub
+
+That's it. Your threads are now backed up as JSON files in your repo. You can sync across devices, never lose a chat, and even browse your conversations directly on GitHub.
