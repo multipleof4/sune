@@ -529,6 +529,10 @@ function enhanceCodeBlocks(root, doHL = true) {
   });
 }
 const md = window.markdownit({ html: false, linkify: true, typographer: true, breaks: true }).use(window.texmath, { engine: window.katex, delimiters: "dollars", katexOptions: { macros: { "\\RR": "\\mathbb{R}" } } });
+const getSuneLabel = (m) => {
+  const name = m && m.sune_name || SUNE.name, modelShort = getModelShort(m && m.model);
+  return `${name} · ${modelShort}`;
+};
 function _createMessageRow(m) {
   const role = typeof m === "string" ? m : m && m.role || "assistant", meta = typeof m === "string" ? {} : m || {}, isUser = role === "user", $row = $('<div class="flex flex-col gap-2"></div>'), $head = $('<div class="flex items-center gap-2 px-4"></div>'), $avatar = $("<div></div>");
   const uAva = isUser ? USER.avatar : meta.avatar;
@@ -1602,7 +1606,7 @@ $(el.accountSettingsOption).on("click", () => {
 $(el.closeAccountSettings).on("click", closeAccountSettings);
 $(el.cancelAccountSettings).on("click", closeAccountSettings);
 $(el.accountSettingsModal).on("click", (e) => {
-  if (e.target === el.accountSettingsModal || e.target.classList.contains("bg-black/30")) closeAccountSettings();
+  if (e.target === el.accountSettingsModal || e.target.classList.contains("bg-black/30")) closeSettings();
 });
 $(el.accountSettingsForm).on("submit", (e) => {
   e.preventDefault();
