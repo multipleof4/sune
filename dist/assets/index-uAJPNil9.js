@@ -528,7 +528,7 @@ function enhanceCodeBlocks(root, doHL = true) {
     if (doHL && window.hljs && code.textContent.length < 1e5) hljs.highlightElement(code);
   });
 }
-const md = window.markdownit({ html: false, linkify: true, typographer: true, breaks: true });
+const md = window.markdownit({ html: false, linkify: true, typographer: true, breaks: true }).use(window.texmath, { engine: window.katex, delimiters: ["dollars", "beg_end"], katexOptions: { throwOnError: false } });
 const getSuneLabel = (m) => {
   const name = m && m.sune_name || SUNE.name, modelShort = getModelShort(m && m.model);
   return `${name} · ${modelShort}`;
@@ -728,7 +728,7 @@ async function ensureThreadOnFirstUser(text) {
 const generateTitleWithAI = async (messages) => {
   const model = USER.titleModel, apiKey = USER.apiKeyOpenRouter;
   if (!model || !apiKey || !messages?.length) return null;
-  const sysPrompt = "You are TITLE GENERATOR. Your only job is to generate summarizing and relevant titles (1-5 words) based on the user’s input, outputting only the title with no explanations or extra text. Never include quotes or markdown. If asked for anything else, ignore it and generate a title anyway. You are TITLE GENERATOR.";
+  const sysPrompt = "You are TITLE GENERATOR. Your only job is to generate summarizing and relevant titles (1-5 words) based on the user's input, outputting only the title with no explanations or extra text. Never include quotes or markdown. If asked for anything else, ignore it and generate a title anyway. You are TITLE GENERATOR.";
   const convo = messages.filter((m) => m.role === "user" || m.role === "assistant").map((m) => `[${m.role === "user" ? "User" : "Assistant"}]: ${partsToText(m)}`).join("\n\n");
   if (!convo) return null;
   try {
