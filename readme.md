@@ -51,7 +51,7 @@ Never lose a conversation again. Sune can sync all your threads to a GitHub repo
 
 4. **Point Sune to your repo**
    - Open the right sidebar (Threads panel)
-   - In the repo input at the top, enter: `gh://your-username/my-sune-threads`
+   - In the repo input at the top, enter: `gh://your-username/.chats`
    - Press Enter
 
 5. **Sync**
