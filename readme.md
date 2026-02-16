@@ -14,7 +14,7 @@
 
 ![Scripting](./public/appstore_content/screenshot4.jpg)
 
-> There are some bugs.
+> Image support.
 
 ![Miku](./public/appstore_content/screenshot_miku.png)
 
