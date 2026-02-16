@@ -1,3 +1,4 @@
+import mathjax3 from "https://esm.sh/markdown-it-mathjax3";
 (function polyfill() {
   const relList = document.createElement("link").relList;
   if (relList && relList.supports && relList.supports("modulepreload")) return;
@@ -35,7 +36,7 @@ const seen = {};
 const __vitePreload = function preload(baseModule, deps, importerUrl) {
   let promise = Promise.resolve();
   if (deps && deps.length > 0) {
-    let allSettled2 = function(promises$2) {
+    let allSettled = function(promises$2) {
       return Promise.all(promises$2.map((p) => Promise.resolve(p).then((value$1) => ({
         status: "fulfilled",
         value: value$1
@@ -44,11 +45,10 @@ const __vitePreload = function preload(baseModule, deps, importerUrl) {
         reason
       }))));
     };
-    var allSettled = allSettled2;
     document.getElementsByTagName("link");
     const cspNonceMeta = document.querySelector("meta[property=csp-nonce]");
     const cspNonce = cspNonceMeta?.nonce || cspNonceMeta?.getAttribute("nonce");
-    promise = allSettled2(deps.map((dep) => {
+    promise = allSettled(deps.map((dep) => {
       dep = assetsURL(dep);
       if (dep in seen) return;
       seen[dep] = true;
@@ -528,7 +528,7 @@ function enhanceCodeBlocks(root, doHL = true) {
     if (doHL && window.hljs && code.textContent.length < 1e5) hljs.highlightElement(code);
   });
 }
-const md = window.markdownit({ html: false, linkify: true, typographer: true, breaks: true });
+const md = window.markdownit({ html: false, linkify: true, typographer: true, breaks: true }).use(mathjax3);
 const getSuneLabel = (m) => {
   const name = m && m.sune_name || SUNE.name, modelShort = getModelShort(m && m.model);
   return `${name} · ${modelShort}`;
@@ -1539,8 +1539,8 @@ $(el.threadSyncBtn).on("click", async () => {
           if (remoteMap[t.id] && remoteMap[t.id].name !== newName) {
             await ghApi(`${info.apiPath}/${remoteMap[t.id].name}`, "DELETE", { message: `Rename thread ${t.id}`, sha: remoteMap[t.id].sha, branch: info.branch });
           }
-          const ex = await ghApi(`${info.apiPath}/${newName}?ref=${info.branch}`);
-          await ghApi(`${info.apiPath}/${newName}`, "PUT", { message: `Sync thread ${t.id}`, content: utob(JSON.stringify(msgs, null, 2)), branch: info.branch, sha: ex?.sha });
+          const x = await ghApi(`${info.apiPath}/${newName}?ref=${info.branch}`);
+          await ghApi(`${info.apiPath}/${newName}`, "PUT", { message: `Sync thread ${t.id}`, content: utob(JSON.stringify(msgs, null, 2)), branch: info.branch, sha: x?.sha });
           t.status = "synced";
         }
       }
