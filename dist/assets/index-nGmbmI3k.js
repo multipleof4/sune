@@ -390,7 +390,7 @@ const SUNE = window.SUNE = new Proxy({ get list() {
       }
       buf += delta;
       state.stream.text = buf;
-      if (buf || assistantMsg.images && assistantMsg.images.length || done) renderMarkdown(suneBubble, partsToText(assistantMsg), { enhance: false });
+      renderMarkdown(suneBubble, partsToText(assistantMsg), { enhance: false });
       assistantMsg.content[0].text = buf;
       if (done && !completed) {
         completed = true;
@@ -596,11 +596,7 @@ const addMessage = window.addMessage = function(m, track = true) {
   if (m.role === "assistant") el.composer.dispatchEvent(new CustomEvent("sune:newSuneResponse", { detail: { message: m } }));
   return bubble;
 };
-const addSuneBubbleStreaming = (meta, id) => {
-  const b = msgRow(Object.assign({ role: "assistant", id }, meta));
-  b.innerHTML = '<span class="sune-generating">✺</span>';
-  return b;
-};
+const addSuneBubbleStreaming = (meta, id) => msgRow(Object.assign({ role: "assistant", id }, meta));
 const clearChat = () => {
   el.suneHtml.dispatchEvent(new CustomEvent("sune:unmount"));
   state.messages = [];
@@ -1091,7 +1087,7 @@ $(el.composer).on("submit", async (e) => {
     }
     buf += delta;
     state.stream.text = buf;
-    if (buf || assistantMsg.images && assistantMsg.images.length || done) renderMarkdown(suneBubble, partsToText(assistantMsg), { enhance: false });
+    renderMarkdown(suneBubble, partsToText(assistantMsg), { enhance: false });
     assistantMsg.content[0].text = buf;
     if (done && !completed) {
       completed = true;
