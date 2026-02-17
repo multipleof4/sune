@@ -26,5 +26,3 @@ mjx-container svg {
   max-width: 100%;
 }
 
-@keyframes sune-spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-.sune-generating { display: inline-block; animation: sune-spin 4s linear infinite; color: #9ca3af; }
