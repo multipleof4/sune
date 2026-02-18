@@ -82,7 +82,7 @@ const __vitePreload = function preload(baseModule, deps, importerUrl) {
     return baseModule().catch(handlePreloadError);
   });
 };
-const HTTP_BASE = "https://orp.aww.4ev.link/ws";
+const HTTP_BASE = "https://us.proxy.sune.chat/ws";
 const buildBody = () => {
   const { USER: USER2, SUNE: SUNE2, state: state2, payloadWithSampling: payloadWithSampling2 } = window;
   const msgs = [];
