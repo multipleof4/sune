@@ -1,4 +1,4 @@
-export const HTTP_BASE='https://orp.aww.4ev.link/ws'
+export const HTTP_BASE='https://us.proxy.sune.chat/ws'
 
 export const buildBody=()=>{
   const {USER,SUNE,state,payloadWithSampling}=window;
