@@ -131,51 +131,6 @@ const buildBody = () => {
   }
   return b;
 };
-async function streamLocal(body, onDelta, signal) {
-  const { USER: USER2, localDemoReply: localDemoReply2 } = window;
-  const apiKey = USER2.apiKeyOpenRouter;
-  if (!apiKey) {
-    onDelta(localDemoReply2(), true);
-    return;
-  }
-  try {
-    const r = await fetch("https://openrouter.ai/api/v1/chat/completions", { method: "POST", headers: { "Authorization": `Bearer ${apiKey}`, "Content-Type": "application/json", "HTTP-Referer": "https://sune.chat", "X-Title": "Sune" }, body: JSON.stringify(body), signal });
-    if (!r.ok) throw new Error(`HTTP ${r.status}`);
-    const reader = r.body.getReader(), dec = new TextDecoder();
-    let buf = "";
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
-      buf += dec.decode(value, { stream: true });
-      const lines = buf.split("\n");
-      buf = lines.pop();
-      for (const line of lines) {
-        if (line.startsWith("data: ")) {
-          const d = line.slice(6);
-          if (d === "[DONE]") {
-            onDelta("", true);
-            return;
-          }
-          try {
-            const j = JSON.parse(d);
-            const delta = j.choices?.[0]?.delta?.content || "";
-            const reasoning = j.choices?.[0]?.delta?.reasoning;
-            const imgs = j.choices?.[0]?.delta?.images;
-            if (reasoning && body.reasoning?.exclude !== true) onDelta(reasoning, false);
-            if (delta) onDelta(delta, false);
-            if (imgs) onDelta("", false, imgs);
-          } catch {
-          }
-        }
-      }
-    }
-    onDelta("", true);
-  } catch (e) {
-    if (e.name !== "AbortError") onDelta(`
-
-Error: ${e.message}`, true);
-  }
-}
 async function streamORP(body, onDelta, streamId) {
   const { USER: USER2, SUNE: SUNE2, state: state2, gid: gid2, cacheStore: cacheStore2 } = window;
   const model = SUNE2.model, provider = model.startsWith("oai:") ? "openai" : model.startsWith("g:") ? "google" : model.startsWith("cla:") ? "claude" : model.startsWith("cf:") ? "cloudflare" : model.startsWith("or:") ? "openrouter" : USER2.provider;
@@ -228,15 +183,7 @@ async function streamORP(body, onDelta, streamId) {
   return { ok: true, rid: r.rid };
 }
 async function streamChat(onDelta, streamId) {
-  const { USER: USER2, state: state2 } = window;
   const body = buildBody();
-  if (!USER2.donor) {
-    const c = new AbortController();
-    state2.controller = c;
-    await streamLocal(body, onDelta, c.signal);
-    state2.controller = null;
-    return { ok: true, rid: null };
-  }
   return await streamORP(body, onDelta, streamId);
 }
 (() => {
@@ -250,7 +197,7 @@ async function streamChat(onDelta, streamId) {
   };
 })();
 const DEFAULT_MODEL = "google/gemini-3-pro-preview", DEFAULT_API_KEY = "";
-const el = window.el = Object.fromEntries(["topbar", "chat", "messages", "composer", "input", "sendBtn", "suneBtnTop", "suneModal", "suneURL", "settingsForm", "closeSettings", "cancelSettings", "tabModel", "tabPrompt", "tabScript", "panelModel", "panelPrompt", "panelScript", "set_model", "set_temperature", "set_top_p", "set_top_k", "set_frequency_penalty", "set_repetition_penalty", "set_min_p", "set_top_a", "set_verbosity", "set_reasoning_effort", "set_system_prompt", "set_hide_composer", "set_include_thoughts", "set_json_output", "set_img_output", "set_aspect_ratio", "set_image_size", "aspectRatioContainer", "set_ignore_master_prompt", "deleteSuneBtn", "sidebarLeft", "sidebarOverlayLeft", "sidebarBtnLeft", "suneList", "newSuneBtn", "userMenuBtn", "userMenu", "accountSettingsOption", "sunesImportOption", "sunesExportOption", "threadsImportOption", "importInput", "sidebarBtnRight", "sidebarRight", "sidebarOverlayRight", "threadList", "closeThreads", "threadPopover", "sunePopover", "footer", "attachBtn", "attachBadge", "fileInput", "htmlEditor", "extensionHtmlEditor", "jsonSchemaEditor", "htmlTab_index", "htmlTab_extension", "suneHtml", "accountSettingsModal", "accountSettingsForm", "closeAccountSettings", "cancelAccountSettings", "set_master_prompt", "set_provider", "set_api_key_or", "set_api_key_oai", "set_api_key_g", "set_api_key_claude", "set_api_key_cf", "set_title_model", "copySystemPrompt", "pasteSystemPrompt", "copyHTML", "pasteHTML", "accountTabGeneral", "accountTabAPI", "accountPanelGeneral", "accountPanelAPI", "set_gh_token", "gcpSAInput", "gcpSAUploadBtn", "importAccountSettings", "exportAccountSettings", "importAccountSettingsInput", "accountTabUser", "accountPanelUser", "set_user_name", "userAvatarPreview", "setUserAvatarBtn", "userAvatarInput", "set_donor", "threadRepoInput", "threadBackBtn", "threadFolderBtn", "threadSyncBtn"].map((id) => [id, $("#" + id)[0]]));
+const el = window.el = Object.fromEntries(["topbar", "chat", "messages", "composer", "input", "sendBtn", "suneBtnTop", "suneModal", "suneURL", "settingsForm", "closeSettings", "cancelSettings", "tabModel", "tabPrompt", "tabScript", "panelModel", "panelPrompt", "panelScript", "set_model", "set_temperature", "set_top_p", "set_top_k", "set_frequency_penalty", "set_repetition_penalty", "set_min_p", "set_top_a", "set_verbosity", "set_reasoning_effort", "set_system_prompt", "set_hide_composer", "set_include_thoughts", "set_json_output", "set_img_output", "set_aspect_ratio", "set_image_size", "aspectRatioContainer", "set_ignore_master_prompt", "deleteSuneBtn", "sidebarLeft", "sidebarOverlayLeft", "sidebarBtnLeft", "suneList", "newSuneBtn", "userMenuBtn", "userMenu", "accountSettingsOption", "sunesImportOption", "sunesExportOption", "threadsImportOption", "importInput", "sidebarBtnRight", "sidebarRight", "sidebarOverlayRight", "threadList", "closeThreads", "threadPopover", "sunePopover", "footer", "attachBtn", "attachBadge", "fileInput", "htmlEditor", "extensionHtmlEditor", "jsonSchemaEditor", "htmlTab_index", "htmlTab_extension", "suneHtml", "accountSettingsModal", "accountSettingsForm", "closeAccountSettings", "cancelAccountSettings", "set_master_prompt", "set_provider", "set_api_key_or", "set_api_key_oai", "set_api_key_g", "set_api_key_claude", "set_api_key_cf", "set_title_model", "copySystemPrompt", "pasteSystemPrompt", "copyHTML", "pasteHTML", "accountTabGeneral", "accountTabAPI", "accountPanelGeneral", "accountPanelAPI", "set_gh_token", "gcpSAInput", "gcpSAUploadBtn", "importAccountSettings", "exportAccountSettings", "importAccountSettingsInput", "accountTabUser", "accountPanelUser", "set_user_name", "userAvatarPreview", "setUserAvatarBtn", "userAvatarInput", "threadRepoInput", "threadBackBtn", "threadFolderBtn", "threadSyncBtn"].map((id) => [id, $("#" + id)[0]]));
 const icons = () => window.lucide && lucide.createIcons();
 const haptic = () => /android/i.test(navigator.userAgent) && navigator.vibrate?.(1);
 const clamp = (v, min, max) => Math.max(min, Math.min(max, v)), num = (v, d) => v == null || v === "" || isNaN(+v) ? d : +v, int = (v, d) => v == null || v === "" || isNaN(parseInt(v)) ? d : parseInt(v), gid = () => Math.random().toString(36).slice(2, 9), esc = (s) => String(s).replace(/[&<>'"`]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;", "`": "&#96;" })[c]), positionPopover = (a, p) => {
@@ -894,7 +841,7 @@ $(el.threadPopover).on("click", async (e) => {
         th.status = "deleted";
         th.updatedAt = Date.now();
       } else {
-        THREAD.list = THREAD.list.filter((x) => x.id !== th.id);
+        THREAD.list = THREAD.list.filter((x) => !th.id !== th.id);
         await localforage.removeItem(prefix + th.id);
       }
       if (state.currentThreadId === th.id) {
@@ -1403,10 +1350,6 @@ const USER = window.USER = { log: async (s) => {
   return localStorage.getItem("master_prompt") || "Always respond using markdown.";
 }, set masterPrompt(v) {
   localStorage.setItem("master_prompt", v || "");
-}, get donor() {
-  return localStorage.getItem("user_donor") !== "false";
-}, set donor(v) {
-  localStorage.setItem("user_donor", String(!!v));
 }, get titleModel() {
   return localStorage.getItem("title_model") ?? "or:amazon/nova-micro-v1";
 }, set titleModel(v) {
@@ -1579,20 +1522,6 @@ function openAccountSettings() {
   el.set_user_name.value = USER.name;
   el.userAvatarPreview.src = USER.avatar || "data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=";
   el.userAvatarPreview.classList.toggle("bg-gray-200", !USER.avatar);
-  el.set_donor.checked = USER.donor;
-  const updateProv = () => {
-    const d = el.set_donor.checked;
-    Array.from(el.set_provider.options).forEach((o) => {
-      if (o.value !== "openrouter") {
-        o.disabled = !d;
-        if (!d) o.hidden = true;
-        else o.hidden = false;
-      }
-    });
-    if (!d && el.set_provider.value !== "openrouter") el.set_provider.value = "openrouter";
-  };
-  updateProv();
-  el.set_donor.onchange = updateProv;
   showAccountTab("General");
   el.accountSettingsModal.classList.remove("hidden");
 }
@@ -1620,7 +1549,6 @@ $(el.accountSettingsForm).on("submit", (e) => {
   USER.titleModel = String(el.set_title_model.value || "").trim();
   USER.githubToken = String(el.set_gh_token.value || "").trim();
   USER.name = String(el.set_user_name.value || "").trim();
-  USER.donor = el.set_donor.checked;
   closeAccountSettings();
 });
 el.gcpSAUploadBtn.onclick = () => el.gcpSAInput.click();
@@ -1687,7 +1615,6 @@ el.importAccountSettingsInput.onchange = async (e) => {
 };
 const getBubbleById = (id) => el.messages.querySelector(`.msg-bubble[data-mid="${CSS.escape(id)}"]`);
 async function syncActiveThread() {
-  if (!USER.donor) return false;
   const id = THREAD.getLastAssistantMessageId();
   if (!id) return false;
   if (await cacheStore.getItem(id) === "done") {
