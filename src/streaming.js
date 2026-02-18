@@ -44,43 +44,6 @@ export const buildBody=()=>{
   return b
 }
 
-async function streamLocal(body,onDelta,signal){
-  const {USER,localDemoReply}=window;
-  const apiKey=USER.apiKeyOpenRouter;
-  if(!apiKey){onDelta(localDemoReply(),true);return}
-  try{
-    const r=await fetch("https://openrouter.ai/api/v1/chat/completions",{method:'POST',headers:{'Authorization':`Bearer ${apiKey}`,'Content-Type':'application/json','HTTP-Referer':'https://sune.chat','X-Title':'Sune'},body:JSON.stringify(body),signal});
-    if(!r.ok)throw new Error(`HTTP ${r.status}`);
-    const reader=r.body.getReader(),dec=new TextDecoder();
-    let buf='';
-    while(true){
-      const{done,value}=await reader.read();
-      if(done)break;
-      buf+=dec.decode(value,{stream:true});
-      const lines=buf.split('\n');
-      buf=lines.pop();
-      for(const line of lines){
-        if(line.startsWith('data: ')){
-          const d=line.slice(6);
-          if(d==='[DONE]'){onDelta('',true);return}
-          try{
-            const j=JSON.parse(d);
-            const delta=j.choices?.[0]?.delta?.content||'';
-            const reasoning=j.choices?.[0]?.delta?.reasoning;
-            const imgs=j.choices?.[0]?.delta?.images;
-            if(reasoning&&body.reasoning?.exclude!==true)onDelta(reasoning,false);
-            if(delta)onDelta(delta,false);
-            if(imgs)onDelta('',false,imgs);
-          }catch{}
-        }
-      }
-    }
-    onDelta('',true)
-  }catch(e){
-    if(e.name!=='AbortError')onDelta(`\n\nError: ${e.message}`,true)
-  }
-}
-
 async function streamORP(body,onDelta,streamId){
   const {USER,SUNE,state,gid,cacheStore}=window;
   const model=SUNE.model,provider=model.startsWith('oai:')?'openai':model.startsWith('g:')?'google':model.startsWith('cla:')?'claude':model.startsWith('cf:')?'cloudflare':model.startsWith('or:')?'openrouter':USER.provider;
@@ -99,14 +62,6 @@ async function streamORP(body,onDelta,streamId){
 }
 
 export async function streamChat(onDelta,streamId){
-  const {USER,state}=window;
   const body=buildBody();
-  if(!USER.donor){
-    const c=new AbortController();
-    state.controller=c;
-    await streamLocal(body,onDelta,c.signal);
-    state.controller=null;
-    return {ok:true,rid:null}
-  }
   return await streamORP(body,onDelta,streamId)
 }
