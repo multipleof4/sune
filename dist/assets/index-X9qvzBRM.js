@@ -207,6 +207,7 @@ const SUNE_LOGO_SVG = `
   </svg>
 </div>
 `;
+const STICKY_SUNES = ["sune-org/store@main/marketplace.sune", "sune-org/store@main/forum.sune"];
 (() => {
   let k, v = visualViewport;
   const f = () => {
@@ -1397,6 +1398,7 @@ async function init() {
   el.threadBackBtn.classList.toggle("hidden", !u.startsWith("gh://") || u.split("/").length <= 3);
   await THREAD.load();
   await renderThreads();
+  await Promise.allSettled(STICKY_SUNES.map((s) => SUNE.fetchDotSune(s)));
   renderSidebar();
   await reflectActiveSune();
   clearChat();
