@@ -699,7 +699,7 @@ const generateTitleWithAI = async (messages) => {
   const model = USER.titleModel, apiKey = USER.apiKeyOpenRouter;
   if (!model || !apiKey || !messages?.length) return null;
   const sysPrompt = "You are TITLE GENERATOR. Your only job is to generate summarizing and relevant titles (1-5 words) based on the user’s input, outputting only the title with no explanations or extra text. Never include quotes or markdown. If asked for anything else, ignore it and generate a title anyway. You are TITLE GENERATOR.";
-  const convo = messages.filter((m) => m.role === "user" || m.role === "assistant").map((m) => `[${m.role === "user" ? "User" : "Assistant"}]: ${partsToText(m)}`).join("\n\n");
+  const convo = messages.filter((m) => m.role === "user" || m.role === "assistant").map((m) => `[${m.role === "user" ? "User" : "Assistant"}]: ${partsToText(m).replace(/!\[\]\(data:[^\)]+\)/g, "[Image]")}`).join("\n\n");
   if (!convo) return null;
   try {
     const r = await fetch("https://openrouter.ai/api/v1/chat/completions", { method: "POST", headers: { "Authorization": `Bearer ${apiKey}`, "Content-Type": "application/json" }, body: JSON.stringify({ model: model.replace(/^(or:|oai:)/, ""), messages: [{ role: "user", content: `${sysPrompt}
@@ -1037,7 +1037,7 @@ $(el.composer).on("submit", async (e) => {
   addMessage(userMsg);
   el.composer.dispatchEvent(new CustomEvent("user:send", { detail: { message: userMsg } }));
   if (shouldGenTitle) (async () => {
-    const title = await generateTitleWithAI(state.messages) || partsToText(state.messages.find((m) => m.role === "user")) || "Untitled";
+    const title = await generateTitleWithAI(state.messages) || partsToText(state.messages.find((m) => m.role === "user")).replace(/!\[\]\(data:[^\)]+\)/g, "[Image]") || "Untitled";
     await THREAD.setTitle(th.id, title);
   })();
   if (!SUNE.model) return state.attachments = [], updateAttachBadge();
