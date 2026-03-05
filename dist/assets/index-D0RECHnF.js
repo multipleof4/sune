@@ -207,7 +207,7 @@ const SUNE_LOGO_SVG = `
   </svg>
 </div>
 `;
-const STICKY_SUNES = ["sune-org/store@main/marketplace.sune", "sune-org/store@main/forum.sune"];
+const STICKY_SUNES = ["sune-org/store@main/marketplace.sune"];
 const generateTitleWithAI = async (messages) => {
   const model = window.USER?.titleModel;
   const apiKey = window.USER?.apiKeyOpenRouter;
