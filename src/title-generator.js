@@ -33,7 +33,11 @@ export const generateTitleWithAI = async messages => {
     });
     if (!r.ok) return null;
     const d = await r.json();
-    return (d.choices?.[0]?.message?.content?.trim() || '').replace(/["']/g, '') || null;
+    const rawTitle = d.choices?.[0]?.message?.content?.trim() || '';
+    
+    // Now stripping backticks (`), slashes (/ \), and other illegal filename chars
+    // This turns "`Sune v0 - UI/CSS tools`" into "Sune v0 - UICSS tools"
+    return rawTitle.replace(/[<>:"/\\|?*\x00-\x1f`]/g, '').trim().replace(/\.$/, '') || null;
   } catch (e) {
     console.error('AI title gen failed:', e);
     return null;
