@@ -239,7 +239,8 @@ ${postPrompt}` }
     });
     if (!r.ok) return null;
     const d = await r.json();
-    return (d.choices?.[0]?.message?.content?.trim() || "").replace(/["']/g, "") || null;
+    const rawTitle = d.choices?.[0]?.message?.content?.trim() || "";
+    return rawTitle.replace(/[<>:"/\\|?*\x00-\x1f`]/g, "").trim().replace(/\.$/, "") || null;
   } catch (e) {
     console.error("AI title gen failed:", e);
     return null;
