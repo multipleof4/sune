@@ -232,8 +232,7 @@ const generateTitleWithAI = async (messages) => {
 ${convo}
 ${postPrompt}` }
         ],
-        max_tokens: 20,
-        temperature: 0.2
+        max_tokens: 20
       })
     });
     if (!r.ok) return null;
