@@ -222,7 +222,9 @@ const generateTitleWithAI = async (messages) => {
       method: "POST",
       headers: {
         "Authorization": `Bearer ${apiKey}`,
-        "Content-Type": "application/json"
+        "Content-Type": "application/json",
+        "HTTP-Referer": "https://sune.chat",
+        "X-Title": "Sune"
       },
       body: JSON.stringify({
         model: model.replace(/^(or:|oai:)/, ""),
