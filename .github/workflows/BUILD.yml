@@ -1,8 +1,13 @@
-on: 
-  push:
-  workflow_dispatch:
-jobs:
-  call-npm-build:
-    uses: multipleof4/.github/.github/workflows/npm-build.yml@master
-    permissions:
-      contents: write
+on: workflow_call
+jobs:  
+  npm-build-push:    
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          token: ${{secrets.GITHUB_TOKEN}}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - run: npm install && npm run build
+      - run: git config user.name github-actions[bot] && git config user.email 41898282+github-actions[bot]@users.noreply.github.com && git add . && git commit -m "This build was committed by a bot." && git push
