@@ -6,8 +6,6 @@ jobs:
       contents: write
     steps:
       - uses: actions/checkout@v6
-        with:
-          token: ${{secrets.GITHUB_TOKEN}}
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version: latest
