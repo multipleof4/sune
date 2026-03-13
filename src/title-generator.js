@@ -29,7 +29,7 @@ export const generateTitleWithAI = async messages => {
           { role: 'user', content: `${prePrompt}\n${convo}\n${postPrompt}` }
         ],
         max_tokens: 12,
-        temperature: 0.2
+        temperature: 0.35
       })
     });
     if (!r.ok) return null;
