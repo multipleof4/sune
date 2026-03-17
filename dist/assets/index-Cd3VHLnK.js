@@ -228,7 +228,7 @@ var generateTitleWithAI = async (messages) => {
 			})
 		});
 		if (!r.ok) return null;
-		return ((await r.json()).choices?.[0]?.message?.content?.trim() || "").replace(/[<>:"/\\|?*\x00-\x1f`]/g, "").trim().replace(/\.$/, "") || null;
+		return ((await r.json()).choices?.[0]?.message?.content?.trim() || "").split("\n")[0].replace(/[<>:"/\\|?*\x00-\x1f`]/g, "").trim().replace(/\.$/, "") || null;
 	} catch (e) {
 		console.error("AI title gen failed:", e);
 		return null;
