@@ -26,7 +26,7 @@ export const generateTitleWithAI = async messages => {
         model: model.replace(/^(or:|oai:)/, ''),
         messages: [
           { role: 'system', content: sysPrompt },
-          { role: 'user', content: `${prePrompt}\n${convo}\n${postPrompt}` }
+          { role: 'user', content: `${prePrompt}\n\n${convo}\n\n${postPrompt}` }
         ],
         max_tokens: 12,
         temperature: 0.35
