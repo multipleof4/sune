@@ -221,7 +221,7 @@ var generateTitleWithAI = async (messages) => {
 					content: sysPrompt
 				}, {
 					role: "user",
-					content: `${prePrompt}\n${convo}\n${postPrompt}`
+					content: `${prePrompt}\n\n${convo}\n\n${postPrompt}`
 				}],
 				max_tokens: 12,
 				temperature: .35
