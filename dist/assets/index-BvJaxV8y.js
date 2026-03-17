@@ -223,7 +223,7 @@ var generateTitleWithAI = async (messages) => {
 					role: "user",
 					content: `${prePrompt}\n\n${convo}\n\n${postPrompt}`
 				}],
-				max_tokens: 12,
+				max_tokens: 5,
 				temperature: .35
 			})
 		});
