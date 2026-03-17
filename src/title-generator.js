@@ -28,7 +28,7 @@ export const generateTitleWithAI = async messages => {
           { role: 'system', content: sysPrompt },
           { role: 'user', content: `${prePrompt}\n\n${convo}\n\n${postPrompt}` }
         ],
-        max_tokens: 8,
+        max_tokens: 5,
         temperature: 0.35
       })
     });
