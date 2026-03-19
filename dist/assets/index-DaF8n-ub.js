@@ -745,7 +745,8 @@ var processSuneIncludes = async (html, depth = 0) => {
 	if (depth > 5) return "<!-- Sune include depth limit reached -->";
 	if (!html) return "";
 	const c = document.createElement("div");
-	c.innerHTML = html;
+	if (c.setHTMLUnsafe) c.setHTMLUnsafe(html);
+	else c.innerHTML = html;
 	for (const n of [...c.querySelectorAll("sune")]) if (n.hasAttribute("src")) {
 		if (n.hasAttribute("private") && depth > 0) {
 			n.remove();
@@ -759,11 +760,20 @@ var processSuneIncludes = async (html, depth = 0) => {
 		try {
 			const r = await fetch(u);
 			if (!r.ok) throw new Error(`HTTP ${r.status}`);
-			const d = await r.json(), o = Array.isArray(d) ? d[0] : d, h = [o?.settings?.extension_html || "", o?.settings?.html || ""].join("\n");
-			n.replaceWith(document.createRange().createContextualFragment(await processSuneIncludes(h, depth + 1)));
+			const d = await r.json(), o = Array.isArray(d) ? d[0] : d;
+			const res = await processSuneIncludes([o?.settings?.extension_html || "", o?.settings?.html || ""].join("\n"), depth + 1);
+			if (c.setHTMLUnsafe) {
+				const tmp = document.createElement("div");
+				tmp.setHTMLUnsafe(res);
+				n.replaceWith(...tmp.childNodes);
+			} else n.replaceWith(document.createRange().createContextualFragment(res));
 		} catch (e) {
 			n.replaceWith(document.createComment(` Fetch failed: ${esc(u)} `));
 		}
+	} else if (c.setHTMLUnsafe) {
+		const tmp = document.createElement("div");
+		tmp.setHTMLUnsafe(n.innerHTML);
+		n.replaceWith(...tmp.childNodes);
 	} else n.replaceWith(document.createRange().createContextualFragment(n.innerHTML));
 	return c.innerHTML;
 };
@@ -772,7 +782,18 @@ var renderSuneHTML = async () => {
 	c.innerHTML = "";
 	const t = h.trim();
 	c.classList.toggle("hidden", !t);
-	t && (c.appendChild(document.createRange().createContextualFragment(h)), window.Alpine?.initTree(c));
+	if (t) {
+		if (c.setHTMLUnsafe) {
+			c.setHTMLUnsafe(h);
+			[...c.querySelectorAll("script")].forEach((s) => {
+				const ns = document.createElement("script");
+				[...s.attributes].forEach((a) => ns.setAttribute(a.name, a.value));
+				ns.textContent = s.textContent;
+				s.replaceWith(ns);
+			});
+		} else c.appendChild(document.createRange().createContextualFragment(h));
+		window.Alpine?.initTree(c);
+	}
 };
 var reflectActiveSune = async () => {
 	const a = SUNE.active;
