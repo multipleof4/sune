@@ -6,7 +6,7 @@ export const resolveSuneSrc = src => {
   if (src.startsWith('gh://')) {
     const path = src.substring(5), parts = path.split('/');
     if (parts.length < 3) return null;
-    const [owner, repo, ...filePathParts] = parts;
+    const[owner, repo, ...filePathParts] = parts;
     return `https://raw.githubusercontent.com/${owner}/${repo}/main/${filePathParts.join('/')}`;
   }
   return src;
@@ -15,8 +15,11 @@ export const resolveSuneSrc = src => {
 export const processSuneIncludes = async (html, depth = 0) => {
   if (depth > 5) return '<!-- Sune include depth limit reached -->';
   if (!html) return '';
-  const c = document.createElement('div');
-  c.innerHTML = html;
+  
+  // Bypass Sanitizer API by parsing into an inert document
+  const doc = Document.parseHTMLUnsafe ? Document.parseHTMLUnsafe(html) : new DOMParser().parseFromString(html, 'text/html');
+  const c = doc.body;
+
   for (const n of [...c.querySelectorAll('sune')]) {
     if (n.hasAttribute('src')) {
       if (n.hasAttribute('private') && depth > 0) {
@@ -31,13 +34,16 @@ export const processSuneIncludes = async (html, depth = 0) => {
       try {
         const r = await fetch(u);
         if (!r.ok) throw new Error(`HTTP ${r.status}`);
-        const d = await r.json(), o = Array.isArray(d) ? d[0] : d, h = [o?.settings?.extension_html || '', o?.settings?.html || ''].join('\n');
-        n.replaceWith(document.createRange().createContextualFragment(await processSuneIncludes(h, depth + 1)));
+        const d = await r.json(), o = Array.isArray(d) ? d[0] : d, h =[o?.settings?.extension_html || '', o?.settings?.html || ''].join('\n');
+        
+        const subHtml = await processSuneIncludes(h, depth + 1);
+        const subDoc = Document.parseHTMLUnsafe ? Document.parseHTMLUnsafe(subHtml) : new DOMParser().parseFromString(subHtml, 'text/html');
+        n.replaceWith(...Array.from(subDoc.body.childNodes));
       } catch (e) {
         n.replaceWith(document.createComment(` Fetch failed: ${esc(u)} `));
       }
     } else {
-      n.replaceWith(document.createRange().createContextualFragment(n.innerHTML));
+      n.replaceWith(...Array.from(n.childNodes));
     }
   }
   return c.innerHTML;
@@ -50,5 +56,23 @@ export const renderSuneHTML = async () => {
   c.innerHTML = '';
   const t = h.trim();
   c.classList.toggle('hidden', !t);
-  t && (c.appendChild(document.createRange().createContextualFragment(h)), window.Alpine?.initTree(c));
+  
+  if (t) {
+    const doc = Document.parseHTMLUnsafe ? Document.parseHTMLUnsafe(h) : new DOMParser().parseFromString(h, 'text/html');
+    c.append(...Array.from(doc.body.childNodes));
+    
+    // Explicitly re-create script tags so they execute, bypassing contextual fragment blocks
+    c.querySelectorAll('script').forEach(oldScript => {
+      const newScript = document.createElement('script');
+      Array.from(oldScript.attributes).forEach(attr => newScript.setAttribute(attr.name, attr.value));
+      newScript.textContent = oldScript.textContent;
+      
+      // Preserve execution order for external scripts matching standard parser behavior
+      if (!newScript.hasAttribute('async')) newScript.async = false; 
+      
+      oldScript.replaceWith(newScript);
+    });
+    
+    window.Alpine?.initTree(c);
+  }
 };
