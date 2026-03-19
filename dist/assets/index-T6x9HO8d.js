@@ -711,8 +711,7 @@ var resolveSuneSrc = (src) => {
 var processSuneIncludes = async (html, depth = 0) => {
 	if (depth > 5) return "<!-- Sune include depth limit reached -->";
 	if (!html) return "";
-	const c = document.createElement("div");
-	c.innerHTML = html;
+	const c = (Document.parseHTMLUnsafe ? Document.parseHTMLUnsafe(html) : new DOMParser().parseFromString(html, "text/html")).body;
 	for (const n of [...c.querySelectorAll("sune")]) if (n.hasAttribute("src")) {
 		if (n.hasAttribute("private") && depth > 0) {
 			n.remove();
@@ -726,12 +725,14 @@ var processSuneIncludes = async (html, depth = 0) => {
 		try {
 			const r = await fetch(u);
 			if (!r.ok) throw new Error(`HTTP ${r.status}`);
-			const d = await r.json(), o = Array.isArray(d) ? d[0] : d, h = [o?.settings?.extension_html || "", o?.settings?.html || ""].join("\n");
-			n.replaceWith(document.createRange().createContextualFragment(await processSuneIncludes(h, depth + 1)));
+			const d = await r.json(), o = Array.isArray(d) ? d[0] : d;
+			const subHtml = await processSuneIncludes([o?.settings?.extension_html || "", o?.settings?.html || ""].join("\n"), depth + 1);
+			const subDoc = Document.parseHTMLUnsafe ? Document.parseHTMLUnsafe(subHtml) : new DOMParser().parseFromString(subHtml, "text/html");
+			n.replaceWith(...Array.from(subDoc.body.childNodes));
 		} catch (e) {
 			n.replaceWith(document.createComment(` Fetch failed: ${esc(u)} `));
 		}
-	} else n.replaceWith(document.createRange().createContextualFragment(n.innerHTML));
+	} else n.replaceWith(...Array.from(n.childNodes));
 	return c.innerHTML;
 };
 var renderSuneHTML = async () => {
@@ -741,7 +742,18 @@ var renderSuneHTML = async () => {
 	c.innerHTML = "";
 	const t = h.trim();
 	c.classList.toggle("hidden", !t);
-	t && (c.appendChild(document.createRange().createContextualFragment(h)), window.Alpine?.initTree(c));
+	if (t) {
+		const doc = Document.parseHTMLUnsafe ? Document.parseHTMLUnsafe(h) : new DOMParser().parseFromString(h, "text/html");
+		c.append(...Array.from(doc.body.childNodes));
+		c.querySelectorAll("script").forEach((oldScript) => {
+			const newScript = document.createElement("script");
+			Array.from(oldScript.attributes).forEach((attr) => newScript.setAttribute(attr.name, attr.value));
+			newScript.textContent = oldScript.textContent;
+			if (!newScript.hasAttribute("async")) newScript.async = false;
+			oldScript.replaceWith(newScript);
+		});
+		window.Alpine?.initTree(c);
+	}
 };
 //#endregion
 //#region \0vite/preload-helper.js
