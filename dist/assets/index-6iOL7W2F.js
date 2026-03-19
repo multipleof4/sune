@@ -235,78 +235,7 @@ var generateTitleWithAI = async (messages) => {
 	}
 };
 //#endregion
-//#region \0vite/preload-helper.js
-var scriptRel = "modulepreload";
-var assetsURL = function(dep) {
-	return "/" + dep;
-};
-var seen = {};
-var __vitePreload = function preload(baseModule, deps, importerUrl) {
-	let promise = Promise.resolve();
-	if (deps && deps.length > 0) {
-		const links = document.getElementsByTagName("link");
-		const cspNonceMeta = document.querySelector("meta[property=csp-nonce]");
-		const cspNonce = cspNonceMeta?.nonce || cspNonceMeta?.getAttribute("nonce");
-		function allSettled(promises) {
-			return Promise.all(promises.map((p) => Promise.resolve(p).then((value) => ({
-				status: "fulfilled",
-				value
-			}), (reason) => ({
-				status: "rejected",
-				reason
-			}))));
-		}
-		promise = allSettled(deps.map((dep) => {
-			dep = assetsURL(dep, importerUrl);
-			if (dep in seen) return;
-			seen[dep] = true;
-			const isCss = dep.endsWith(".css");
-			const cssSelector = isCss ? "[rel=\"stylesheet\"]" : "";
-			if (!!importerUrl) for (let i = links.length - 1; i >= 0; i--) {
-				const link = links[i];
-				if (link.href === dep && (!isCss || link.rel === "stylesheet")) return;
-			}
-			else if (document.querySelector(`link[href="${dep}"]${cssSelector}`)) return;
-			const link = document.createElement("link");
-			link.rel = isCss ? "stylesheet" : scriptRel;
-			if (!isCss) link.as = "script";
-			link.crossOrigin = "";
-			link.href = dep;
-			if (cspNonce) link.setAttribute("nonce", cspNonce);
-			document.head.appendChild(link);
-			if (isCss) return new Promise((res, rej) => {
-				link.addEventListener("load", res);
-				link.addEventListener("error", () => rej(/* @__PURE__ */ new Error(`Unable to preload CSS for ${dep}`)));
-			});
-		}));
-	}
-	function handlePreloadError(err) {
-		const e = new Event("vite:preloadError", { cancelable: true });
-		e.payload = err;
-		window.dispatchEvent(e);
-		if (!e.defaultPrevented) throw err;
-	}
-	return promise.then((res) => {
-		for (const item of res || []) {
-			if (item.status !== "rejected") continue;
-			handlePreloadError(item.reason);
-		}
-		return baseModule().catch(handlePreloadError);
-	});
-};
-//#endregion
-//#region src/main.js
-(() => {
-	let k, v = visualViewport;
-	const f = () => {
-		removeEventListener("popstate", f), document.activeElement?.blur();
-	};
-	v.onresize = () => {
-		let o = v.height < innerHeight;
-		o != k && ((k = o) ? (history.pushState({ k: 1 }, ""), addEventListener("popstate", f)) : (removeEventListener("popstate", f), history.state?.k && history.back()));
-	};
-})();
-var DEFAULT_MODEL = "anthropic/claude-opus-4.6";
+//#region src/dom.js
 var el = window.el = Object.fromEntries([
 	"topbar",
 	"chat",
@@ -411,17 +340,22 @@ var el = window.el = Object.fromEntries([
 	"threadBackBtn",
 	"threadFolderBtn",
 	"threadSyncBtn"
-].map((id) => [id, $("#" + id)[0]]));
-var icons = () => window.lucide && lucide.createIcons();
-var haptic = () => /android/i.test(navigator.userAgent) && navigator.vibrate?.(1);
-var clamp = (v, min, max) => Math.max(min, Math.min(max, v)), num = (v, d) => v == null || v === "" || isNaN(+v) ? d : +v, int = (v, d) => v == null || v === "" || isNaN(parseInt(v)) ? d : parseInt(v), gid = () => Math.random().toString(36).slice(2, 9), esc = (s) => String(s).replace(/[&<>'"`]/g, (c) => ({
+].map((id) => [id, document.getElementById(id)]));
+//#endregion
+//#region src/utils.js
+var clamp = (v, min, max) => Math.max(min, Math.min(max, v));
+var num = (v, d) => v == null || v === "" || isNaN(+v) ? d : +v;
+var int = (v, d) => v == null || v === "" || isNaN(parseInt(v)) ? d : parseInt(v);
+var gid = () => Math.random().toString(36).slice(2, 9);
+var esc = (s) => String(s).replace(/[&<>'"`]/g, (c) => ({
 	"&": "&amp;",
 	"<": "&lt;",
 	">": "&gt;",
 	"\"": "&quot;",
 	"'": "&#39;",
 	"`": "&#96;"
-})[c]), positionPopover = (a, p) => {
+})[c]);
+var positionPopover = (a, p) => {
 	const r = a.getBoundingClientRect();
 	p.style.top = `${r.bottom + p.offsetHeight + 4 > window.innerHeight ? r.top - p.offsetHeight - 4 : r.bottom + 4}px`;
 	p.style.left = `${Math.max(8, Math.min(r.right - p.offsetWidth, window.innerWidth - p.offsetWidth - 8))}px`;
@@ -464,7 +398,129 @@ var imgToWebp = (f, D = 128, q = 80) => new Promise((r, j) => {
 	i.src = URL.createObjectURL(f);
 });
 var b64 = (x) => x.split(",")[1] || "";
-var utob = (s) => btoa(unescape(encodeURIComponent(s))), btou = (s) => decodeURIComponent(escape(atob(s.replace(/\s/g, ""))));
+var utob = (s) => btoa(unescape(encodeURIComponent(s)));
+var btou = (s) => decodeURIComponent(escape(atob(s.replace(/\s/g, ""))));
+function partsToText(m) {
+	if (!m) return "";
+	const c = m.content, i = m.images;
+	let t = Array.isArray(c) ? c.map((p) => p?.type === "text" ? p.text : p?.type === "image_url" ? `![](${p.image_url?.url || ""})` : p?.type === "file" ? `[${p.file?.filename || "file"}]` : p?.type === "input_audio" ? `(audio:${p.input_audio?.format || ""})` : "").join("\n") : String(c || "");
+	if (Array.isArray(i)) t += i.map((x) => `\n![](${x.image_url?.url})\n`).join("");
+	return t;
+}
+function dl(name, obj) {
+	const blob = new Blob([JSON.stringify(obj, null, 2)], { type: name.endsWith(".sune") ? "application/octet-stream" : "application/json" }), url = URL.createObjectURL(blob), a = document.createElement("a");
+	a.href = url;
+	a.download = name;
+	document.body.appendChild(a);
+	a.click();
+	a.remove();
+	URL.revokeObjectURL(url);
+}
+var ts = () => {
+	const d = /* @__PURE__ */ new Date(), p = (n) => String(n).padStart(2, "0");
+	return `${d.getFullYear()}${p(d.getMonth() + 1)}${p(d.getDate())}-${p(d.getHours())}${p(d.getMinutes())}${p(d.getSeconds())}`;
+};
+//#endregion
+//#region src/user.js
+var USER = {
+	get PAT() {
+		return this.githubToken;
+	},
+	get name() {
+		return localStorage.getItem("user_name") || "Anon";
+	},
+	set name(v) {
+		localStorage.setItem("user_name", v || "");
+	},
+	get avatar() {
+		return localStorage.getItem("user_avatar") || "";
+	},
+	set avatar(v) {
+		localStorage.setItem("user_avatar", v || "");
+	},
+	get provider() {
+		return localStorage.getItem("provider") || "openrouter";
+	},
+	set provider(v) {
+		localStorage.setItem("provider", [
+			"openai",
+			"google",
+			"claude"
+		].includes(v) ? v : "openrouter");
+	},
+	get apiKeyOpenRouter() {
+		return localStorage.getItem("openrouter_api_key") || "";
+	},
+	set apiKeyOpenRouter(v) {
+		localStorage.setItem("openrouter_api_key", v || "");
+	},
+	get apiKeyOpenAI() {
+		return localStorage.getItem("openai_api_key") || "";
+	},
+	set apiKeyOpenAI(v) {
+		localStorage.setItem("openai_api_key", v || "");
+	},
+	get apiKeyGoogle() {
+		return localStorage.getItem("google_api_key") || "";
+	},
+	set apiKeyGoogle(v) {
+		localStorage.setItem("google_api_key", v || "");
+	},
+	get apiKeyClaude() {
+		return localStorage.getItem("claude_api_key") || "";
+	},
+	set apiKeyClaude(v) {
+		localStorage.setItem("claude_api_key", v || "");
+	},
+	get apiKeyCloudflare() {
+		return localStorage.getItem("cloudflare_api_key") || "";
+	},
+	set apiKeyCloudflare(v) {
+		localStorage.setItem("cloudflare_api_key", v || "");
+	},
+	get apiKey() {
+		const p = this.provider;
+		return p === "openai" ? this.apiKeyOpenAI : p === "google" ? this.apiKeyGoogle : p === "claude" ? this.apiKeyClaude : p === "cloudflare" ? this.apiKeyCloudflare : this.apiKeyOpenRouter;
+	},
+	set apiKey(v) {
+		const p = this.provider;
+		if (p === "openai") this.apiKeyOpenAI = v;
+		else if (p === "google") this.apiKeyGoogle = v;
+		else if (p === "claude") this.apiKeyClaude = v;
+		else if (p === "cloudflare") this.apiKeyCloudflare = v;
+		else this.apiKeyOpenRouter = v;
+	},
+	get masterPrompt() {
+		return localStorage.getItem("master_prompt") || "Always respond using markdown.";
+	},
+	set masterPrompt(v) {
+		localStorage.setItem("master_prompt", v || "");
+	},
+	get titleModel() {
+		return localStorage.getItem("title_model") ?? "or:amazon/nova-micro-v1";
+	},
+	set titleModel(v) {
+		localStorage.setItem("title_model", v || "");
+	},
+	get githubToken() {
+		return localStorage.getItem("gh_token") || "";
+	},
+	set githubToken(v) {
+		localStorage.setItem("gh_token", v || "");
+	},
+	get gcpSA() {
+		try {
+			return JSON.parse(localStorage.getItem("gcp_sa_json") || "null");
+		} catch {
+			return null;
+		}
+	},
+	set gcpSA(v) {
+		localStorage.setItem("gcp_sa_json", v ? JSON.stringify(v) : "");
+	}
+};
+//#endregion
+//#region src/github.js
 var ghApi = async (path, method = "GET", body = null) => {
 	const t = USER.githubToken;
 	if (!t) throw new Error("No GH token");
@@ -490,6 +546,231 @@ var parseGhUrl = (u) => {
 		apiPath: `${owner}/${repo}/contents${path ? "/" + path : ""}`
 	};
 };
+//#endregion
+//#region src/markdown.js
+var md = window.md = window.markdownit({
+	html: false,
+	linkify: true,
+	typographer: true,
+	breaks: true
+}).use(mathjax3);
+function enhanceCodeBlocks(root, doHL = true) {
+	window.$(root).find("pre>code").each((i, code) => {
+		if (code.textContent.length > 2e5) return;
+		const $pre = window.$(code).parent().addClass("relative rounded-xl border border-gray-200");
+		if (!$pre.find(".code-actions").length) {
+			const len = code.textContent.length, countText = len >= 1e3 ? (len / 1e3).toFixed(1) + "K" : len;
+			const $btn = window.$("<button class=\"bg-slate-900 text-white rounded-lg py-1 px-2 text-xs opacity-85\">Copy</button>").on("click", async (e) => {
+				e.stopPropagation();
+				try {
+					await navigator.clipboard.writeText(code.innerText);
+					$btn.text("Copied");
+					setTimeout(() => $btn.text("Copy"), 1200);
+				} catch {}
+			});
+			const $container = window.$("<div class=\"code-actions absolute top-2 right-2 flex items-center gap-2\"></div>");
+			$container.append(window.$(`<span class="text-xs text-gray-500">${countText} chars</span>`), $btn);
+			$pre.append($container);
+		}
+		if (doHL && window.hljs && code.textContent.length < 1e5) window.hljs.highlightElement(code);
+	});
+}
+var renderMarkdown = window.renderMarkdown = function(node, text, opt = {
+	enhance: true,
+	highlight: true
+}) {
+	node.innerHTML = md.render(text);
+	if (opt.enhance) enhanceCodeBlocks(node, opt.highlight);
+};
+//#endregion
+//#region src/keyboard.js
+function kbUpdate() {
+	const vv = window.visualViewport;
+	const overlap = vv ? Math.max(0, window.innerHeight - (vv.height + vv.offsetTop)) : 0;
+	document.documentElement.style.setProperty("--kb", overlap + "px");
+	const fh = el.footer.getBoundingClientRect().height;
+	document.documentElement.style.setProperty("--footer-h", fh + "px");
+	el.footer.style.transform = "translateY(" + -overlap + "px)";
+	el.chat.style.scrollPaddingBottom = fh + overlap + 16 + "px";
+}
+function kbBind() {
+	if (window.visualViewport) ["resize", "scroll"].forEach((ev) => window.visualViewport.addEventListener(ev, () => kbUpdate(), { passive: true }));
+	window.$(window).on("resize orientationchange", () => setTimeout(kbUpdate, 50));
+	window.$(el.input).on("focus click", () => {
+		setTimeout(() => {
+			kbUpdate();
+			el.input.scrollIntoView({
+				block: "nearest",
+				behavior: "smooth"
+			});
+		}, 0);
+	});
+}
+//#endregion
+//#region src/attachments.js
+async function toAttach(file) {
+	if (!file) return null;
+	if (file instanceof File) {
+		const name = file.name || "file", mime = (file.type || "application/octet-stream").toLowerCase();
+		if (/^image\//.test(mime) || /\.(png|jpe?g|webp|gif)$/i.test(name)) return {
+			type: "image_url",
+			image_url: { url: mime === "image/webp" || /\.webp$/i.test(name) ? await asDataURL(file) : await imgToWebp(file, 2048, 94) }
+		};
+		if (mime === "application/pdf" || /\.pdf$/i.test(name)) {
+			const bin = b64(await asDataURL(file));
+			return {
+				type: "file",
+				file: {
+					filename: name.endsWith(".pdf") ? name : name + ".pdf",
+					file_data: bin
+				}
+			};
+		}
+		if (/^audio\//.test(mime) || /\.(wav|mp3)$/i.test(name)) return {
+			type: "input_audio",
+			input_audio: {
+				data: b64(await asDataURL(file)),
+				format: /mp3/.test(mime) || /\.mp3$/i.test(name) ? "mp3" : "wav"
+			}
+		};
+		return {
+			type: "file",
+			file: {
+				filename: name,
+				file_data: b64(await asDataURL(file))
+			}
+		};
+	}
+	if (file && file.name == null && file.data) {
+		const name = file.name || "file", mime = (file.mime || "application/octet-stream").toLowerCase();
+		if (/^image\//.test(mime)) return {
+			type: "image_url",
+			image_url: { url: `data:${mime};base64,${file.data}` }
+		};
+		if (mime === "application/pdf") return {
+			type: "file",
+			file: {
+				filename: name,
+				file_data: file.data
+			}
+		};
+		if (/^audio\//.test(mime)) {
+			const fmt = /mp3/.test(mime) ? "mp3" : "wav";
+			return {
+				type: "input_audio",
+				input_audio: {
+					data: file.data,
+					format: fmt
+				}
+			};
+		}
+		return {
+			type: "file",
+			file: {
+				filename: name,
+				file_data: file.data
+			}
+		};
+	}
+	return null;
+}
+//#endregion
+//#region src/threads-utils.js
+var titleFrom = (t) => {
+	if (!t) return "Untitled";
+	return (typeof t === "string" ? t : Array.isArray(t) ? partsToText({ content: t }) : "Untitled").replace(/\s+/g, " ").trim().slice(0, 60) || "Untitled";
+};
+var serializeThreadName = (t) => {
+	const s = (t.title || "Untitled").replace(/[^a-zA-Z0-9]/g, "_").slice(0, 150);
+	return `${t.pinned ? "1" : "0"}-${t.updatedAt || Date.now()}-${t.id}-${s}.json`;
+};
+var deserializeThreadName = (n) => {
+	const p = n.replace(".json", "").split("-");
+	if (p.length < 4) return null;
+	return {
+		pinned: p[0] === "1",
+		updatedAt: parseInt(p[1]),
+		id: p[2],
+		title: p.slice(3).join("-").replace(/_/g, " "),
+		status: "synced",
+		type: "thread"
+	};
+};
+//#endregion
+//#region \0vite/preload-helper.js
+var scriptRel = "modulepreload";
+var assetsURL = function(dep) {
+	return "/" + dep;
+};
+var seen = {};
+var __vitePreload = function preload(baseModule, deps, importerUrl) {
+	let promise = Promise.resolve();
+	if (deps && deps.length > 0) {
+		const links = document.getElementsByTagName("link");
+		const cspNonceMeta = document.querySelector("meta[property=csp-nonce]");
+		const cspNonce = cspNonceMeta?.nonce || cspNonceMeta?.getAttribute("nonce");
+		function allSettled(promises) {
+			return Promise.all(promises.map((p) => Promise.resolve(p).then((value) => ({
+				status: "fulfilled",
+				value
+			}), (reason) => ({
+				status: "rejected",
+				reason
+			}))));
+		}
+		promise = allSettled(deps.map((dep) => {
+			dep = assetsURL(dep, importerUrl);
+			if (dep in seen) return;
+			seen[dep] = true;
+			const isCss = dep.endsWith(".css");
+			const cssSelector = isCss ? "[rel=\"stylesheet\"]" : "";
+			if (!!importerUrl) for (let i = links.length - 1; i >= 0; i--) {
+				const link = links[i];
+				if (link.href === dep && (!isCss || link.rel === "stylesheet")) return;
+			}
+			else if (document.querySelector(`link[href="${dep}"]${cssSelector}`)) return;
+			const link = document.createElement("link");
+			link.rel = isCss ? "stylesheet" : scriptRel;
+			if (!isCss) link.as = "script";
+			link.crossOrigin = "";
+			link.href = dep;
+			if (cspNonce) link.setAttribute("nonce", cspNonce);
+			document.head.appendChild(link);
+			if (isCss) return new Promise((res, rej) => {
+				link.addEventListener("load", res);
+				link.addEventListener("error", () => rej(/* @__PURE__ */ new Error(`Unable to preload CSS for ${dep}`)));
+			});
+		}));
+	}
+	function handlePreloadError(err) {
+		const e = new Event("vite:preloadError", { cancelable: true });
+		e.payload = err;
+		window.dispatchEvent(e);
+		if (!e.defaultPrevented) throw err;
+	}
+	return promise.then((res) => {
+		for (const item of res || []) {
+			if (item.status !== "rejected") continue;
+			handlePreloadError(item.reason);
+		}
+		return baseModule().catch(handlePreloadError);
+	});
+};
+//#endregion
+//#region src/main.js
+(() => {
+	let k, v = visualViewport;
+	const f = () => {
+		removeEventListener("popstate", f), document.activeElement?.blur();
+	};
+	v.onresize = () => {
+		let o = v.height < innerHeight;
+		o != k && ((k = o) ? (history.pushState({ k: 1 }, ""), addEventListener("popstate", f)) : (removeEventListener("popstate", f), history.state?.k && history.back()));
+	};
+})();
+var DEFAULT_MODEL = "anthropic/claude-opus-4.6";
+var icons = () => window.lucide && lucide.createIcons();
+var haptic = () => /android/i.test(navigator.userAgent) && navigator.vibrate?.(1);
 var su = {
 	key: "sunes_v1",
 	activeKey: "active_sune_id",
@@ -788,33 +1069,6 @@ var renderSidebar = window.renderSidebar = () => {
 	el.suneList.innerHTML = list.map(suneRow).join("");
 	icons();
 };
-function enhanceCodeBlocks(root, doHL = true) {
-	$(root).find("pre>code").each((i, code) => {
-		if (code.textContent.length > 2e5) return;
-		const $pre = $(code).parent().addClass("relative rounded-xl border border-gray-200");
-		if (!$pre.find(".code-actions").length) {
-			const len = code.textContent.length, countText = len >= 1e3 ? (len / 1e3).toFixed(1) + "K" : len;
-			const $btn = $("<button class=\"bg-slate-900 text-white rounded-lg py-1 px-2 text-xs opacity-85\">Copy</button>").on("click", async (e) => {
-				e.stopPropagation();
-				try {
-					await navigator.clipboard.writeText(code.innerText);
-					$btn.text("Copied");
-					setTimeout(() => $btn.text("Copy"), 1200);
-				} catch {}
-			});
-			const $container = $("<div class=\"code-actions absolute top-2 right-2 flex items-center gap-2\"></div>");
-			$container.append($(`<span class="text-xs text-gray-500">${countText} chars</span>`), $btn);
-			$pre.append($container);
-		}
-		if (doHL && window.hljs && code.textContent.length < 1e5) hljs.highlightElement(code);
-	});
-}
-var md = window.markdownit({
-	html: false,
-	linkify: true,
-	typographer: true,
-	breaks: true
-}).use(mathjax3);
 var getSuneLabel = (m) => {
 	return `${m && m.sune_name || SUNE.name} · ${getModelShort(m && m.model)}`;
 };
@@ -857,20 +1111,6 @@ function msgRow(m) {
 		icons();
 	});
 	return $row.find(".msg-bubble")[0];
-}
-var renderMarkdown = window.renderMarkdown = function(node, text, opt = {
-	enhance: true,
-	highlight: true
-}) {
-	node.innerHTML = md.render(text);
-	if (opt.enhance) enhanceCodeBlocks(node, opt.highlight);
-};
-function partsToText(m) {
-	if (!m) return "";
-	const c = m.content, i = m.images;
-	let t = Array.isArray(c) ? c.map((p) => p?.type === "text" ? p.text : p?.type === "image_url" ? `![](${p.image_url?.url || ""})` : p?.type === "file" ? `[${p.file?.filename || "file"}]` : p?.type === "input_audio" ? `(audio:${p.input_audio?.format || ""})` : "").join("\n") : String(c || "");
-	if (Array.isArray(i)) t += i.map((x) => `\n![](${x.image_url?.url})\n`).join("");
-	return t;
 }
 var addMessage = window.addMessage = function(m, track = true) {
 	m.id = m.id || gid();
@@ -939,26 +1179,6 @@ function setBtnSend() {
 function localDemoReply() {
 	return "Tip: open the sidebar → Account & Backup to set your API key.";
 }
-var titleFrom = (t) => {
-	if (!t) return "Untitled";
-	return (typeof t === "string" ? t : Array.isArray(t) ? partsToText({ content: t }) : "Untitled").replace(/\s+/g, " ").trim().slice(0, 60) || "Untitled";
-};
-var serializeThreadName = (t) => {
-	const s = (t.title || "Untitled").replace(/[^a-zA-Z0-9]/g, "_").slice(0, 150);
-	return `${t.pinned ? "1" : "0"}-${t.updatedAt || Date.now()}-${t.id}-${s}.json`;
-};
-var deserializeThreadName = (n) => {
-	const p = n.replace(".json", "").split("-");
-	if (p.length < 4) return null;
-	return {
-		pinned: p[0] === "1",
-		updatedAt: parseInt(p[1]),
-		id: p[2],
-		title: p.slice(3).join("-").replace(/_/g, " "),
-		status: "synced",
-		type: "thread"
-	};
-};
 var TKEY = "threads_v1", THREAD = window.THREAD = {
 	list: [],
 	load: async function() {
@@ -1302,72 +1522,6 @@ function updateAttachBadge() {
 	el.attachBadge.textContent = String(n);
 	el.attachBadge.classList.toggle("hidden", n === 0);
 }
-async function toAttach(file) {
-	if (!file) return null;
-	if (file instanceof File) {
-		const name = file.name || "file", mime = (file.type || "application/octet-stream").toLowerCase();
-		if (/^image\//.test(mime) || /\.(png|jpe?g|webp|gif)$/i.test(name)) return {
-			type: "image_url",
-			image_url: { url: mime === "image/webp" || /\.webp$/i.test(name) ? await asDataURL(file) : await imgToWebp(file, 2048, 94) }
-		};
-		if (mime === "application/pdf" || /\.pdf$/i.test(name)) {
-			const bin = b64(await asDataURL(file));
-			return {
-				type: "file",
-				file: {
-					filename: name.endsWith(".pdf") ? name : name + ".pdf",
-					file_data: bin
-				}
-			};
-		}
-		if (/^audio\//.test(mime) || /\.(wav|mp3)$/i.test(name)) return {
-			type: "input_audio",
-			input_audio: {
-				data: b64(await asDataURL(file)),
-				format: /mp3/.test(mime) || /\.mp3$/i.test(name) ? "mp3" : "wav"
-			}
-		};
-		return {
-			type: "file",
-			file: {
-				filename: name,
-				file_data: b64(await asDataURL(file))
-			}
-		};
-	}
-	if (file && file.name == null && file.data) {
-		const name = file.name || "file", mime = (file.mime || "application/octet-stream").toLowerCase();
-		if (/^image\//.test(mime)) return {
-			type: "image_url",
-			image_url: { url: `data:${mime};base64,${file.data}` }
-		};
-		if (mime === "application/pdf") return {
-			type: "file",
-			file: {
-				filename: name,
-				file_data: file.data
-			}
-		};
-		if (/^audio\//.test(mime)) {
-			const fmt = /mp3/.test(mime) ? "mp3" : "wav";
-			return {
-				type: "input_audio",
-				input_audio: {
-					data: file.data,
-					format: fmt
-				}
-			};
-		}
-		return {
-			type: "file",
-			file: {
-				filename: name,
-				file_data: file.data
-			}
-		};
-	}
-	return null;
-}
 $(el.attachBtn).on("click", () => {
 	if (state.busy) return;
 	if (state.attachments.length) {
@@ -1599,19 +1753,6 @@ $(el.newSuneBtn).on("click", async () => {
 	document.getElementById("sidebarLeft").classList.add("-translate-x-full");
 	document.getElementById("sidebarOverlayLeft").classList.add("hidden");
 });
-function dl(name, obj) {
-	const blob = new Blob([JSON.stringify(obj, null, 2)], { type: name.endsWith(".sune") ? "application/octet-stream" : "application/json" }), url = URL.createObjectURL(blob), a = $("<a>").prop({
-		href: url,
-		download: name
-	}).appendTo("body");
-	a.get(0).click();
-	a.remove();
-	URL.revokeObjectURL(url);
-}
-var ts = () => {
-	const d = /* @__PURE__ */ new Date(), p = (n) => String(n).padStart(2, "0");
-	return `${d.getFullYear()}${p(d.getMonth() + 1)}${p(d.getDate())}-${p(d.getHours())}${p(d.getMinutes())}${p(d.getSeconds())}`;
-};
 var importMode = null;
 $(el.sunesExportOption).on("click", () => {
 	dl(`sunes-${ts()}.sune`, {
@@ -1698,28 +1839,6 @@ $(el.importInput).on("change", async () => {
 		importMode = null;
 	}
 });
-function kbUpdate() {
-	const vv = window.visualViewport;
-	const overlap = vv ? Math.max(0, window.innerHeight - (vv.height + vv.offsetTop)) : 0;
-	document.documentElement.style.setProperty("--kb", overlap + "px");
-	const fh = el.footer.getBoundingClientRect().height;
-	document.documentElement.style.setProperty("--footer-h", fh + "px");
-	el.footer.style.transform = "translateY(" + -overlap + "px)";
-	el.chat.style.scrollPaddingBottom = fh + overlap + 16 + "px";
-}
-function kbBind() {
-	if (window.visualViewport) ["resize", "scroll"].forEach((ev) => visualViewport.addEventListener(ev, () => kbUpdate(), { passive: true }));
-	$(window).on("resize orientationchange", () => setTimeout(kbUpdate, 50));
-	$(el.input).on("focus click", () => {
-		setTimeout(() => {
-			kbUpdate();
-			el.input.scrollIntoView({
-				block: "nearest",
-				behavior: "smooth"
-			});
-		}, 0);
-	});
-}
 function activeMeta() {
 	return {
 		sune_name: SUNE.name,
@@ -1727,153 +1846,57 @@ function activeMeta() {
 		avatar: SUNE.avatar
 	};
 }
-var USER = window.USER = {
-	log: async (s) => {
-		const t = String(s ?? "").trim();
-		if (!t) return;
-		await ensureThreadOnFirstUser(t);
-		addMessage({
-			role: "user",
-			content: [{
-				type: "text",
-				text: t
-			}]
+window.USER = USER;
+USER.log = async (s) => {
+	const t = String(s ?? "").trim();
+	if (!t) return;
+	await ensureThreadOnFirstUser(t);
+	addMessage({
+		role: "user",
+		content: [{
+			type: "text",
+			text: t
+		}]
+	});
+	await THREAD.persist();
+};
+USER.logMany = async (msgs) => {
+	if (!Array.isArray(msgs) || !msgs.length) return;
+	const clean = msgs.map((s) => String(s ?? "").trim()).filter(Boolean);
+	if (!clean.length) return;
+	await ensureThreadOnFirstUser(clean[0]);
+	const newMsgs = clean.map((t) => ({
+		id: gid(),
+		role: "user",
+		content: [{
+			type: "text",
+			text: t
+		}]
+	}));
+	state.messages.push(...newMsgs);
+	const frag = document.createDocumentFragment();
+	const newEls = newMsgs.map((m) => {
+		const $row = _createMessageRow(m), bubble = $row.find(".msg-bubble")[0];
+		bubble.dataset.mid = m.id;
+		return {
+			rowEl: $row[0],
+			bubbleEl: bubble,
+			message: m
+		};
+	});
+	newEls.forEach((item) => frag.appendChild(item.rowEl));
+	el.messages.appendChild(frag);
+	queueMicrotask(() => {
+		newEls.forEach((item) => {
+			renderMarkdown(item.bubbleEl, partsToText(item.message));
 		});
-		await THREAD.persist();
-	},
-	logMany: async (msgs) => {
-		if (!Array.isArray(msgs) || !msgs.length) return;
-		const clean = msgs.map((s) => String(s ?? "").trim()).filter(Boolean);
-		if (!clean.length) return;
-		await ensureThreadOnFirstUser(clean[0]);
-		const newMsgs = clean.map((t) => ({
-			id: gid(),
-			role: "user",
-			content: [{
-				type: "text",
-				text: t
-			}]
-		}));
-		state.messages.push(...newMsgs);
-		const frag = document.createDocumentFragment();
-		const newEls = newMsgs.map((m) => {
-			const $row = _createMessageRow(m), bubble = $row.find(".msg-bubble")[0];
-			bubble.dataset.mid = m.id;
-			return {
-				rowEl: $row[0],
-				bubbleEl: bubble,
-				message: m
-			};
+		el.chat.scrollTo({
+			top: el.chat.scrollHeight,
+			behavior: "smooth"
 		});
-		newEls.forEach((item) => frag.appendChild(item.rowEl));
-		el.messages.appendChild(frag);
-		queueMicrotask(() => {
-			newEls.forEach((item) => {
-				renderMarkdown(item.bubbleEl, partsToText(item.message));
-			});
-			el.chat.scrollTo({
-				top: el.chat.scrollHeight,
-				behavior: "smooth"
-			});
-			icons();
-		});
-		await THREAD.persist();
-	},
-	get PAT() {
-		return this.githubToken;
-	},
-	get name() {
-		return localStorage.getItem("user_name") || "Anon";
-	},
-	set name(v) {
-		localStorage.setItem("user_name", v || "");
-	},
-	get avatar() {
-		return localStorage.getItem("user_avatar") || "";
-	},
-	set avatar(v) {
-		localStorage.setItem("user_avatar", v || "");
-	},
-	get provider() {
-		return localStorage.getItem("provider") || "openrouter";
-	},
-	set provider(v) {
-		localStorage.setItem("provider", [
-			"openai",
-			"google",
-			"claude"
-		].includes(v) ? v : "openrouter");
-	},
-	get apiKeyOpenRouter() {
-		return localStorage.getItem("openrouter_api_key") || "";
-	},
-	set apiKeyOpenRouter(v) {
-		localStorage.setItem("openrouter_api_key", v || "");
-	},
-	get apiKeyOpenAI() {
-		return localStorage.getItem("openai_api_key") || "";
-	},
-	set apiKeyOpenAI(v) {
-		localStorage.setItem("openai_api_key", v || "");
-	},
-	get apiKeyGoogle() {
-		return localStorage.getItem("google_api_key") || "";
-	},
-	set apiKeyGoogle(v) {
-		localStorage.setItem("google_api_key", v || "");
-	},
-	get apiKeyClaude() {
-		return localStorage.getItem("claude_api_key") || "";
-	},
-	set apiKeyClaude(v) {
-		localStorage.setItem("claude_api_key", v || "");
-	},
-	get apiKeyCloudflare() {
-		return localStorage.getItem("cloudflare_api_key") || "";
-	},
-	set apiKeyCloudflare(v) {
-		localStorage.setItem("cloudflare_api_key", v || "");
-	},
-	get apiKey() {
-		const p = this.provider;
-		return p === "openai" ? this.apiKeyOpenAI : p === "google" ? this.apiKeyGoogle : p === "claude" ? this.apiKeyClaude : p === "cloudflare" ? this.apiKeyCloudflare : this.apiKeyOpenRouter;
-	},
-	set apiKey(v) {
-		const p = this.provider;
-		if (p === "openai") this.apiKeyOpenAI = v;
-		else if (p === "google") this.apiKeyGoogle = v;
-		else if (p === "claude") this.apiKeyClaude = v;
-		else if (p === "cloudflare") this.apiKeyCloudflare = v;
-		else this.apiKeyOpenRouter = v;
-	},
-	get masterPrompt() {
-		return localStorage.getItem("master_prompt") || "Always respond using markdown.";
-	},
-	set masterPrompt(v) {
-		localStorage.setItem("master_prompt", v || "");
-	},
-	get titleModel() {
-		return localStorage.getItem("title_model") ?? "or:amazon/nova-micro-v1";
-	},
-	set titleModel(v) {
-		localStorage.setItem("title_model", v || "");
-	},
-	get githubToken() {
-		return localStorage.getItem("gh_token") || "";
-	},
-	set githubToken(v) {
-		localStorage.setItem("gh_token", v || "");
-	},
-	get gcpSA() {
-		try {
-			return JSON.parse(localStorage.getItem("gcp_sa_json") || "null");
-		} catch {
-			return null;
-		}
-	},
-	set gcpSA(v) {
-		localStorage.setItem("gcp_sa_json", v ? JSON.stringify(v) : "");
-	}
+		icons();
+	});
+	await THREAD.persist();
 };
 async function init() {
 	const u = localStorage.getItem("thread_repo_url") || "";
