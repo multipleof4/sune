@@ -490,16 +490,6 @@ var USER = {
 	},
 	set githubToken(v) {
 		localStorage.setItem("gh_token", v || "");
-	},
-	get gcpSA() {
-		try {
-			return JSON.parse(localStorage.getItem("gcp_sa_json") || "null");
-		} catch {
-			return null;
-		}
-	},
-	set gcpSA(v) {
-		localStorage.setItem("gcp_sa_json", v ? JSON.stringify(v) : "");
 	}
 };
 //#endregion
