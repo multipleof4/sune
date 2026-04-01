@@ -37,7 +37,6 @@ export const buildBody=()=>{
   }
 
   const b=payloadWithSampling({model:SUNE.model.replace(/^(or:|oai:|g:|cla:|cf:)/,''),messages:msgs,stream:true});
-  if(SUNE.json_output){let s;try{s=JSON.parse(SUNE.json_schema||'null')}catch{s=null}if(s&&typeof s==='object'&&Object.keys(s).length>0){b.response_format={type:'json_schema',json_schema:s}}else{b.response_format={type:'json_object'}}}
   b.reasoning={...(SUNE.reasoning_effort&&SUNE.reasoning_effort!=='default'?{effort:SUNE.reasoning_effort}:{}),exclude:!SUNE.include_thoughts};
   if(SUNE.verbosity)b.verbosity=SUNE.verbosity;
   if(SUNE.img_output){b.modalities=['image'];b.image_config={aspect_ratio:SUNE.aspect_ratio||'1:1',image_size:SUNE.image_size||'1K'}}
