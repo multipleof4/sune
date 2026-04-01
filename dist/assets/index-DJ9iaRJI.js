@@ -66,19 +66,6 @@ var buildBody = () => {
 		messages: msgs,
 		stream: true
 	});
-	if (SUNE.json_output) {
-		let s;
-		try {
-			s = JSON.parse(SUNE.json_schema || "null");
-		} catch {
-			s = null;
-		}
-		if (s && typeof s === "object" && Object.keys(s).length > 0) b.response_format = {
-			type: "json_schema",
-			json_schema: s
-		};
-		else b.response_format = { type: "json_object" };
-	}
 	b.reasoning = {
 		...SUNE.reasoning_effort && SUNE.reasoning_effort !== "default" ? { effort: SUNE.reasoning_effort } : {},
 		exclude: !SUNE.include_thoughts
@@ -268,7 +255,6 @@ var el = window.el = Object.fromEntries([
 	"set_system_prompt",
 	"set_hide_composer",
 	"set_include_thoughts",
-	"set_json_output",
 	"set_img_output",
 	"set_aspect_ratio",
 	"set_image_size",
@@ -300,7 +286,6 @@ var el = window.el = Object.fromEntries([
 	"fileInput",
 	"htmlEditor",
 	"extensionHtmlEditor",
-	"jsonSchemaEditor",
 	"htmlTab_index",
 	"htmlTab_extension",
 	"suneHtml",
@@ -325,8 +310,6 @@ var el = window.el = Object.fromEntries([
 	"accountPanelGeneral",
 	"accountPanelAPI",
 	"set_gh_token",
-	"gcpSAInput",
-	"gcpSAUploadBtn",
 	"importAccountSettings",
 	"exportAccountSettings",
 	"importAccountSettingsInput",
@@ -866,12 +849,10 @@ var defaultSettings = {
 	extension_html: "<sune src='https://raw.githubusercontent.com/sune-org/store/refs/heads/main/sync.sune' private></sune>",
 	hide_composer: false,
 	include_thoughts: false,
-	json_output: false,
 	img_output: false,
 	aspect_ratio: "1:1",
 	image_size: "1K",
-	ignore_master_prompt: false,
-	json_schema: ""
+	ignore_master_prompt: false
 };
 var makeSune = (p = {}) => ({
 	id: p.id || gid(),
@@ -1642,15 +1623,13 @@ $(el.composer).on("submit", async (e) => {
 });
 var jars = {
 	html: null,
-	extension: null,
-	jsonSchema: null
+	extension: null
 };
 var ensureJars = async () => {
-	if (jars.html && jars.extension && jars.jsonSchema) return jars;
-	const mod = await __vitePreload(() => import("https://medv.io/codejar/codejar.js"), []), CodeJar = mod.CodeJar || mod.default, hl = (e) => e.innerHTML = hljs.highlight(e.textContent, { language: "xml" }).value, hl_json = (e) => e.innerHTML = hljs.highlight(e.textContent, { language: "json" }).value;
+	if (jars.html && jars.extension) return jars;
+	const mod = await __vitePreload(() => import("https://medv.io/codejar/codejar.js"), []), CodeJar = mod.CodeJar || mod.default, hl = (e) => e.innerHTML = hljs.highlight(e.textContent, { language: "xml" }).value;
 	if (!jars.html) jars.html = CodeJar(el.htmlEditor, hl, { tab: "  " });
 	if (!jars.extension) jars.extension = CodeJar(el.extensionHtmlEditor, hl, { tab: "  " });
-	if (!jars.jsonSchema) jars.jsonSchema = CodeJar(el.jsonSchemaEditor, hl_json, { tab: "  " });
 	return jars;
 };
 var openedHTML = false;
@@ -1670,7 +1649,6 @@ function openSettings() {
 	el.set_reasoning_effort.value = s.reasoning_effort || "default";
 	el.set_system_prompt.value = s.system_prompt;
 	el.set_hide_composer.checked = !!s.hide_composer;
-	el.set_json_output.checked = !!s.json_output;
 	el.set_img_output.checked = !!s.img_output;
 	el.set_aspect_ratio.value = s.aspect_ratio || "1:1";
 	el.set_image_size.value = s.image_size || "1K";
@@ -1693,11 +1671,7 @@ function showTab(key) {
 		el[tb].classList.toggle("border-black", k === key);
 		el[pn].classList.toggle("hidden", k !== key);
 	});
-	if (key === "Prompt") ensureJars().then(({ jsonSchema }) => {
-		const s = SUNE.settings;
-		jsonSchema.updateCode(s.json_schema || "");
-	});
-	else if (key === "Script") {
+	if (key === "Script") {
 		openedHTML = true;
 		showHtmlTab("index");
 		ensureJars().then(({ html, extension }) => {
@@ -1733,13 +1707,11 @@ $(el.settingsForm).on("submit", async (e) => {
 	SUNE.reasoning_effort = el.set_reasoning_effort.value || "default";
 	SUNE.system_prompt = el.set_system_prompt.value.trim();
 	SUNE.hide_composer = el.set_hide_composer.checked;
-	SUNE.json_output = el.set_json_output.checked;
 	SUNE.img_output = el.set_img_output.checked;
 	SUNE.aspect_ratio = el.set_aspect_ratio.value;
 	SUNE.image_size = el.set_image_size.value;
 	SUNE.include_thoughts = el.set_include_thoughts.checked;
 	SUNE.ignore_master_prompt = el.set_ignore_master_prompt.checked;
-	SUNE.json_schema = el.jsonSchemaEditor.textContent;
 	if (openedHTML) {
 		SUNE.html = el.htmlEditor.textContent;
 		SUNE.extension_html = el.extensionHtmlEditor.textContent;
@@ -2104,8 +2076,6 @@ function openAccountSettings() {
 	el.set_master_prompt.value = USER.masterPrompt || "";
 	el.set_title_model.value = USER.titleModel;
 	el.set_gh_token.value = USER.githubToken || "";
-	const sa = USER.gcpSA;
-	el.gcpSAUploadBtn.textContent = sa && sa.project_id ? `Uploaded: ${sa.project_id}` : "Upload .json";
 	el.set_user_name.value = USER.name;
 	el.userAvatarPreview.src = USER.avatar || "data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=";
 	el.userAvatarPreview.classList.toggle("bg-gray-200", !USER.avatar);
@@ -2138,20 +2108,6 @@ $(el.accountSettingsForm).on("submit", (e) => {
 	USER.name = String(el.set_user_name.value || "").trim();
 	closeAccountSettings();
 });
-el.gcpSAUploadBtn.onclick = () => el.gcpSAInput.click();
-el.gcpSAInput.onchange = async (e) => {
-	const f = e.target.files?.[0];
-	if (!f) return;
-	try {
-		const t = await f.text(), d = JSON.parse(t);
-		if (!d.project_id) throw new Error("Invalid");
-		USER.gcpSA = d;
-		el.gcpSAUploadBtn.textContent = `Uploaded: ${d.project_id}`;
-		alert("GCP SA loaded.");
-	} catch {
-		alert("Failed to load GCP SA.");
-	}
-};
 $(el.accountPanelAPI).on("click", (e) => {
 	const b = e.target.closest("[data-reveal-for]");
 	if (!b) return;
@@ -2189,7 +2145,6 @@ el.exportAccountSettings.onclick = () => dl(`sune-account-${ts()}.json`, {
 	masterPrompt: USER.masterPrompt,
 	titleModel: USER.titleModel,
 	githubToken: USER.githubToken,
-	gcpSA: USER.gcpSA,
 	userName: USER.name,
 	userAvatar: USER.avatar
 });
@@ -2214,11 +2169,10 @@ el.importAccountSettingsInput.onchange = async (e) => {
 			titleModel: "titleModel",
 			githubToken: "ghToken",
 			name: "userName",
-			avatar: "userAvatar",
-			gcpSA: "gcpSA"
+			avatar: "userAvatar"
 		}).forEach(([p, k]) => {
 			const v = d[p] ?? d[k];
-			if (typeof v === "string" || p === "gcpSA" && typeof v === "object" && v) USER[p] = v;
+			if (typeof v === "string") USER[p] = v;
 		});
 		openAccountSettings();
 		alert("Imported.");
