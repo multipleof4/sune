@@ -965,8 +965,8 @@ var SUNE = window.SUNE = new Proxy({
 				}
 				buf += delta;
 				state.stream.text = buf;
-				renderMarkdown(suneBubble, partsToText(assistantMsg), { enhance: false });
 				assistantMsg.content[0].text = buf;
+				renderMarkdown(suneBubble, partsToText(assistantMsg), { enhance: false });
 				if (done && !completed) {
 					completed = true;
 					setBtnSend();
@@ -1589,8 +1589,8 @@ $(el.composer).on("submit", async (e) => {
 		}
 		buf += delta;
 		state.stream.text = buf;
-		renderMarkdown(suneBubble, partsToText(assistantMsg), { enhance: false });
 		assistantMsg.content[0].text = buf;
+		renderMarkdown(suneBubble, partsToText(assistantMsg), { enhance: false });
 		if (done && !completed) {
 			completed = true;
 			setBtnSend();
