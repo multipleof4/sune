@@ -4,7 +4,7 @@
 
 > Each sune is like a module. You can have many. And share them.
 
-![Sunes](./public/appstore_content/screenshot6.jpg)
+![Sunes](./public/appstore_content/sune_sidebar.png)
 
 ![Setting](./public/appstore_content/screenshot3.jpg)
 
