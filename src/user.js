@@ -33,5 +33,7 @@ export const USER = {
   get titleModel() { return localStorage.getItem('title_model') ?? 'or:amazon/nova-micro-v1'; },
   set titleModel(v) { localStorage.setItem('title_model', v || ''); },
   get githubToken() { return localStorage.getItem('gh_token') || ''; },
-  set githubToken(v) { localStorage.setItem('gh_token', v || ''); }
+  set githubToken(v) { localStorage.setItem('gh_token', v || ''); },
+  get customKey1() { return localStorage.getItem('custom_key_1') || ''; },
+  set customKey1(v) { localStorage.setItem('custom_key_1', v || ''); }
 };
