@@ -14,7 +14,7 @@ export const el = window.el = Object.fromEntries(
     'htmlTab_index','htmlTab_extension','suneHtml','accountSettingsModal','accountSettingsForm',
     'closeAccountSettings','cancelAccountSettings','set_master_prompt','set_provider',
     'set_api_key_or','set_api_key_oai','set_api_key_g','set_api_key_claude','set_api_key_cf',
-    'set_title_model','copySystemPrompt','pasteSystemPrompt','copyHTML','pasteHTML',
+    'set_api_key_custom1','set_title_model','copySystemPrompt','pasteSystemPrompt','copyHTML','pasteHTML',
     'accountTabGeneral','accountTabAPI','accountPanelGeneral','accountPanelAPI','set_gh_token',
     'importAccountSettings','exportAccountSettings',
     'importAccountSettingsInput','accountTabUser','accountPanelUser','set_user_name',
