@@ -300,6 +300,7 @@ var el = window.el = Object.fromEntries([
 	"set_api_key_g",
 	"set_api_key_claude",
 	"set_api_key_cf",
+	"set_api_key_custom1",
 	"set_title_model",
 	"copySystemPrompt",
 	"pasteSystemPrompt",
@@ -490,6 +491,12 @@ var USER = {
 	},
 	set githubToken(v) {
 		localStorage.setItem("gh_token", v || "");
+	},
+	get customKey1() {
+		return localStorage.getItem("custom_key_1") || "";
+	},
+	set customKey1(v) {
+		localStorage.setItem("custom_key_1", v || "");
 	}
 };
 //#endregion
@@ -2063,6 +2070,7 @@ function openAccountSettings() {
 	el.set_api_key_g.value = USER.apiKeyGoogle || "";
 	el.set_api_key_claude.value = USER.apiKeyClaude || "";
 	el.set_api_key_cf.value = USER.apiKeyCloudflare || "";
+	el.set_api_key_custom1.value = USER.customKey1 || "";
 	el.set_master_prompt.value = USER.masterPrompt || "";
 	el.set_title_model.value = USER.titleModel;
 	el.set_gh_token.value = USER.githubToken || "";
@@ -2092,6 +2100,7 @@ $(el.accountSettingsForm).on("submit", (e) => {
 	USER.apiKeyGoogle = String(el.set_api_key_g.value || "").trim();
 	USER.apiKeyClaude = String(el.set_api_key_claude.value || "").trim();
 	USER.apiKeyCloudflare = String(el.set_api_key_cf.value || "").trim();
+	USER.customKey1 = String(el.set_api_key_custom1.value || "").trim();
 	USER.masterPrompt = String(el.set_master_prompt.value || "").trim();
 	USER.titleModel = String(el.set_title_model.value || "").trim();
 	USER.githubToken = String(el.set_gh_token.value || "").trim();
@@ -2111,19 +2120,6 @@ $(el.accountPanelAPI).on("click", (e) => {
 el.accountTabGeneral.onclick = () => showAccountTab("General");
 el.accountTabAPI.onclick = () => showAccountTab("API");
 el.accountTabUser.onclick = () => showAccountTab("User");
-el.setUserAvatarBtn.onclick = () => el.userAvatarInput.click();
-el.userAvatarInput.onchange = async (e) => {
-	const f = e.target.files?.[0];
-	if (!f) return;
-	try {
-		const dataUrl = await imgToWebp(f);
-		USER.avatar = dataUrl;
-		el.userAvatarPreview.src = dataUrl;
-		el.userAvatarPreview.classList.remove("bg-gray-200");
-	} catch {
-		alert("Failed to process image.");
-	}
-};
 el.exportAccountSettings.onclick = () => dl(`sune-account-${ts()}.json`, {
 	v: 1,
 	provider: USER.provider,
@@ -2132,6 +2128,7 @@ el.exportAccountSettings.onclick = () => dl(`sune-account-${ts()}.json`, {
 	apiKeyGoogle: USER.apiKeyGoogle,
 	apiKeyClaude: USER.apiKeyClaude,
 	apiKeyCloudflare: USER.apiKeyCloudflare,
+	customKey1: USER.customKey1,
 	masterPrompt: USER.masterPrompt,
 	titleModel: USER.titleModel,
 	githubToken: USER.githubToken,
@@ -2155,6 +2152,7 @@ el.importAccountSettingsInput.onchange = async (e) => {
 			apiKeyGoogle: "apiKeyG",
 			apiKeyClaude: "apiKeyC",
 			apiKeyCloudflare: "apiKeyCF",
+			customKey1: "customKey1",
 			masterPrompt: "masterPrompt",
 			titleModel: "titleModel",
 			githubToken: "ghToken",
