@@ -1624,7 +1624,12 @@ var jars = {
 };
 var ensureJars = async () => {
 	if (jars.html && jars.extension) return jars;
-	const mod = await __vitePreload(() => import("https://medv.io/codejar/codejar.js"), []), CodeJar = mod.CodeJar || mod.default, hl = (e) => e.innerHTML = hljs.highlight(e.textContent, { language: "xml" }).value;
+	const mod = await __vitePreload(() => import("https://medv.io/codejar/codejar.js"), []), CodeJar = mod.CodeJar || mod.default, hl = (e) => {
+		e.textContent = e.textContent;
+		window.hljs.highlightElement(e);
+	};
+	el.htmlEditor.classList.add("language-xml");
+	el.extensionHtmlEditor.classList.add("language-xml");
 	if (!jars.html) jars.html = CodeJar(el.htmlEditor, hl, { tab: "  " });
 	if (!jars.extension) jars.extension = CodeJar(el.extensionHtmlEditor, hl, { tab: "  " });
 	return jars;
@@ -1710,8 +1715,8 @@ $(el.settingsForm).on("submit", async (e) => {
 	SUNE.include_thoughts = el.set_include_thoughts.checked;
 	SUNE.ignore_master_prompt = el.set_ignore_master_prompt.checked;
 	if (openedHTML) {
-		SUNE.html = el.htmlEditor.textContent;
-		SUNE.extension_html = el.extensionHtmlEditor.textContent;
+		SUNE.html = jars.html ? jars.html.toString() : el.htmlEditor.textContent;
+		SUNE.extension_html = jars.extension ? jars.extension.toString() : el.extensionHtmlEditor.textContent;
 	}
 	closeSettings();
 	await reflectActiveSune();
@@ -2289,7 +2294,8 @@ $(el.pasteSystemPrompt).on("click", async () => {
 var getActiveHtmlParts = () => !el.htmlEditor.classList.contains("hidden") ? [el.htmlEditor, jars.html] : [el.extensionHtmlEditor, jars.extension];
 $(el.copyHTML).on("click", async () => {
 	try {
-		await navigator.clipboard.writeText(getActiveHtmlParts()[0].textContent || "");
+		const [editor, jar] = getActiveHtmlParts();
+		await navigator.clipboard.writeText(jar ? jar.toString() : editor.textContent || "");
 	} catch {}
 });
 $(el.pasteHTML).on("click", async () => {
