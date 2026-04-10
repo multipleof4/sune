@@ -1625,13 +1625,20 @@ var jars = {
 var ensureJars = async () => {
 	if (jars.html && jars.extension) return jars;
 	const mod = await __vitePreload(() => import("https://medv.io/codejar/codejar.js"), []), CodeJar = mod.CodeJar || mod.default, hl = (e) => {
-		e.textContent = e.textContent;
-		window.hljs.highlightElement(e);
+		e.innerHTML = hljs.highlight(e.textContent, { language: "xml" }).value;
 	};
-	el.htmlEditor.classList.add("language-xml");
-	el.extensionHtmlEditor.classList.add("language-xml");
-	if (!jars.html) jars.html = CodeJar(el.htmlEditor, hl, { tab: "  " });
-	if (!jars.extension) jars.extension = CodeJar(el.extensionHtmlEditor, hl, { tab: "  " });
+	if (!jars.html) jars.html = CodeJar(el.htmlEditor, hl, {
+		tab: "  ",
+		catchTab: true,
+		preserveIndent: true,
+		addClosing: true
+	});
+	if (!jars.extension) jars.extension = CodeJar(el.extensionHtmlEditor, hl, {
+		tab: "  ",
+		catchTab: true,
+		preserveIndent: true,
+		addClosing: true
+	});
 	return jars;
 };
 var openedHTML = false;
@@ -1715,8 +1722,8 @@ $(el.settingsForm).on("submit", async (e) => {
 	SUNE.include_thoughts = el.set_include_thoughts.checked;
 	SUNE.ignore_master_prompt = el.set_ignore_master_prompt.checked;
 	if (openedHTML) {
-		SUNE.html = jars.html ? jars.html.toString() : el.htmlEditor.textContent;
-		SUNE.extension_html = jars.extension ? jars.extension.toString() : el.extensionHtmlEditor.textContent;
+		SUNE.html = jars.html.toString();
+		SUNE.extension_html = jars.extension.toString();
 	}
 	closeSettings();
 	await reflectActiveSune();
@@ -2291,19 +2298,18 @@ $(el.pasteSystemPrompt).on("click", async () => {
 		el.set_system_prompt.value = await navigator.clipboard.readText();
 	} catch {}
 });
-var getActiveHtmlParts = () => !el.htmlEditor.classList.contains("hidden") ? [el.htmlEditor, jars.html] : [el.extensionHtmlEditor, jars.extension];
+var getActiveJar = () => !el.htmlEditor.classList.contains("hidden") ? jars.html : jars.extension;
 $(el.copyHTML).on("click", async () => {
 	try {
-		const [editor, jar] = getActiveHtmlParts();
-		await navigator.clipboard.writeText(jar ? jar.toString() : editor.textContent || "");
+		const jar = getActiveJar();
+		await navigator.clipboard.writeText(jar ? jar.toString() : "");
 	} catch {}
 });
 $(el.pasteHTML).on("click", async () => {
 	try {
 		const t = await navigator.clipboard.readText();
-		const [editor, jar] = getActiveHtmlParts();
-		if (jar && jar.updateCode) jar.updateCode(t);
-		else if (editor) editor.textContent = t;
+		const jar = getActiveJar();
+		if (jar) jar.updateCode(t);
 	} catch {}
 });
 Object.assign(window, {
@@ -2368,7 +2374,7 @@ Object.assign(window, {
 	syncActiveThread,
 	syncWhileBusy,
 	onForeground,
-	getActiveHtmlParts,
+	getActiveJar,
 	imgToWebp,
 	cacheStore,
 	ghApi,
