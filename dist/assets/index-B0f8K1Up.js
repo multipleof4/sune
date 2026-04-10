@@ -1624,21 +1624,13 @@ var jars = {
 };
 var ensureJars = async () => {
 	if (jars.html && jars.extension) return jars;
-	const mod = await __vitePreload(() => import("https://medv.io/codejar/codejar.js"), []), CodeJar = mod.CodeJar || mod.default, hl = (e) => {
-		e.innerHTML = hljs.highlight(e.textContent, { language: "xml" }).value;
+	const mod = await __vitePreload(() => import("https://medv.io/codejar/codejar.js"), []), CodeJar = mod.CodeJar || mod.default;
+	const hl = (e) => {
+		const code = e.innerText;
+		e.innerHTML = hljs.highlight(code, { language: "xml" }).value;
 	};
-	if (!jars.html) jars.html = CodeJar(el.htmlEditor, hl, {
-		tab: "  ",
-		catchTab: true,
-		preserveIndent: true,
-		addClosing: true
-	});
-	if (!jars.extension) jars.extension = CodeJar(el.extensionHtmlEditor, hl, {
-		tab: "  ",
-		catchTab: true,
-		preserveIndent: true,
-		addClosing: true
-	});
+	if (!jars.html) jars.html = CodeJar(el.htmlEditor, hl, { tab: "  " });
+	if (!jars.extension) jars.extension = CodeJar(el.extensionHtmlEditor, hl, { tab: "  " });
 	return jars;
 };
 var openedHTML = false;
