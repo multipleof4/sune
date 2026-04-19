@@ -807,7 +807,7 @@ var __vitePreload = function preload(baseModule, deps, importerUrl) {
 		o != k && ((k = o) ? (history.pushState({ k: 1 }, ""), addEventListener("popstate", f)) : (removeEventListener("popstate", f), history.state?.k && history.back()));
 	};
 })();
-var DEFAULT_MODEL = "anthropic/claude-opus-4.6";
+var DEFAULT_MODEL = "anthropic/claude-opus-4.7";
 var icons = () => window.lucide && lucide.createIcons();
 var haptic = () => /android/i.test(navigator.userAgent) && navigator.vibrate?.(1);
 var su = {
