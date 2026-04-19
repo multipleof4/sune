@@ -13,7 +13,7 @@ import { titleFrom, serializeThreadName, deserializeThreadName } from './threads
 import { resolveSuneSrc, processSuneIncludes, renderSuneHTML } from './sune-html.js';
 
 (()=>{let k,v=visualViewport;const f=()=>{removeEventListener('popstate',f),document.activeElement?.blur()};v.onresize=()=>{let o=v.height<innerHeight;o!=k&&((k=o)?(history.pushState({k:1},''),addEventListener('popstate',f)):(removeEventListener('popstate',f),history.state?.k&&history.back()))}})()
-const DEFAULT_MODEL='anthropic/claude-opus-4.6'
+const DEFAULT_MODEL='anthropic/claude-opus-4.7'
 const icons=()=>window.lucide&&lucide.createIcons()
 const haptic=()=>/android/i.test(navigator.userAgent)&&navigator.vibrate?.(1)
 
